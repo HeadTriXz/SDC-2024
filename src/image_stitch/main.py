@@ -76,40 +76,46 @@ matrix_right = get_matrix(RATIOS_RIGHT)
 right_width = get_width(RATIOS_RIGHT)
 right_height = get_height(RATIOS_RIGHT)
 
-# Load images
-center = cv2.imread('images/corner/center.jpg')
-left = cv2.imread('images/corner/left.jpg')
-right = cv2.imread('images/corner/right.jpg')
+def stitch_images(left: np.ndarray, center: np.ndarray, right: np.ndarray) -> np.ndarray:
+    """ Stitch the images together. """
+    center = cv2.resize(center, (MAX_WIDTH, MAX_HEIGHT))
+    left = cv2.resize(left, (MAX_WIDTH, MAX_HEIGHT))
+    right = cv2.resize(right, (MAX_WIDTH, MAX_HEIGHT))
 
-# Resize images
-center = cv2.resize(center, (MAX_WIDTH, MAX_HEIGHT))
-left = cv2.resize(left, (MAX_WIDTH, MAX_HEIGHT))
-right = cv2.resize(right, (MAX_WIDTH, MAX_HEIGHT))
+    # Warp images
+    left = cv2.cvtColor(left, cv2.COLOR_RGB2RGBA)
+    right = cv2.cvtColor(right, cv2.COLOR_RGB2RGBA)
+    left_res = warp_image(left, matrix_left, left_width, left_height)
+    right_res = warp_image(right, matrix_right, right_width, right_height)
 
-# Warp images
-left = cv2.cvtColor(left, cv2.COLOR_RGB2RGBA)
-right = cv2.cvtColor(right, cv2.COLOR_RGB2RGBA)
-left_res = warp_image(left, matrix_left, left_width, left_height)
-right_res = warp_image(right, matrix_right, right_width, right_height)
+    # Calculate result image size
+    result_width = int(math.ceil(left_width / 2 / LEFT_X))
+    result_height = int(math.ceil(MAX_HEIGHT / 2 / CENTER_Y))
 
-# Calculate result image size
-result_width = int(math.ceil(left_width / 2 / LEFT_X))
-result_height = int(math.ceil(MAX_HEIGHT / 2 / CENTER_Y))
+    # Calculate the position of the images
+    lxc, lyc = relative_to_absolute(LEFT_X, LEFT_Y, result_width, result_height)
+    lx1, ly1, lx2, ly2 = get_ltbr(lxc, lyc, left_width, left_height)
 
-# Calculate the position of the images
-lxc, lyc = relative_to_absolute(LEFT_X, LEFT_Y, result_width, result_height)
-lx1, ly1, lx2, ly2 = get_ltbr(lxc, lyc, left_width, left_height)
+    rxc, ryc = relative_to_absolute(RIGHT_X, RIGHT_Y, result_width, result_height)
+    rx1, ry1, rx2, ry2 = get_ltbr(rxc, ryc, right_width, right_height)
 
-rxc, ryc = relative_to_absolute(RIGHT_X, RIGHT_Y, result_width, result_height)
-rx1, ry1, rx2, ry2 = get_ltbr(rxc, ryc, right_width, right_height)
+    cxc, cyc = relative_to_absolute(CENTER_X, CENTER_Y, result_width, result_height)
+    cx1, cy1, cx2, cy2 = get_ltbr(cxc, cyc, MAX_WIDTH, MAX_HEIGHT)
 
-cxc, cyc = relative_to_absolute(CENTER_X, CENTER_Y, result_width, result_height)
-cx1, cy1, cx2, cy2 = get_ltbr(cxc, cyc, MAX_WIDTH, MAX_HEIGHT)
+    # Create result image
+    result = np.zeros((result_height, result_width, 3), dtype=np.uint8)
+    result = merge_image(result, center, cx1, cy1, cx2, cy2)
+    result = merge_image(result, left_res, lx1, ly1, lx2, ly2)
+    result = merge_image(result, right_res, rx1, ry1, rx2, ry2)
 
-# Create result image
-result = np.zeros((result_height, result_width, 3), dtype=np.uint8)
-result = merge_image(result, center, cx1, cy1, cx2, cy2)
-result = merge_image(result, left_res, lx1, ly1, lx2, ly2)
-result = merge_image(result, right_res, rx1, ry1, rx2, ry2)
+    return result
 
-cv2.imwrite('images/result.jpg', result)
+if __name__ == '__main__':
+    # Load images
+    center = cv2.imread('images/corner/center.jpg')
+    left = cv2.imread('images/corner/left.jpg')
+    right = cv2.imread('images/corner/right.jpg')
+
+    # Write result
+    result = stitch_images(left, center, right)
+    cv2.imwrite('images/result.jpg', result)
