@@ -205,7 +205,7 @@ def main():
     cam3_worker.stop()
 
 
-def initialize_can() -> can.Bus | None:
+def initialize_can() -> Optional[can.Bus]:
     """
     Set up the can bus interface and apply filters for the messages we're interested in.
     """
@@ -223,7 +223,7 @@ def initialize_can() -> can.Bus | None:
         print(f'Error initializing CAN: {e}', file=sys.stderr)
         return None
 
-def initialize_camera(device: int | str) -> cv2.VideoCapture | None:
+def initialize_camera(device: int | str) -> Optional[cv2.VideoCapture]:
     capture = cv2.VideoCapture(device)
     if capture is None or not capture.isOpened():
         return None
