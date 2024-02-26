@@ -111,7 +111,12 @@ class CanWorker:
         self.queue = can_queue
         self.thread = threading.Thread(target=self._process, args=(), daemon=True)
         self.folder_name = folder_name
-        self.file_pointer = open('data/' + self.folder_name + '.csv', 'w')
+
+        file_name = Path('data/' + self.folder_name + '.csv')
+        if not file_name.parent.exists():
+            file_name.parent.mkdir(parents=True, exist_ok=True)
+
+        self.file_pointer = open(str(file_name), 'w')
         print('Steering|Throttle|Brake|Speed|Image', file=self.file_pointer)
 
     def start(self):
