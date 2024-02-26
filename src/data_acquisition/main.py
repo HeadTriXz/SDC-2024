@@ -56,6 +56,9 @@ class CanListener:
         }
 
     def start_listening(self):
+        if self.bus is None:
+            return
+
         self.running = True
         self.thread.start()
 
@@ -202,19 +205,23 @@ def main():
     cam3_worker.stop()
 
 
-def initialize_can() -> can.Bus:
+def initialize_can() -> can.Bus | None:
     """
     Set up the can bus interface and apply filters for the messages we're interested in.
     """
-    bus = can.Bus(interface='socketcan', channel='can0', bitrate=500000)
-    bus.set_filters([
-        {'can_id': 0x12c, 'can_mask': 0xfff, 'extended': True},  # Steering
-        {'can_id': 0x120, 'can_mask': 0xfff, 'extended': True},  # Throttle
-        {'can_id': 0x126, 'can_mask': 0xfff, 'extended': True},  # Brake
-        {'can_id': 0x15e, 'can_mask': 0xfff, 'extended': True},  # Speed sensor
-    ])
-    return bus
 
+    try:
+        bus = can.Bus(interface='socketcan', channel='can0', bitrate=500000)
+        bus.set_filters([
+            {'can_id': 0x12c, 'can_mask': 0xfff, 'extended': True},  # Steering
+            {'can_id': 0x120, 'can_mask': 0xfff, 'extended': True},  # Throttle
+            {'can_id': 0x126, 'can_mask': 0xfff, 'extended': True},  # Brake
+            {'can_id': 0x15e, 'can_mask': 0xfff, 'extended': True},  # Speed sensor
+        ])
+        return bus
+    except Exception as e:
+        print(f'Error initializing CAN: {e}', file=sys.stderr)
+        return None
 
 def initialize_camera(device: int | str) -> cv2.VideoCapture | None:
     capture = cv2.VideoCapture(device)
