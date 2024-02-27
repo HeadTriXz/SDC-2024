@@ -47,6 +47,7 @@ class CANController:
 
         :param brake: The percentage of the brake-force to apply.
         """
+
         data = [brake, 0, 0, 0, 0, 0, 0, 0]
         message = can.Message(arbitration_id=CANControlIdentifier.BRAKE, data=data)
 
@@ -58,6 +59,7 @@ class CANController:
 
         :param angle: The angle of the steering wheel.
         """
+
         data = list(bytearray(struct.pack("f", float(angle)))) + [0, 0, 195, 0]
         message = can.Message(arbitration_id=CANControlIdentifier.STEERING, data=data)
 
@@ -70,6 +72,7 @@ class CANController:
         :param throttle: The percentage of the throttle to apply.
         :param gear: The gear to put the go-kart in.
         """
+
         data = [throttle, 0, gear, 0, 0, 0, 0, 0]
         message = can.Message(arbitration_id=CANControlIdentifier.THROTTLE, data=data)
 
@@ -77,10 +80,12 @@ class CANController:
 
     def start(self) -> None:
         """Start the CAN controller."""
+
         self.__thread.start()
 
     def __listen(self) -> None:
         """Listen to the CAN bus for messages."""
+
         while True:
             message = self.bus.recv()
             if message.arbitration_id in self.__listeners:

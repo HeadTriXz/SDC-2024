@@ -34,7 +34,7 @@ class SpeedMode(IntEnum):
     The mode of the speed controller.
     """
 
-    SLOW = 0
-    MEDIUM = 1
-    FAST = 2
+    SLOW =      0
+    MEDIUM =    1
+    FAST =      2
     VERY_FAST = 3
