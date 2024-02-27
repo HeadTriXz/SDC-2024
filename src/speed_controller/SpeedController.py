@@ -83,7 +83,7 @@ class SpeedController:
     def start(self) -> None:
         """Start the speed controller."""
 
-        self.__can.add_listener(CANFeedbackIdentifier.SPEED, self.__update_speed)
+        self.__can.add_listener(CANFeedbackIdentifier.SPEED_SENSOR, self.__update_speed)
         self.__thread.start()
 
     def __get_target_percentage(self) -> int:

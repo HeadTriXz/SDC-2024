@@ -15,10 +15,11 @@ class CANFeedbackIdentifier(IntEnum):
     The identifiers for the CAN messages received from the go-kart.
     """
 
-    BRAKE    = 0x126
-    SPEED    = 0x15e
-    STEERING = 0x12C
-    THROTTLE = 0x120
+    BRAKE           = 0x710
+    SPEED_SENSOR    = 0x440
+    STEERING_ECU    = 0x720
+    STEERING_SENSOR = 0x1E5
+    THROTTLE        = 0x730
 
 class Gear(IntEnum):
     """
