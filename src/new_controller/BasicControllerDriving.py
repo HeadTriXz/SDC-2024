@@ -1,17 +1,19 @@
-from src.new_controller.BasicDriving import BasicDriving
-from src.new_controller.controller import Controller, EventType, ControllerButton, ControllerAxis
+from common.constants import Gear
+from new_controller.CANController import CANController
+from new_controller.controller import Controller, EventType, ControllerButton, ControllerAxis
 
 import threading
 import time
 import can
 
-class BasicControllerDriving(BasicDriving):
 
-    direction = 0
+class BasicControllerDriving(CANController):
+    direction = Gear.NEUTRAL
 
     def __init__(self, can_bus: can.Bus):
         super().__init__(can_bus)
         self.controller = Controller()
+        self.__run_thread = threading.Thread(target=self.__run, daemon=True)
 
     def start(self):
         """
@@ -19,9 +21,6 @@ class BasicControllerDriving(BasicDriving):
         :return:
         """
 
-        # start __run on a new thread
-        self.__run_thread = threading.Thread(target=self.__run)
-        self.__run_thread.daemon = True
         self.__run_thread.start()
 
     def __run(self):
@@ -58,7 +57,7 @@ class BasicControllerDriving(BasicDriving):
         self.controller.add_listener(EventType.AXIS_CHANGED, ControllerAxis.LS_X, self.__set_steering)
 
         # set the throttle to 0 and apply full braking
-        self.set_throttle(0, 0)
+        self.set_throttle(0, Gear.NEUTRAL)
         self.set_brake(100) # 100% braking
 
         # vibrate the controller after 1 sec
@@ -70,13 +69,13 @@ class BasicControllerDriving(BasicDriving):
         self.controller.vibrate(1000)
 
     def __set_reverse(self):
-        self.direction = 2
+        self.direction = Gear.REVERSE
 
     def __set_neutral(self):
-        self.direction = 0
+        self.direction = Gear.NEUTRAL
 
     def __set_forward(self):
-        self.direction = 1
+        self.direction = Gear.DRIVE
 
     def __set_throttle(self, value):
         if self.ready:
@@ -87,10 +86,5 @@ class BasicControllerDriving(BasicDriving):
             self.set_brake(int(value * 100))
 
     def __set_steering(self, value):
-        if self.ready and abs(value) > 0.1 :
+        if self.ready and abs(value) > 0.1:
             self.set_steering(value)
-
-
-
-
-
