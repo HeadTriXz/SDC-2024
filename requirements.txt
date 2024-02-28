@@ -1,4 +1,4 @@
-inputs==0.4
+inputs==0.5
 numpy==1.26.4
 opencv-python==4.9.0.80
 packaging==23.2
