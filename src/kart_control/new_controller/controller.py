@@ -107,27 +107,27 @@ class Controller:
 
     def vibrate(self, duration: int=1000) -> None:
         """Vibrate the controller.
-        
+
         Parameters
         ----------
         :param duration int: the duration to vibrate in miliseconds. default = 1000
-        
+
         """
         try:
             self.gamepad.set_vibration(1, 1, duration)
         except Exception:  # noqa: BLE001
             print("Failed to vibrate")   # noqa: T201
 
-    def add_listener(self, event_type: EventType, button_or_axis: ControllerButton | ControllerAxis, 
+    def add_listener(self, event_type: EventType, button_or_axis: ControllerButton | ControllerAxis,
                         callback: callable) -> None:
         """Add a listener to be executed on that event.
-        
+
         Parameters
         ----------
         :param event_type EventType: the type of event to call it on.
         :param button_or_axis ControllerButton | ControllerAxis: the axis or button that the event needs to be for.
         :param callback callable: the callback to call when the event occurs
-        
+
         """
         if event_type not in EventType:
             raise ValueError(f"Invalid event type: {event_type}")
