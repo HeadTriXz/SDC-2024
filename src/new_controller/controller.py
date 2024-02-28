@@ -101,6 +101,7 @@ class Controller:
                     self._handle_axis_event(event)
 
     def vibrate(self, duration=1000):
+        """Vibrate the controller for a given duration."""
         try:
             self.gamepad.set_vibration(1, 1, duration)
         except Exception as e:
