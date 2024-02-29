@@ -58,21 +58,20 @@ class BrakeCalibrationProcedure:
             EventType.BUTTON_UP, ControllerButton.LB, self.__stop_braking
         )
 
-    def __arrow_pressed(self, event, data: (ControllerAxis, float)) -> None:
-        if data[1] == 0:
+    def __arrow_pressed(self, event, button, val) -> None:
+        if val == 0:
             return
 
-        if data[0] == ControllerAxis.DPAD_Y:
-            print(data[1])
-            if data[1] == 1:
+        if button == ControllerAxis.DPAD_Y:
+            if val == 1:
                 print("select lockup")
                 self.locked = True
-            elif data[1] == -1:
+            elif val == -1:
                 print("select non lockup")
                 self.locked = False
-        if data[0] == ControllerAxis.DPAD_X:
+        if button == ControllerAxis.DPAD_X:
             print("confirm")
-            if data[1] == 1:
+            if val == 1:
                 self.__confirm_lockup()
 
     def __confirm_lockup(self) -> None:
@@ -112,9 +111,12 @@ class BrakeCalibrationProcedure:
 
     def __start_braking(self, _event, _button: ControllerButton) -> None:
         """Start braking at the set pressure."""
+        print('start_braking')
         self.driving.set_brake(self.braking_steps[self.middle_idx])
 
     def __stop_braking(self, _event, _button: ControllerButton) -> None:
         """Stop braking."""
+
+        print('stop_braking')
         self.driving.set_brake(0)
         self.braked = True
