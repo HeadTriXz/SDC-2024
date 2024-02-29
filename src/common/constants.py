@@ -21,6 +21,27 @@ class CANFeedbackIdentifier(IntEnum):
     STEERING_SENSOR = 0x1E5
     THROTTLE        = 0x730
 
+class CameraResolution:
+    """
+    The camera resolutions that the Logitech StreamCam supports.
+    """
+
+    FHD = (1920, 1080)
+    HD = (1280, 720)
+    VGA = (848, 480)
+
+class CameraFramerate:
+    """
+    The camera framerates that the Logitech StreamCam supports.
+    """
+
+    FPS_60 = 60
+    FPS_30 = 30
+    FPS_24 = 24
+    FPS_20 = 20
+    FPS_15 = 15
+    FPS_10 = 10
+
 class Gear(IntEnum):
     """
     The gear of the go-kart.
