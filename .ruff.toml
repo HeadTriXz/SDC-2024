@@ -8,6 +8,7 @@ select = [
     "I",    # isort
     "SIM",  # flake8-simplify
     "UP",   # pyupgrade
+    "W292", # newline at end of file
 ]
 
 [lint.isort]
