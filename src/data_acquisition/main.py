@@ -198,7 +198,7 @@ def initialize_can() -> Optional[can.Bus]:
     """
 
     try:
-        bus = can.Bus(interface='virtual', channel='can0', bitrate=500000)
+        bus = can.Bus(interface='socketcan', channel='can0', bitrate=500000)
         bus.set_filters([
             {
                 'can_id': CANFeedbackIdentifier.STEERING_SENSOR,
