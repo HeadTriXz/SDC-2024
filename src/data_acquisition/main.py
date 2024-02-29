@@ -1,6 +1,7 @@
 import sys
 import threading
 import time
+from common.constants import CameraFramerate, CameraResolution, CANFeedbackIdentifier
 from datetime import datetime
 from pathlib import Path
 from queue import Queue
@@ -9,28 +10,8 @@ from typing import Optional
 import can
 import cv2
 
+
 CAN_MSG_SENDING_SPEED = .040  # 25Hz
-
-class CameraResolution:
-    """
-    The camera resolutions that the Logitech StreamCam supports.
-    """
-
-    FHD = (1920, 1080)
-    HD = (1280, 720)
-    VGA = (848, 480)
-
-class CameraFramerate:
-    """
-    The camera framerates that the Logitech StreamCam supports.
-    """
-
-    FPS_60 = 60
-    FPS_30 = 30
-    FPS_24 = 24
-    FPS_20 = 20
-    FPS_15 = 15
-    FPS_10 = 10
 
 class CanListener:
     """
@@ -38,10 +19,10 @@ class CanListener:
     """
 
     _id_conversion = {
-        0x12c: 'steering',
-        0x120: 'throttle',
-        0x126: 'brake',
-        0x15e: 'speed_sensor'
+        CANFeedbackIdentifier.STEERING_SENSOR: 'steering',
+        CANFeedbackIdentifier.THROTTLE: 'throttle',
+        CANFeedbackIdentifier.BRAKE: 'brake',
+        CANFeedbackIdentifier.SPEED_SENSOR: 'speed_sensor'
     }
 
     def __init__(self, bus: can.Bus):
@@ -72,8 +53,9 @@ class CanListener:
     def _listen(self):
         while self.running:
             message: Optional[can.Message] = self.bus.recv(.5)
-            if message and message.arbitration_id in self._id_conversion:
-                self.data[self._id_conversion[message.arbitration_id]] = message.data
+            message_id = CANFeedbackIdentifier(message.arbitration_id) if message else None
+            if message_id in self._id_conversion:
+                self.data[self._id_conversion[message_id]] = message.data
 
 
 class ImageWorker:
@@ -218,10 +200,26 @@ def initialize_can() -> Optional[can.Bus]:
     try:
         bus = can.Bus(interface='socketcan', channel='can0', bitrate=500000)
         bus.set_filters([
-            {'can_id': 0x12c, 'can_mask': 0xfff, 'extended': True},  # Steering
-            {'can_id': 0x120, 'can_mask': 0xfff, 'extended': True},  # Throttle
-            {'can_id': 0x126, 'can_mask': 0xfff, 'extended': True},  # Brake
-            {'can_id': 0x15e, 'can_mask': 0xfff, 'extended': True},  # Speed sensor
+            {
+                'can_id': CANFeedbackIdentifier.STEERING_SENSOR,
+                'can_mask': 0xfff,
+                'extended': True
+            },
+            {
+                'can_id': CANFeedbackIdentifier.THROTTLE,
+                'can_mask': 0xfff,
+                'extended': True
+            },
+            {
+                'can_id': CANFeedbackIdentifier.BRAKE,
+                'can_mask': 0xfff,
+                'extended': True
+            },
+            {
+                'can_id': CANFeedbackIdentifier.SPEED_SENSOR,
+                'can_mask': 0xfff,
+                'extended': True
+            }
         ])
         return bus
     except Exception as e:
