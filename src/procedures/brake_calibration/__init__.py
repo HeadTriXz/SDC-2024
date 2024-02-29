@@ -1,4 +1,3 @@
-from common.decorators import run_once
 from new_controller.CANController import CANController
 from new_controller.controller import (
     Controller,
@@ -39,7 +38,6 @@ class BrakeCalibrationProcedure:
         self.low_idx = 0
         self.middle_idx = self.low_idx + (self.high_idx - self.low_idx) // 2
 
-    @run_once
     def start_procedure(self, _event: EventType, _button: ControllerButton) -> None:
         """Start the brake calibration procedure.
 
