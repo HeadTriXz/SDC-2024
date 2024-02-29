@@ -88,22 +88,21 @@ class BrakeCalibrationProcedure:
 
         self.braked = False
 
-        print(f"low: {self.low_idx} high: {self.high_idx} middle: {self.middle_idx}")
+        if self.low_idx >= self.high_idx:
+            print(f"braking force calibrated: {self.braking_steps[self.middle_idx]}")
+            return
 
-        print("confirm")
+        print(f"low: {self.low_idx} high: {self.high_idx} middle: {self.middle_idx}")
         if self.locked:
             self.high_idx = self.middle_idx - 1
         else:
             self.low_idx = self.middle_idx + 1
 
         # check if we are done
-        if self.low_idx >= self.high_idx:
-            print(f"braking force calibrated: {self.braking_steps[self.middle_idx]}")
-            return
 
-        print(
-            f"Confirmed lockup: {self.locked} - {self.braking_steps[self.middle_idx]}"
-        )
+        # print(
+        #     f"Confirmed lockup: {self.locked} - {self.braking_steps[self.middle_idx]}"
+        # )
 
         # adjust for the next iteration
         self.locked = False
@@ -111,12 +110,9 @@ class BrakeCalibrationProcedure:
 
     def __start_braking(self, _event, _button: ControllerButton) -> None:
         """Start braking at the set pressure."""
-        print('start_braking')
         self.driving.set_brake(self.braking_steps[self.middle_idx])
 
     def __stop_braking(self, _event, _button: ControllerButton) -> None:
         """Stop braking."""
-
-        print('stop_braking')
         self.driving.set_brake(0)
         self.braked = True
