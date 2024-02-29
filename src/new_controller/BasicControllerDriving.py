@@ -92,28 +92,22 @@ class BasicControllerDriving:
         )
 
     def __set_reverse(self, _type: TypeError, _button: ControllerButton) -> None:
-        print("reverse")
         self.direction = Gear.REVERSE
 
     def __set_neutral(self, _type: TypeError, _button: ControllerButton) -> None:
-        print("neutral")
         self.direction = Gear.NEUTRAL
 
     def __set_forward(self, _type: TypeError, _button: ControllerButton) -> None:
-        print("forward")
         self.direction = Gear.DRIVE
 
     def __set_throttle(
         self, _event: EventType, _button: ControllerButton, val: float
     ) -> None:
-        print("throttle: ", int(val * 100))
         self.can_controller.set_throttle(int(val * 100), self.direction)
 
     def __set_brake(self, _event: EventType, _button: ControllerButton, val: float):
-        print("brake: ", int(val * 100))
         self.can_controller.set_brake(int(val * 100))
 
     def __set_steering(self, _event: EventType, _button: ControllerButton, val: float):
-        print("steering: ", val)
         if abs(val) > 0.1:
             self.can_controller.set_steering(val)
