@@ -3,6 +3,7 @@ import can
 from new_controller.BasicControllerDriving import BasicControllerDriving
 from new_controller.CANController import CANController
 from new_controller.controller import Controller
+from procedures.brake_calibration import BrakeCalibrationProcedure
 
 if __name__ == "__main__":
     can_bus = can.interface.Bus("can0", interface="virtual", bitrate=500000)
@@ -15,7 +16,7 @@ if __name__ == "__main__":
     controller_driving = BasicControllerDriving(driving, controller)
     controller_driving.start()
 
-    # procedure = BrakeCalibrationProcedure(driving, controller)
+    procedure = BrakeCalibrationProcedure(driving, controller)
 
     while True:
         pass

@@ -1,21 +1,19 @@
-import threading
-import time
-
-import can
-
-from new_controller.BasicDriving import BasicDriving
+from common.constants import Gear
+from new_controller.CANController import CANController
 from new_controller.controller import (
     Controller,
-    ControllerAxis,
-    ControllerButton,
     EventType,
+    ControllerButton,
+    ControllerAxis,
 )
 
+import threading
 
-class BasicControllerDriving(BasicDriving):
-    direction = 0
 
-    def __init__(self, can_bus: can.Bus, controller: Controller) -> None:
+class BasicControllerDriving:
+    direction = Gear.NEUTRAL
+
+    def __init__(self, can_controller: CANController, controller: Controller) -> None:
         """Driving using a controller.
 
         the controller scheme is as follows:
@@ -27,16 +25,12 @@ class BasicControllerDriving(BasicDriving):
         - B: forward
         - A: arm/start driving
         """
-        super().__init__(can_bus)
-        self.controller = Controller()
+        self.can_controller = can_controller
+        self.controller = controller
+        self.__run_thread = threading.Thread(target=self.__run, daemon=True)
 
     def start(self) -> None:
-        """Start driving using a controller."""
-        # start __run on a new thread
-        self.__run()
-
-    def __run(self) -> None:
-        """Run the actual driving script.
+        """Start driving using controller.
 
         ## sequence to start driving:
         1. wait until vibration.
@@ -52,89 +46,74 @@ class BasicControllerDriving(BasicDriving):
         - Y: neutral
         - B: forward
         """
+        # start __run on a new thread
+        self.__run()
+
+    def __run(self) -> None:
         print("starting")
-        # start the controller
-        self.controller_thread = threading.Thread(
-            target=self.controller.start, daemon=True
-        )
-        self.controller_thread.start()
 
         # set the throttle to 0 and apply full braking
-        self.set_throttle(0, 0)
+        self.can_controller.set_throttle(0, Gear.NEUTRAL)
+        self.can_controller.set_brake(100)  # 100% braking
 
-        self.set_brake(100)  # 100% braking-+
-
-        print("shit done")
+        # register callbacks for the buttons adn axis
+        self.controller.add_listener(
+            EventType.LONG_PRESS, ControllerButton.A, self.__ready
+        )
 
         # vibrate the controller after 1 sec
-        time.sleep(1)
-        self.controller.vibrate(1000)
+        self.controller.vibrate(500)
         print("shake it off")
 
-    a_time: int
-
-    def __ready(self, event, button):
+    def __ready(self, _event: EventType, _button: ControllerButton) -> None:
         print("__ready")
-        if event == EventType.BUTTON_DOWN:
-            self.a_time = time.time()
-            print("set time")
-        else:
-            print(self.a_time - time.time())
-            if time.time() - self.a_time > 1.5:
-                print("ready")
-                self.controller.vibrate(1000)
+        self.controller.vibrate(1000)
 
-                # register callbacks for the buttons adn axis
-                self.controller.add_listener(
-                    EventType.BUTTON_DOWN, ControllerButton.A, self.__ready
-                )
-                self.controller.add_listener(
-                    EventType.BUTTON_UP, ControllerButton.A, self.__ready
-                )
+        # gears
+        self.controller.add_listener(
+            EventType.BUTTON_DOWN, ControllerButton.X, self.__set_reverse
+        )
+        self.controller.add_listener(
+            EventType.BUTTON_DOWN, ControllerButton.Y, self.__set_neutral
+        )
+        self.controller.add_listener(
+            EventType.BUTTON_DOWN, ControllerButton.B, self.__set_forward
+        )
+        # throttle and brake
+        self.controller.add_listener(
+            EventType.AXIS_CHANGED, ControllerAxis.RT, self.__set_throttle
+        )
+        self.controller.add_listener(
+            EventType.AXIS_CHANGED, ControllerAxis.LT, self.__set_brake
+        )
+        # steering
+        self.controller.add_listener(
+            EventType.AXIS_CHANGED, ControllerAxis.LS_X, self.__set_steering
+        )
 
-                # gears
-                self.controller.add_listener(
-                    EventType.BUTTON_DOWN, ControllerButton.X, self.__set_reverse
-                )
-                self.controller.add_listener(
-                    EventType.BUTTON_DOWN, ControllerButton.Y, self.__set_neutral
-                )
-                self.controller.add_listener(
-                    EventType.BUTTON_DOWN, ControllerButton.B, self.__set_forward
-                )
-                # throttle and brake
-                self.controller.add_listener(
-                    EventType.AXIS_CHANGED, ControllerAxis.RT, self.__set_throttle
-                )
-                self.controller.add_listener(
-                    EventType.AXIS_CHANGED, ControllerAxis.LT, self.__set_brake
-                )
-                # steering
-                self.controller.add_listener(
-                    EventType.AXIS_CHANGED, ControllerAxis.LS_X, self.__set_steering
-                )
+    def __set_reverse(self, _type: TypeError, _button: ControllerButton) -> None:
+        print("reverse")
+        self.direction = Gear.REVERSE
 
-    def __set_reverse(self, event, buttton):
-        if self.ready:
-            self.direction = 2
+    def __set_neutral(self, _type: TypeError, _button: ControllerButton) -> None:
+        print("neutral")
+        self.direction = Gear.NEUTRAL
 
-    def __set_neutral(self, event, buttton):
-        if self.ready:
-            self.direction = 0
+    def __set_forward(self, _type: TypeError, _button: ControllerButton) -> None:
+        print("forward")
+        self.direction = Gear.DRIVE
 
-    def __set_forward(self, event, buttton):
-        if not self.ready:
-            return
-        self.direction = 1
+    def __set_throttle(
+        self, _event: EventType, _button: ControllerButton, val: float
+    ) -> None:
+        print("throttle: ", int(val * 100))
+        self.can_controller.set_throttle(int(val * 100), self.direction)
 
-    def __set_throttle(self, event, button_val):
-        if self.ready:
-            self.set_throttle(int(button_val[1] * 100), self.direction)
+    def __set_brake(self, _event: EventType, _button: ControllerButton, val: float):
+        print("brake: ", int(val * 100))
+        self.can_controller.set_brake(int(val * 100))
 
-    def __set_brake(self, event, value):
-        if self.ready:
-            self.set_brake(int(value[1] * 100))
-
-    def __set_steering(self, event, value):
-        if self.ready and abs(value[1]) > 0.1:
-            self.set_steering(value[1])
+    def __set_steering(self, _event: EventType, _button: ControllerButton, val: float):
+        print("steering: ", val)
+        if abs(val) > 0.1:
+            self.can_controller.set_steering(val)
