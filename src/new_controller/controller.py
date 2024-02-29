@@ -2,8 +2,8 @@ import math
 from enum import Enum
 from threading import Timer, Thread
 
-from inputs import get_gamepad
 import inputs
+from inputs import get_gamepad
 
 
 MAX_TRIG_VAL = math.pow(2, 8)
@@ -93,13 +93,15 @@ class Controller:
 
     def __start(self):
         while True:
-            events = get_gamepad()
-            for event in events:
-                if event.ev_type == "Key":
-                    self._handle_button_event(event)
-                elif event.ev_type == "Absolute":
-                    self._handle_axis_event(event)
-
+            try:
+                events = get_gamepad()
+                for event in events:
+                    if event.ev_type == "Key":
+                        self._handle_button_event(event)
+                    elif event.ev_type == "Absolute":
+                        self._handle_axis_event(event)
+            except Exception:
+                pass
     def vibrate(self, duration=1000):
         """Vibrate the controller for a given duration."""
         try:
