@@ -236,7 +236,7 @@ def initialize_camera(device: int | str) -> Optional[cv2.VideoCapture]:
     capture.set(cv2.CAP_PROP_AUTOFOCUS, 0)
     capture.set(cv2.CAP_PROP_FOCUS, 0)
     capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*'MJPG'))
-    capture.set(cv2.CAP_PROP_FPS, CameraFramerate.FPS_20)
+    capture.set(cv2.CAP_PROP_FPS, CameraFramerate.FPS_60)
 
     return capture
 
