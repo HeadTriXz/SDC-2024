@@ -88,15 +88,17 @@ class BrakeCalibrationProcedure:
 
         self.braked = False
 
-        if self.low_idx >= self.high_idx:
-            print(f"braking force calibrated: {self.braking_steps[self.middle_idx]}")
-            return
+        with open("braking_force.txt", "w") as f:
+            if self.low_idx >= self.high_idx:
+                f.write(f"braking force calibrated: {self.braking_steps[self.middle_idx]}")
+                print(f"braking force calibrated: {self.braking_steps[self.middle_idx]}")
 
-        print(f"low: {self.low_idx} high: {self.high_idx} middle: {self.middle_idx}")
-        if self.locked:
-            self.high_idx = self.middle_idx - 1
-        else:
-            self.low_idx = self.middle_idx + 1
+            f.write(f"low: {self.low_idx} high: {self.high_idx} middle: {self.middle_idx}")
+            print(f"low: {self.low_idx} high: {self.high_idx} middle: {self.middle_idx}")
+            if self.locked:
+                self.high_idx = self.middle_idx - 1
+            else:
+                self.low_idx = self.middle_idx + 1
 
         # check if we are done
 
