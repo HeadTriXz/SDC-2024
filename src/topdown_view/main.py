@@ -12,19 +12,18 @@ def resize_image(image, target_width, target_height):
 
 
 def topdown(image):
-    """ a function to transform the image to a top-down view of the road
+    """ a function to tranform the image to a top-down view of the road
     Args:
         image: the image to be transformed
+        creates a top down view of the road
     """
-    img = image
-    if img is None:
-        print("Error: Unable to load image.")
-        exit()
+    if image is None:
+        raise ValueError("Error: Unable to load image")
 
     pts = np.array([[55, 900], [1841, 253], [2067, 253], [3861, 900]], dtype=np.float32)
-    ipm_pts = np.array([[800, 450], [800, 1100], [600, 1100], [600, 450]], dtype=np.float32)
+    ipm_pts = np.array([[780, 450], [800, 1100], [600, 1100], [620, 450]], dtype=np.float32)
     ipm_matrix = cv2.getPerspectiveTransform(pts, ipm_pts)
-    ipm = cv2.warpPerspective(img, ipm_matrix, (img.shape[1], img.shape[0]), flags=cv2.INTER_LINEAR)
+    ipm = cv2.warpPerspective(image, ipm_matrix, (image.shape[1], image.shape[0]), flags=cv2.INTER_LINEAR)
     ipm = cut_image(ipm, 300, 450, 800, 900)
     ipm = cv2.rotate(ipm, cv2.ROTATE_90_CLOCKWISE)
     ipm = cv2.rotate(ipm, cv2.ROTATE_90_CLOCKWISE)
