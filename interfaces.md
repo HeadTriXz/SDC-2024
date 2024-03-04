@@ -44,7 +44,7 @@ class LaneController:
 class SpeedController:
     max_speed: int
     target_speed: int
-    stopped: bool
+    state: SpeedControllerState
 
     def get_current_speed(self):
         pass

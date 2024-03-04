@@ -1,10 +1,18 @@
-import can
 import threading
+from enum import IntEnum
+
+import can
 
 from common import config
 from common.constants import CANFeedbackIdentifier, Gear
 from new_controller.CANController import CANController
 
+
+class SpeedControllerState(IntEnum): 
+    """The states the speed controller can be in"""
+    STOPPED = 0
+    WAITING_TO_STOP = 1
+    DRIVING = 2
 
 class SpeedController:
     """
@@ -20,7 +28,7 @@ class SpeedController:
 
     current_speed: float
     gear: Gear
-    stopped: bool
+    satte: SpeedControllerState
 
     __can: CANController
     __max_speed: int
@@ -36,7 +44,7 @@ class SpeedController:
 
         self.current_speed = 0
         self.gear = Gear.NEUTRAL
-        self.stopped = True
+        self.state = SpeedControllerState.DRIVING
 
         self.__can = can_bus
         self.__max_speed = 0
@@ -95,7 +103,7 @@ class SpeedController:
         """Listen for changes in the speed of the go-kart."""
 
         while True:
-            if self.stopped:
+            if self.state == SpeedControllerState.STOPPED:
                 self.__can.set_throttle(0, Gear.NEUTRAL)
                 self.__can.set_brake(100) # TODO: change brake value.
                 continue
