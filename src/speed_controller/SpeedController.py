@@ -44,7 +44,7 @@ class SpeedController:
 
         self.current_speed = 0
         self.gear = Gear.NEUTRAL
-        self.state = SpeedControllerState.DRIVING
+        self.state = SpeedControllerState.STOPPED
 
         self.__can = can_bus
         self.__max_speed = 0
