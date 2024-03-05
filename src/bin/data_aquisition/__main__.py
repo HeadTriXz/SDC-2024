@@ -1,7 +1,6 @@
 import sys
 import threading
 import time
-from common.constants import CameraFramerate, CameraResolution, CANFeedbackIdentifier
 from datetime import datetime
 from pathlib import Path
 from queue import Queue
@@ -10,6 +9,7 @@ from typing import Optional
 import can
 import cv2
 
+from common.constants import CameraFramerate, CameraResolution, CANFeedbackIdentifier
 
 CAN_MSG_SENDING_SPEED = .040  # 25Hz
 
@@ -249,5 +249,7 @@ def initialize_cameras() -> tuple[cv2.VideoCapture, cv2.VideoCapture, cv2.VideoC
     return initialize_camera(0), initialize_camera(2), initialize_camera(4)
 
 
+
 if __name__ == '__main__':
     main()
+

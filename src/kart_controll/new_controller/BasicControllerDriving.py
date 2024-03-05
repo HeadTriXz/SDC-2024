@@ -1,10 +1,12 @@
+# noqa: T201
+
 import threading
 import time
 
 import can
 
-from new_controller.BasicDriving import BasicDriving
-from new_controller.controller import (
+from kart_controll.new_controller.CANController import CANController
+from kart_controll.new_controller.controller import (
     Controller,
     ControllerAxis,
     ControllerButton,
@@ -12,13 +14,11 @@ from new_controller.controller import (
 )
 
 
-class BasicControllerDriving(BasicDriving):
-    direction = 0
-
-    def __init__(self, can_bus: can.Bus, controller: Controller) -> None:
-        """Driving using a controller.
-
-        the controller scheme is as follows:
+class BasicControllerDriving(CANController):
+    """Class that will drive the kart with an xbox controller.
+    
+    this class will register all needed buttons on the controller. 
+    the controll scheme is as follows: 
         - left joystick: steering
         - right trigger: throttle
         - left trigger: brake
@@ -26,9 +26,43 @@ class BasicControllerDriving(BasicDriving):
         - Y: neutral
         - B: forward
         - A: arm/start driving
+
+
+    Example:
+    -------
+    ```python 
+    from kartcontroll.new_contorller.controller import Controller
+    from kartcontroll.new_contorller. import Controller
+    import can
+
+    if __name__ == "__main__":
+        can_bus = can.Bus(interface='socketcan', channel='can0', bitrate=500000)
+
+        controller = Controller()
+        controller.start()
+
+        controller_driving = BasicControllerDriving(can_bus, controller)
+        controller_driving.start()
+    ```
+
+    this piece of code will start the canbus, controller and controller driving. 
+    ater that you need to hold a and then you can drive.
+
+    """
+
+    direction = 0
+
+    def __init__(self, can_bus: can.Bus, controller: Controller) -> None:
+        """Driving using a controller.
+        
+        Parameters
+        ----------
+        :param can_bus can.Bus: the canbus that is used to controll the kart.
+        :param controller Controller: the controller to register the buttons on.
+
         """
         super().__init__(can_bus)
-        self.controller = Controller()
+        self.controller = controller
 
     def start(self) -> None:
         """Start driving using a controller."""
@@ -73,7 +107,7 @@ class BasicControllerDriving(BasicDriving):
 
     a_time: int
 
-    def __ready(self, event, button):
+    def __ready(self, event: EventType, _button: ControllerButton) -> None:
         print("__ready")
         if event == EventType.BUTTON_DOWN:
             self.a_time = time.time()
@@ -114,27 +148,27 @@ class BasicControllerDriving(BasicDriving):
                     EventType.AXIS_CHANGED, ControllerAxis.LS_X, self.__set_steering
                 )
 
-    def __set_reverse(self, event, buttton):
+    def __set_reverse(self, _event: EventType, _button: ControllerButton) -> None:
         if self.ready:
             self.direction = 2
 
-    def __set_neutral(self, event, buttton):
+    def __set_neutral(self, _event: EventType, _button: ControllerButton) -> None:
         if self.ready:
             self.direction = 0
 
-    def __set_forward(self, event, buttton):
+    def __set_forward(self, _event: EventType, _button: ControllerButton) -> None:
         if not self.ready:
             return
         self.direction = 1
 
-    def __set_throttle(self, event, button_val):
+    def __set_throttle(self, _event: EventType, button_val: tuple[ControllerButton, float]) -> None:
         if self.ready:
             self.set_throttle(int(button_val[1] * 100), self.direction)
 
-    def __set_brake(self, event, value):
+    def __set_brake(self, _event: EventType, value: tuple[ControllerButton, float]) -> None:
         if self.ready:
             self.set_brake(int(value[1] * 100))
 
-    def __set_steering(self, event, value):
+    def __set_steering(self, _event: EventType, value: tuple[ControllerButton, float]) -> None:
         if self.ready and abs(value[1]) > 0.1:
             self.set_steering(value[1])

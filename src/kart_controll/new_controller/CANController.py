@@ -1,6 +1,7 @@
-import can
 import struct
 import threading
+
+import can
 
 from common.constants import CANControlIdentifier, CANFeedbackIdentifier, Gear
 
