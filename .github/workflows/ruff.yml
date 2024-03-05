@@ -10,6 +10,6 @@ jobs:
           src: "./src"
           args: --config .ruff.toml --fix --unsafe-fixes ./src
 
-      - uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: 'style fixes by ruff'
+      # - uses: stefanzweifel/git-auto-commit-action@v4
+      #   with:
+      #     commit_message: 'style fixes by ruff'
