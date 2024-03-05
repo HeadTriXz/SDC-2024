@@ -235,8 +235,7 @@ def initialize_can() -> Optional[can.Bus]:
         return None
 
 def initialize_camera(device: int | str) -> Optional[cv2.VideoCapture]:
-    """Connect a camera.
-    """
+    """Connect a camera."""
     capture = cv2.VideoCapture(device)
     if capture is None or not capture.isOpened():
         return None
