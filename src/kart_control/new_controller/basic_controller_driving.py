@@ -1,3 +1,4 @@
+import logging
 import threading
 
 from common.constants import Gear
@@ -11,6 +12,19 @@ from kart_control.new_controller import (
 
 
 class BasicControllerDriving:
+    """Driving using a controller.
+
+    this class will drive the kart using a controller. it will use the following
+    scheme:
+    - left joystick: steering
+    - right trigger: throttle
+    - left trigger: brake
+    - X: reverse
+    - Y: neutral
+    - B: forward
+    - A: arm/start driving
+    """
+
     direction = Gear.NEUTRAL
 
     def __init__(self, can_controller: CANController, controller: Controller) -> None:
@@ -28,6 +42,7 @@ class BasicControllerDriving:
         self.can_controller = can_controller
         self.controller = controller
         self.__run_thread = threading.Thread(target=self.__run, daemon=True)
+        self.logger = logging.getLogger(__name__)
 
     def start(self) -> None:
         """Start driving using controller.
@@ -50,7 +65,7 @@ class BasicControllerDriving:
         self.__run()
 
     def __run(self) -> None:
-        print("starting")
+        logging.info("starting")
 
         # set the throttle to 0 and apply full braking
         self.can_controller.set_throttle(0, Gear.NEUTRAL)
@@ -61,10 +76,10 @@ class BasicControllerDriving:
 
         # vibrate the controller after 1 sec
         self.controller.vibrate(500)
-        print("shake it off")
+        logging.info("shake it off")
 
     def __ready(self, _event: EventType, _button: ControllerButton) -> None:
-        print("__ready")
+        logging.info("__ready")
         self.controller.vibrate(1000)
 
         # gears
