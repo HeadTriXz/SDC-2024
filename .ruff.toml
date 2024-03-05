@@ -39,7 +39,7 @@ ignore = [
     "D213"
 ]
 
-exclude = ["src/bin/controller/*"]
+exclude = ["src/scripts/original_controller.py"]
 
 
 [lint.isort]
