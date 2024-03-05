@@ -3,7 +3,7 @@ import threading
 
 import can
 
-from src.common.constants import CANControlIdentifier, CANFeedbackIdentifier, Gear
+from common.constants import CANControlIdentifier, CANFeedbackIdentifier, Gear
 
 
 class CANController:
