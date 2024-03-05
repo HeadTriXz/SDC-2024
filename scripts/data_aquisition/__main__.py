@@ -9,7 +9,7 @@ from typing import Optional
 import can
 import cv2
 
-from common.constants import CameraFramerate, CameraResolution, CANFeedbackIdentifier
+from src.common.constants import CameraFramerate, CameraResolution, CANFeedbackIdentifier
 
 CAN_MSG_SENDING_SPEED = .040  # 25Hz
 

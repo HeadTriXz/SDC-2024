@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/scripts/bash
 TTY=$(realpath /dev/TinCan)
 killall slcand || true
 slcan_attach -f -s6 -o $TTY
