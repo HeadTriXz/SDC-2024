@@ -1,11 +1,11 @@
-# noqa: T201
+#ruff: noqa: T201
 
 import threading
 import time
 
 import can
 
-from kart_controll.new_controller.CANController import CANController
+from kart_controll.can_controller import CANController
 from kart_controll.new_controller.controller import (
     Controller,
     ControllerAxis,

@@ -5,7 +5,7 @@ import can
 
 from common import config
 from common.constants import CANFeedbackIdentifier, Gear
-from new_controller.CANController import CANController
+from kart_controll.can_controller import CANController
 
 
 class SpeedControllerState(IntEnum): 
