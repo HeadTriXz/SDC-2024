@@ -2,7 +2,7 @@ import threading
 
 from common.constants import Gear
 from kart_control.can_controller import CANController
-from kart_control.new_controller.controller import (
+from kart_control.new_controller import (
     Controller,
     ControllerAxis,
     ControllerButton,
