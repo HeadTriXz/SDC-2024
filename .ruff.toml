@@ -33,6 +33,7 @@ ignore = [
     "ANN101", # missing type annotation for self in method
     "FIX002",
     "D100",
+    "D401",
     "D417",
     "D104",
     "D203",
