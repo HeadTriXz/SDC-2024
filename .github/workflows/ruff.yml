@@ -8,3 +8,8 @@ jobs:
       - uses: chartboost/ruff-action@v1
         with: 
           src: "./src"
+          args: --config .ruff.toml --fix --unsafe-fixes ./src
+
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: 'style fixes by ruff'
