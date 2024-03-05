@@ -5,15 +5,16 @@ import can
 
 from common import config
 from common.constants import CANFeedbackIdentifier, Gear
-from kart_controll.can_controller import CANController
+from kart_control.can_controller import CANController
 
 
-class SpeedControllerState(IntEnum): 
+class SpeedControllerState(IntEnum):
     """The states the speed controller can be in."""
 
     STOPPED = 0
     WAITING_TO_STOP = 1
     DRIVING = 2
+
 
 class SpeedController:
     """A controller for the speed of the go-kart.
@@ -25,7 +26,7 @@ class SpeedController:
         max_speed (int): The maximum speed of the go-kart.
         target_speed (int): The target speed of the go-kart.
         stopped (bool): Whether the go-kart is stopped.
-    
+
     """
 
     current_speed: float
@@ -98,7 +99,7 @@ class SpeedController:
         while True:
             if self.state == SpeedControllerState.STOPPED:
                 self.__can.set_throttle(0, Gear.NEUTRAL)
-                self.__can.set_brake(100) # TODO: change brake value.
+                self.__can.set_brake(100)  # TODO: change brake value.
                 continue
 
             self.__can.set_throttle(self.__get_target_percentage(), self.gear)
@@ -106,7 +107,7 @@ class SpeedController:
             if self.current_speed < self.__target_speed:
                 self.__can.set_brake(0)
             else:
-                self.__can.set_brake(30) # TODO: Dynamically calculate required braking force.
+                self.__can.set_brake(30)  # TODO: Dynamically calculate required braking force.
 
     def __update_speed(self, message: can.Message) -> None:
         """Update the speed of the go-kart."""

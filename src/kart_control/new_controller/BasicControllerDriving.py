@@ -1,12 +1,12 @@
-#ruff: noqa: T201
+# ruff: noqa: T201
 
 import threading
 import time
 
 import can
 
-from kart_controll.can_controller import CANController
-from kart_controll.new_controller.controller import (
+from kart_control.can_controller import CANController
+from kart_control.new_controller.controller import (
     Controller,
     ControllerAxis,
     ControllerButton,
@@ -16,9 +16,9 @@ from kart_controll.new_controller.controller import (
 
 class BasicControllerDriving(CANController):
     """Class that will drive the kart with an xbox controller.
-    
-    this class will register all needed buttons on the controller. 
-    the controll scheme is as follows: 
+
+    this class will register all needed buttons on the controller.
+    the controll scheme is as follows:
         - left joystick: steering
         - right trigger: throttle
         - left trigger: brake
@@ -30,7 +30,7 @@ class BasicControllerDriving(CANController):
 
     Example:
     -------
-    ```python 
+    ```python
     from kartcontroll.new_contorller.controller import Controller
     from kartcontroll.new_contorller. import Controller
     import can
@@ -45,7 +45,7 @@ class BasicControllerDriving(CANController):
         controller_driving.start()
     ```
 
-    this piece of code will start the canbus, controller and controller driving. 
+    this piece of code will start the canbus, controller and controller driving.
     ater that you need to hold a and then you can drive.
 
     """
@@ -54,7 +54,7 @@ class BasicControllerDriving(CANController):
 
     def __init__(self, can_bus: can.Bus, controller: Controller) -> None:
         """Driving using a controller.
-        
+
         Parameters
         ----------
         :param can_bus can.Bus: the canbus that is used to controll the kart.
@@ -88,9 +88,7 @@ class BasicControllerDriving(CANController):
         """
         print("starting")
         # start the controller
-        self.controller_thread = threading.Thread(
-            target=self.controller.start, daemon=True
-        )
+        self.controller_thread = threading.Thread(target=self.controller.start, daemon=True)
         self.controller_thread.start()
 
         # set the throttle to 0 and apply full braking
@@ -119,34 +117,18 @@ class BasicControllerDriving(CANController):
                 self.controller.vibrate(1000)
 
                 # register callbacks for the buttons adn axis
-                self.controller.add_listener(
-                    EventType.BUTTON_DOWN, ControllerButton.A, self.__ready
-                )
-                self.controller.add_listener(
-                    EventType.BUTTON_UP, ControllerButton.A, self.__ready
-                )
+                self.controller.add_listener(EventType.BUTTON_DOWN, ControllerButton.A, self.__ready)
+                self.controller.add_listener(EventType.BUTTON_UP, ControllerButton.A, self.__ready)
 
                 # gears
-                self.controller.add_listener(
-                    EventType.BUTTON_DOWN, ControllerButton.X, self.__set_reverse
-                )
-                self.controller.add_listener(
-                    EventType.BUTTON_DOWN, ControllerButton.Y, self.__set_neutral
-                )
-                self.controller.add_listener(
-                    EventType.BUTTON_DOWN, ControllerButton.B, self.__set_forward
-                )
+                self.controller.add_listener(EventType.BUTTON_DOWN, ControllerButton.X, self.__set_reverse)
+                self.controller.add_listener(EventType.BUTTON_DOWN, ControllerButton.Y, self.__set_neutral)
+                self.controller.add_listener(EventType.BUTTON_DOWN, ControllerButton.B, self.__set_forward)
                 # throttle and brake
-                self.controller.add_listener(
-                    EventType.AXIS_CHANGED, ControllerAxis.RT, self.__set_throttle
-                )
-                self.controller.add_listener(
-                    EventType.AXIS_CHANGED, ControllerAxis.LT, self.__set_brake
-                )
+                self.controller.add_listener(EventType.AXIS_CHANGED, ControllerAxis.RT, self.__set_throttle)
+                self.controller.add_listener(EventType.AXIS_CHANGED, ControllerAxis.LT, self.__set_brake)
                 # steering
-                self.controller.add_listener(
-                    EventType.AXIS_CHANGED, ControllerAxis.LS_X, self.__set_steering
-                )
+                self.controller.add_listener(EventType.AXIS_CHANGED, ControllerAxis.LS_X, self.__set_steering)
 
     def __set_reverse(self, _event: EventType, _button: ControllerButton) -> None:
         if self.ready:
