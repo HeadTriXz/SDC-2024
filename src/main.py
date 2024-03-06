@@ -2,17 +2,19 @@ from os import system
 
 import can
 
-from new_controller.BasicControllerDriving import BasicControllerDriving
-from new_controller.CANController import CANController
-from new_controller.controller import Controller
+from kart_control.can_controller import CANController
+from kart_control.new_controller import Controller
+from kart_control.new_controller.basic_controller_driving import BasicControllerDriving
 from procedures.brake_calibration import BrakeCalibrationProcedure
 
 if __name__ == "__main__":
-    system("ip link set can0 type can bitrate 500000")
-    system("ip link set can0 up")
+    try:
+        system("ip link set can0 type can bitrate 500000")
+        system("ip link set can0 up")
 
-    can_bus = can.Bus(interface='socketcan', channel='can0', bitrate=500000)
-    # can_bus = can.interface.Bus("can0", interface="virtual", bitrate=500000)
+        can_bus = can.Bus(interface="socketcan", channel="can0", bitrate=500000)
+    except OSError:
+        can_bus = can.interface.Bus("can0", interface="virtual", bitrate=500000)
 
     controller = Controller()
     controller.start()

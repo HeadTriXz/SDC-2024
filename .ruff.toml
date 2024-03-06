@@ -38,7 +38,8 @@ ignore = [
     "D104",
     "D203",
     "D213",
-    "D401"
+    "D401",
+    "I001",
 ]
 
 exclude = ["src/scripts/original_controller.py"]

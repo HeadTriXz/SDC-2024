@@ -28,18 +28,20 @@ class CANController:
         self.__listeners = {}
         self.__thread = threading.Thread(target=self.__listen, daemon=True)
 
-        self.__throttle_message = can.Message(arbitration_id=CANControlIdentifier.THROTTLE, data=[0, 0, 0, 0, 0, 0, 0, 0])
+        self.__throttle_message = can.Message(
+            arbitration_id=CANControlIdentifier.THROTTLE, data=[0, 0, 0, 0, 0, 0, 0, 0]
+        )
         self.__throttle_task = can_bus.send_periodic(self.__throttle_message, 0.04)
 
         self.__brake_message = can.Message(arbitration_id=CANControlIdentifier.BRAKE, data=[0, 0, 0, 0, 0, 0, 0, 0])
         self.__brake_task = can_bus.send_periodic(self.__brake_message, 0.04)
 
-        self.__steering_message = can.Message(arbitration_id=CANControlIdentifier.STEERING, data=[0, 0, 0, 0, 0, 0, 0, 0])
+        self.__steering_message = can.Message(
+            arbitration_id=CANControlIdentifier.STEERING, data=[0, 0, 0, 0, 0, 0, 0, 0]
+        )
         self.__steering_task = can_bus.send_periodic(self.__steering_message, 0.04)
 
-    def add_listener(
-            self, message_id: CANFeedbackIdentifier, listener: callable
-    ) -> None:
+    def add_listener(self, message_id: CANFeedbackIdentifier, listener: callable) -> None:
         """Add a listener for a message.
 
         :param message_id: The identifier of the message.
@@ -57,12 +59,12 @@ class CANController:
         """
         self.__brake_message.data = [brake, 0, 0, 0, 0, 0, 0, 0]
         self.__brake_task.modify_data(self.__brake_message)
+
     def set_steering(self, angle: float) -> None:
         """Set the angle of the steering wheel.
 
         :param angle: The angle of the steering wheel.
         """
-
         self.__steering_message.data = list(bytearray(struct.pack("f", angle))) + [0, 0, 195, 0]
         self.__steering_task.modify_data(self.__steering_message)
 
@@ -74,7 +76,6 @@ class CANController:
         """
         self.__throttle_message.data = [throttle, 0, gear, 0, 0, 0, 0, 0]
         self.__throttle_task.modify_data(self.__throttle_message)
-
 
     def start(self) -> None:
         """Start the CAN controller."""
