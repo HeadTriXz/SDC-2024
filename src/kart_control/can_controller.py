@@ -28,9 +28,7 @@ class CANController:
         self.__listeners = {}
         self.__thread = threading.Thread(target=self.__listen, daemon=True)
 
-    def add_listener(
-        self, message_id: CANFeedbackIdentifier, listener: callable
-    ) -> None:
+    def add_listener(self, message_id: CANFeedbackIdentifier, listener: callable) -> None:
         """Add a listener for a message.
 
         :param message_id: The identifier of the message.
