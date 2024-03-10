@@ -63,8 +63,7 @@ class TestDetectLines(unittest.TestCase):
         this benchmark will not include stitching the unstitched_images.
         """
         benchmark_images = [
-            cv2.imread(f"./line_detection/unstitched_images/{img}")
-            for img in os.listdir("./line_detection/unstitched_images")
+            cv2.imread(f"./line_detection/images/{img}") for img in os.listdir("./line_detection/images")
         ]
 
         img_count = len(benchmark_images)
