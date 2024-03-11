@@ -4,6 +4,14 @@ from lane_assist.line_detection import Line, Window
 from lane_assist.line_detection.line import LineType
 
 
+LINE_WIDTH = 90
+ZEBRA_CROSSING_THRESHOLD = 20000
+FILTER_DECAY = 10
+
+LINE_THRESHOLD = 5000
+LINE_DECAY = 1
+
+
 def get_histogram_peaks(histogram: np.ndarray, peak_minimum: int, decay: int = 1) -> list[list[int]]:
     """Get the peaks in the histogram.
 
@@ -11,7 +19,8 @@ def get_histogram_peaks(histogram: np.ndarray, peak_minimum: int, decay: int = 1
     this is done by iterating over the histogram until the peak_minimum is reached.
     after this it will traverse the peak in both sides to find the edges of it.
 
-    # TODO: investigate why this returns overlapping peaks
+    # TODO: improve detection of corners
+    # TODO: support multiple stoplines
 
     Parameters
     ----------
@@ -102,12 +111,6 @@ def merge_peaks(peaks: list, min_distance: int) -> list:
     return merged_peaks
 
 
-LINE_WIDTH = 90
-ZEBRA_CROSSING_THRESHOLD = 20000
-FILTER_DECAY = 10
-
-LINE_THRESHOLD = 5000
-LINE_DECAY = 1
 
 
 def window_search(img: np.ndarray, window_count: int, pixels_per_window: int = 1, window_width: int = 60) -> list[Line]:

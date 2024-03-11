@@ -21,7 +21,7 @@ class CanListener:
         CANFeedbackIdentifier.STEERING_SENSOR: "steering",
         CANFeedbackIdentifier.THROTTLE: "throttle",
         CANFeedbackIdentifier.BRAKE: "brake",
-        CANFeedbackIdentifier.SPEED_SENSOR: "speed_sensor",
+        CANFeedbackIdentifier.SPEED_SENSOR: "speed_sensor"
     }
 
     def __init__(self, bus: can.Bus) -> None:
@@ -56,7 +56,7 @@ class CanListener:
 
 
 class ImageWorker:
-    """A worker that writes unstitched_images to disk."""
+    """A worker that writes images to disk."""
 
     def __init__(self, image_queue: Queue, folder_name: str) -> None:
         """Configure image worker."""
@@ -131,7 +131,7 @@ class CanWorker:
 def main() -> None:
     """Start collecting data."""
     folder_name = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
-    folder = Path("unstitched_images/" + folder_name)
+    folder = Path("images/" + folder_name)
 
     print("Initializing...", file=sys.stderr)  # noqa: T201
     if not folder.exists():
@@ -210,7 +210,7 @@ def initialize_can() -> Optional[can.Bus]:
                 {"can_id": CANFeedbackIdentifier.STEERING_SENSOR, "can_mask": 0xFFF, "extended": True},
                 {"can_id": CANFeedbackIdentifier.THROTTLE, "can_mask": 0xFFF, "extended": True},
                 {"can_id": CANFeedbackIdentifier.BRAKE, "can_mask": 0xFFF, "extended": True},
-                {"can_id": CANFeedbackIdentifier.SPEED_SENSOR, "can_mask": 0xFFF, "extended": True},
+                {"can_id": CANFeedbackIdentifier.SPEED_SENSOR, "can_mask": 0xFFF, "extended": True}
             ]
         )
         return bus

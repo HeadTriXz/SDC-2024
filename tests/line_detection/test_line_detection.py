@@ -59,8 +59,8 @@ class TestDetectLines(unittest.TestCase):
     def test_benchmark(self) -> None:
         """Benchmark the line detection.
 
-        to make sure it is a realistic situation all unstitched_images in the test folder are used.
-        this benchmark will not include stitching the unstitched_images.
+        to make sure it is a realistic situation all images in the test folder are used.
+        this benchmark will not include stitching the images.
         """
         benchmark_images = [
             cv2.imread(f"./line_detection/images/{img}") for img in os.listdir("./line_detection/images")

@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 
 
 def list_images(images: list[np.ndarray], cols: int = 1, rows: int = 4, cmap: str = None) -> None:
-    """Plot a list of unstitched_images."""
+    """Plot a list of images."""
     plt.figure(figsize=(10, 11))
     for i, image in enumerate(images):
         plt.subplot(rows, cols, i + 1)

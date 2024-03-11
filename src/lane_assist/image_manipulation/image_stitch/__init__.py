@@ -64,18 +64,18 @@ def warp_image(image: np.ndarray, matrix: np.ndarray, width: int, height: int) -
 
 
 def merge_image(base: np.ndarray, overlay: np.ndarray, x1: int, y1: int, x2: int, y2: int) -> np.ndarray:
-    """Merge two unstitched_images."""
+    """Merge two images."""
     base[y1:y2, x1:x2] = overlay
     return base
 
 
 def stitch_images(left: np.ndarray, center: np.ndarray, right: np.ndarray) -> np.ndarray:
-    """Stitch the unstitched_images together."""
+    """Stitch the images together."""
     center = cv2.resize(center, (MAX_WIDTH, MAX_HEIGHT))
     left = cv2.resize(left, (MAX_WIDTH, MAX_HEIGHT))
     right = cv2.resize(right, (MAX_WIDTH, MAX_HEIGHT))
 
-    # Warp unstitched_images
+    # Warp images
     left_res = warp_image(left, MATRIX_LEFT, LEFT_WIDTH, LEFT_HEIGHT)
     right_res = warp_image(right, MATRIX_RIGHT, RIGHT_WIDTH, RIGHT_HEIGHT)
 
@@ -83,7 +83,7 @@ def stitch_images(left: np.ndarray, center: np.ndarray, right: np.ndarray) -> np
     result_width = int(math.ceil(LEFT_WIDTH / 2 / LEFT_X))
     result_height = int(math.ceil(MAX_HEIGHT / 2 / CENTER_Y))
 
-    # Calculate the position of the unstitched_images
+    # Calculate the position of the images
     lxc, lyc = relative_to_absolute(LEFT_X, LEFT_Y, result_width, result_height)
     lx1, ly1, lx2, ly2 = get_ltbr(lxc, lyc, LEFT_WIDTH, LEFT_HEIGHT)
 
@@ -109,10 +109,10 @@ def adjust_gamma(image: np.ndarray, gamma: float = 1.0) -> np.ndarray:
 
 
 if __name__ == "__main__":
-    # Load unstitched_images
-    center_img = cv2.imread("../../../../resources/unstitched_images/stopline/center.jpg")
-    left_img = cv2.imread("../../../../resources/unstitched_images/stopline/left.jpg")
-    right_img = cv2.imread("../../../../resources/unstitched_images/stopline/right.jpg")
+    # Load images
+    center_img = cv2.imread("../../../../resources/images/stopline/center.jpg")
+    left_img = cv2.imread("../../../../resources/images/stopline/left.jpg")
+    right_img = cv2.imread("../../../../resources/images/stopline/right.jpg")
 
     left_img = adjust_gamma(left_img, 0.62)
     right_img = adjust_gamma(right_img, 0.62)

@@ -25,7 +25,7 @@ def main() -> None:
     """Example usage of the line detection.
 
     this function is used for testing the line detection algorithm.
-    this is done by taking a few unstitched_images and drawing the lines on the topdown image.
+    this is done by taking a few images and drawing the lines on the topdown image.
     """
     test_images = [
         cv2.imread("../../../tests/line_detection/images/corner.jpg"),
@@ -33,7 +33,7 @@ def main() -> None:
         cv2.imread("../../../tests/line_detection/images/crossing.jpg"),
         cv2.imread("../../../tests/line_detection/images/stopline.jpg"),
     ]
-    # benchmark(unstitched_images)  # noqa: ERA001
+
 
     colours = {
         LineType.SOLID: (255, 0, 0),  # red
@@ -42,7 +42,7 @@ def main() -> None:
     }
 
     final_images = []
-    # convert the unstitched_images, so we can find the lines
+    # convert the images, so we can find the lines
     for img in test_images:
         lines = get_lines(img)
         td_img = topdown(img)  # convert too topdown to draw the lines
