@@ -11,7 +11,8 @@ import cv2
 
 from src.common.constants import CameraFramerate, CameraResolution, CANFeedbackIdentifier
 
-CAN_MSG_SENDING_SPEED = .040  # 25Hz
+CAN_MSG_SENDING_SPEED = 0.040  # 25Hz
+
 
 class CanListener:
     """A can listener that listens for specific messages and stores their latest values."""
@@ -28,12 +29,7 @@ class CanListener:
         self.bus = bus
         self.thread = threading.Thread(target=self._listen, args=(), daemon=True)
         self.running = False
-        self.data = {
-            "steering": None,
-            "throttle": None,
-            "brake": None,
-            "speed_sensor": None
-        }
+        self.data = {"steering": None, "throttle": None, "brake": None, "speed_sensor": None}
 
     def start_listening(self) -> None:
         """Start the can listener."""
@@ -50,11 +46,10 @@ class CanListener:
     def get_new_values(self) -> any:
         """Get new values."""
         return self.data
-        
 
     def _listen(self) -> None:
         while self.running:
-            message: Optional[can.Message] = self.bus.recv(.5)
+            message: Optional[can.Message] = self.bus.recv(0.5)
             message_id = CANFeedbackIdentifier(message.arbitration_id) if message else None
             if message_id in self._id_conversion:
                 self.data[self._id_conversion[message_id]] = message.data
@@ -125,8 +120,11 @@ class CanWorker:
                     [str(x) for x in values["throttle"] 
                         or []])}"|"{",".join([str(x) for x in values["brake"] 
                         or []])}"|"{",".join([str(x) for x in values["speed_sensor"] 
-                        or []])}"|"' + self.folder_name + f'/{timestamp}.jpg"',
-                file=self.file_pointer)
+                        or []])}"|"'
+                + self.folder_name
+                + f'/{timestamp}.jpg"',
+                file=self.file_pointer,
+            )
             self.queue.task_done()
 
 
@@ -207,32 +205,19 @@ def initialize_can() -> Optional[can.Bus]:
     """Set up the can bus interface and apply filters for the messages we're interested in."""
     try:
         bus = can.Bus(interface="socketcan", channel="can0", bitrate=500000)
-        bus.set_filters([
-            {
-                "can_id": CANFeedbackIdentifier.STEERING_SENSOR,
-                "can_mask": 0xfff,
-                "extended": True
-            },
-            {
-                "can_id": CANFeedbackIdentifier.THROTTLE,
-                "can_mask": 0xfff,
-                "extended": True
-            },
-            {
-                "can_id": CANFeedbackIdentifier.BRAKE,
-                "can_mask": 0xfff,
-                "extended": True
-            },
-            {
-                "can_id": CANFeedbackIdentifier.SPEED_SENSOR,
-                "can_mask": 0xfff,
-                "extended": True
-            }
-        ])
+        bus.set_filters(
+            [
+                {"can_id": CANFeedbackIdentifier.STEERING_SENSOR, "can_mask": 0xFFF, "extended": True},
+                {"can_id": CANFeedbackIdentifier.THROTTLE, "can_mask": 0xFFF, "extended": True},
+                {"can_id": CANFeedbackIdentifier.BRAKE, "can_mask": 0xFFF, "extended": True},
+                {"can_id": CANFeedbackIdentifier.SPEED_SENSOR, "can_mask": 0xFFF, "extended": True}
+            ]
+        )
         return bus
     except Exception as e:  # noqa: BLE001
         print(f"Error initializing CAN: {e}", file=sys.stderr)  # noqa: T201
         return None
+
 
 def initialize_camera(device: int | str) -> Optional[cv2.VideoCapture]:
     """Connect a camera."""
@@ -255,7 +240,5 @@ def initialize_cameras() -> tuple[cv2.VideoCapture, cv2.VideoCapture, cv2.VideoC
     return initialize_camera(0), initialize_camera(2), initialize_camera(4)
 
 
-
 if __name__ == "__main__":
     main()
-

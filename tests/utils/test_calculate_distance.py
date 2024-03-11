@@ -17,5 +17,6 @@ class TestCalculateDistance(unittest.TestCase):
         self.assertEqual(meters_to_y(y_to_meters(720, 720), 720), 720)
         self.assertEqual(meters_to_y(y_to_meters(561, 1080), 1080), 561)
 
+
 if __name__ == "__main__":
     unittest.main()
