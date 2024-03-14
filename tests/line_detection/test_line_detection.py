@@ -12,31 +12,36 @@ from .lines import CORNER, CROSSING, STOP_LINE, STRAIGHT
 
 BENCHMARK_ITERATIONS = 500
 
+def get_path(file: str) -> str:
+    """Get the absolute path of the current file."""
+    current_file = os.path.dirname(os.path.abspath(__file__))
+    return os.path.normpath(os.path.join(current_file, file))
+
 
 class TestDetectLines(unittest.TestCase):
     """Tests for the line detection methods."""
 
     def test_line_detection_corner(self) -> None:
         """Test the line detection on the corner image."""
-        image = cv2.imread("./line_detection/images/corner.jpg")
+        image = cv2.imread(get_path("./images/corner.jpg"))
         self.assertIsNotNone(image, "Image not found")
         self.__test_line_detection(image, CORNER)
 
     def test_line_detection_straight(self) -> None:
         """Test the line detection on the straight image."""
-        image = cv2.imread("./line_detection/images/straight.jpg")
+        image = cv2.imread(get_path("./images/straight.jpg"))
         self.assertIsNotNone(image, "Image not found")
         self.__test_line_detection(image, STRAIGHT)
 
     def test_line_detection_crossing(self) -> None:
         """Test the line detection on the crossing image."""
-        image = cv2.imread("./line_detection/images/crossing.jpg")
+        image = cv2.imread(get_path("./images/crossing.jpg"))
         self.assertIsNotNone(image, "Image not found")
         self.__test_line_detection(image, CROSSING)
 
     def test_line_detection_stopline(self) -> None:
         """Test the line detection on the stopline image."""
-        image = cv2.imread("./line_detection/images/stopline.jpg")
+        image = cv2.imread(get_path("./images/stopline.jpg"))
         self.assertIsNotNone(image, "Image not found")
         self.__test_line_detection(image, STOP_LINE)
 
