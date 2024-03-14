@@ -79,3 +79,5 @@ venv.bak/
 # Editor
 .idea
 .vscode
+
+**/.benchmarks

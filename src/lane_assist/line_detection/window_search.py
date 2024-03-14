@@ -116,7 +116,11 @@ def window_search(img: np.ndarray, window_count: int, pixels_per_window: int = 1
     # this is used to determine if the line is solid or dashed. we also allow
     # for 2 extra gaps jsut in case
     filtered_count = len(filter_peaks) - len(stop_lines_y)
-    lines = [Line(np.array(window.points), window_height, gaps_allowed=filtered_count + 2) for window in windows]
+    lines = [
+        Line(np.array(window.points), window_height, gaps_allowed=filtered_count + 2)
+        for window in windows
+        if len(window.points) > 5
+    ]
 
     if len(stop_lines_y) == 0:
         return lines
@@ -128,7 +132,7 @@ def window_search(img: np.ndarray, window_count: int, pixels_per_window: int = 1
     # get the closest point for each solid line at the y of the stop lines
     closest_points = []
     for line in solid_lines:
-        if line.points.shape[0] == 0:
+        if line.points.shape[0] == 0 or len(stop_lines_y) > 1:
             continue
         closest_point = line.points[np.argmin(np.abs(line.points[:, 1] - stop_lines_y))]
         closest_points.append(closest_point)
