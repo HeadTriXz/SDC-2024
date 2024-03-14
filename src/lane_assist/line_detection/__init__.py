@@ -14,11 +14,8 @@ def get_lines(image: np.ndarray) -> list[Line]:
     This function will take an image and return the lines in the image.
     the image shoulb be stitched and not top down
     """
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    top_down = topdown(gray)
-    white = cv2.inRange(top_down, 200, 255)
-    blurred = cv2.GaussianBlur(white, (15, 15), 0)
-    return window_search(blurred, 50)
+    white = cv2.inRange(image, 200, 255)
+    return window_search(white, 110)
 
 
 def main() -> None:
@@ -28,12 +25,11 @@ def main() -> None:
     this is done by taking a few images and drawing the lines on the topdown image.
     """
     test_images = [
-        cv2.imread("../../../tests/line_detection/images/corner.jpg"),
-        cv2.imread("../../../tests/line_detection/images/straight.jpg"),
-        cv2.imread("../../../tests/line_detection/images/crossing.jpg"),
-        cv2.imread("../../../tests/line_detection/images/stopline.jpg"),
+        cv2.imread("../../../tests/line_detection/images/corner.jpg", cv2.IMREAD_GRAYSCALE),
+        cv2.imread("../../../tests/line_detection/images/straight.jpg", cv2.IMREAD_GRAYSCALE),
+        cv2.imread("../../../tests/line_detection/images/crossing.jpg", cv2.IMREAD_GRAYSCALE),
+        cv2.imread("../../../tests/line_detection/images/stopline.jpg", cv2.IMREAD_GRAYSCALE),
     ]
-
 
     colours = {
         LineType.SOLID: (255, 0, 0),  # red
@@ -44,8 +40,8 @@ def main() -> None:
     final_images = []
     # convert the images, so we can find the lines
     for img in test_images:
-        lines = get_lines(img)
         td_img = topdown(img)  # convert too topdown to draw the lines
+        lines = get_lines(td_img)
 
         # draw the points on the topdown image
         for line in lines:

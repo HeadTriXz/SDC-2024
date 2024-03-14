@@ -6,6 +6,8 @@ import cv2
 import numpy as np
 from src.lane_assist.line_detection import Line, get_lines
 
+from lane_assist.image_manipulation.top_down_transfrom import topdown
+
 from .lines import CORNER, CROSSING, STOP_LINE, STRAIGHT
 
 BENCHMARK_ITERATIONS = 500
@@ -63,15 +65,17 @@ class TestDetectLines(unittest.TestCase):
         this benchmark will not include stitching the images.
         """
         benchmark_images = [
-            cv2.imread(f"./line_detection/images/{img}") for img in os.listdir("./line_detection/images")
+            cv2.imread(f"./line_detection/images/{img}", cv2.IMREAD_GRAYSCALE)
+            for img in os.listdir("./line_detection/images")
         ]
+        td_images = [topdown(img) for img in benchmark_images]
 
-        img_count = len(benchmark_images)
+        img_count = len(td_images)
 
-        start = time.process_time()
+        start = time.perf_counter()
         for i in range(BENCHMARK_ITERATIONS):
-            get_lines(benchmark_images[i % img_count])
-        stop = time.process_time()
+            get_lines(td_images[i % img_count])
+        stop = time.perf_counter()
         fps = BENCHMARK_ITERATIONS / (stop - start)
         per_iteration = (stop - start) / BENCHMARK_ITERATIONS
 
