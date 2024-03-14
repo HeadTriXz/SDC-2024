@@ -33,8 +33,6 @@ def main() -> None:
         cv2.imread("../../../tests/line_detection/images/stopline.jpg", cv2.IMREAD_GRAYSCALE),
     ]
 
-    names = ["corner", "straight", "crossing", "stopline"]
-
     colours = {
         LineType.SOLID: (255, 0, 0),  # red
         LineType.DASHED: (0, 255, 0),  # green
@@ -44,6 +42,7 @@ def main() -> None:
     final_images = []
     # convert the images, so we can find the lines
 
+    # names = ["corner", "straight", "crossing", "stopline"]
     # f = open("../../../tests/line_detection/lines.py", "w")
     for img in test_images:
         td_img = topdown(img)  # convert too topdown to draw the lines
@@ -56,7 +55,7 @@ def main() -> None:
                 cv2.circle(td_img, (point[0], point[1]), 10, colour, -1)
 
         # write the lines to the file. this will be used for generating tests
-        # f.write(f"{names.pop(0)} = [\n")  # noqa:
+        # f.write(f"{names.pop(0)} = [\n")
         # for line in lines:
         #     f.write("\t" + line.as_definition() + ",\n")
         # f.write("]\n")

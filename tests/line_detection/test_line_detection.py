@@ -73,7 +73,7 @@ class TestDetectLines(unittest.TestCase):
 
 @pytest.mark.benchmark(group="line_detection", min_rounds=5, disable_gc=True)
 @pytest.mark.skipif("BENCHMARK" not in os.environ, reason="Skip benchmark if not set")
-def test_line_detection_benchmark(benchmark) -> None:
+def test_line_detection_benchmark(benchmark: any) -> None:
     """Benchmark the line detection.
 
     to make sure it is a realistic situation all images in the test folder are used.
