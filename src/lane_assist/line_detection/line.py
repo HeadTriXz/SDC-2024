@@ -66,4 +66,7 @@ class Line:
 
     def __repr__(self) -> str:
         """Get the string representation of the line."""
-        return f"Line(points={len(self.points)}, line_type={self.line_type})"
+        type_str = (
+            "SOLID" if self.line_type == LineType.SOLID else "DASHED" if self.line_type == LineType.DASHED else "STOP"
+        )
+        return f"Line(points={len(self.points)}, line_type={type_str})"

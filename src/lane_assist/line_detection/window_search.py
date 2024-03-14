@@ -1,116 +1,15 @@
 import numpy as np
+import scipy
 
-from lane_assist.line_detection import Line, Window
-from lane_assist.line_detection.line import LineType
+from lane_assist.line_detection.line import Line, LineType
+from lane_assist.line_detection.window import Window
 
-
-LINE_WIDTH = 90
+LINE_WIDTH = 50
 ZEBRA_CROSSING_THRESHOLD = 20000
-FILTER_DECAY = 10
+FILTER_WIDTH = LINE_WIDTH * 4
 
 LINE_THRESHOLD = 5000
 LINE_DECAY = 1
-
-
-def get_histogram_peaks(histogram: np.ndarray, peak_minimum: int, decay: int = 1) -> list[list[int]]:
-    """Get the peaks in the histogram.
-
-    get all complete peaks in the histogram.
-    this is done by iterating over the histogram until the peak_minimum is reached.
-    after this it will traverse the peak in both sides to find the edges of it.
-
-    # TODO: improve detection of corners
-    # TODO: support multiple stoplines
-
-    Parameters
-    ----------
-    :param histogram: the histogram to extract the peaks from
-    :param peak_minimum: the minimum value to be considered a peak
-    :param decay: the amount of times the value needs to be lower to say it is the end of the peak
-
-    """
-    peaks = []
-    # loop over all points in histogram
-    index = 0
-    while index < len(histogram):
-        # get beginning above the threshold
-        if histogram[index] > peak_minimum:
-            # iterate backwards till the value is increasing.
-            # this index will be the start of the peak.
-            current_backward_index = index
-            lower_count = 0
-            while current_backward_index > 0:
-                if (
-                    histogram[current_backward_index] < histogram[current_backward_index - 1]
-                    or histogram[current_backward_index] < 50
-                ):
-                    lower_count += 1
-
-                if lower_count > decay:
-                    break
-
-                current_backward_index -= 1
-            start = current_backward_index
-
-            # iterate forwards till the value is increasing.
-            # this index will be the end. we will only count it the end if we find 5 decreasing values.
-            current_forward_index = index
-            lower_count = 0
-            while current_forward_index < len(histogram) - 1:
-                if (
-                    histogram[current_forward_index] < histogram[current_forward_index + 1]
-                    or histogram[current_backward_index] < 50
-                ) and histogram[current_forward_index] < peak_minimum:
-                    lower_count += 1
-
-                if lower_count > decay:
-                    break
-
-                current_forward_index += 1
-
-            # add the peak to the list
-            peaks.append([start, current_forward_index])
-
-            # set the index to the end of the peak
-            index = current_forward_index + 1
-        else:
-            index += 1
-
-    return peaks
-
-
-def merge_peaks(peaks: list, min_distance: int) -> list:
-    """Merge the peaks of the histogram.
-
-    this function will merge the peaks of the histogram if they are close to each other.
-
-    Parameters
-    ----------
-    :param peaks: the peaks to merge
-    :param min_distance: the minimum distance between the peaks
-
-    """
-    merged_peaks = []
-    index = 0
-    while index < len(peaks) - 1:
-        peak = peaks[index]
-        other = peaks[index + 1]
-        index += 1
-
-        peak_position = peak
-
-        if abs(peak - other) < min_distance:
-            peak_position = (peak + other) // 2
-            index += 1
-
-        merged_peaks.append(peak_position)
-
-    if index == len(peaks) - 1:
-        merged_peaks.append(peaks[-1])
-
-    return merged_peaks
-
-
 
 
 def window_search(img: np.ndarray, window_count: int, pixels_per_window: int = 1, window_width: int = 60) -> list[Line]:
@@ -138,66 +37,52 @@ def window_search(img: np.ndarray, window_count: int, pixels_per_window: int = 1
     # take a histogram over the horizontal pixels.
     # this is used to filter out the zebra crossing.
     histogram = np.sum(img[:], axis=1)
-    avg = ZEBRA_CROSSING_THRESHOLD
-    filter_peaks = get_histogram_peaks(histogram, avg, FILTER_DECAY)
-    peak_widths = [peak[1] - peak[0] for peak in filter_peaks]
-
+    filter_peaks = scipy.signal.find_peaks(histogram, height=ZEBRA_CROSSING_THRESHOLD, distance=FILTER_WIDTH)[0]
+    widths, _, lefts, rights = scipy.signal.peak_widths(histogram, filter_peaks, rel_height=0.98)
     stop_lines_y = []
 
     # mask out these peaks if they are wider then a line
-    for width, peak in zip(peak_widths, filter_peaks):
+    for peak, width, left, right in zip(filter_peaks, widths, lefts, rights):
         if width > LINE_WIDTH:
-            img[peak[0] : peak[1]] = 0
+            img[int(left) : int(right)] = 0
         else:
-            stop_lines_y.append(peak[len(peak) // 2])
+            stop_lines_y.append(int(peak))
 
     # create a histogram of the image to find the lines.
-    # we only use the bottom half because that should eb where the lines are
+    # we only use the bottom half because that should be where the lines are.
+    # to get the lines we will detect and get the peaks
     histogram = np.sum(img[img.shape[0] // 2 :], axis=0)
-
-    # get the center of the peaks. merge if they are to close to each other.
-    # if the peaks are to close to each other they will instantly kill each other.
-    # the distance between these peaks most likely means that they are part of
-    # the same line which has a large a gap in it.
-    peak_limits = get_histogram_peaks(histogram, LINE_THRESHOLD, LINE_DECAY)
-    peak_centers = [peak[0] + np.argmax(histogram[peak[0] : peak[1]]) for peak in peak_limits]
-    merged_peaks = merge_peaks(peak_centers, window_width)
+    merged_peaks = scipy.signal.find_peaks(histogram, height=LINE_THRESHOLD, distance=LINE_WIDTH)[0]
 
     # create the windows
     window_height = img.shape[0] // window_count  # get the height of the windows based on the amount we want.
-    windows = [Window(center, img.shape[0] - window_height, window_width // 2) for center in merged_peaks]
-    line_points = [[] for _ in range(len(windows))]
+    windows = [Window(center, img.shape[0], window_width // 2) for center in merged_peaks]
+
     for _ in range(window_count):
         # check which windows overlap
-        overlapped_windows = []
-
-        for i, window in enumerate(windows):
+        # time the window search
+        for window in windows:
             if window.collided:
                 continue
-            for k, other_window in enumerate(windows):
+            for other_window in windows:
                 if window == other_window:
                     continue
                 if (
                     window.x - window.margin < other_window.x + other_window.margin
                     and window.x + window.margin > other_window.x - other_window.margin
                 ):
-                    overlapped_windows.append((i, k))
-                    break
+                    if window.found_in_previous and other_window.found_in_previous:
+                        window.collided = True
+                        other_window.collided = True
+                    elif window.found_in_previous:
+                        other_window.collided = True
+                    elif other_window.found_in_previous:
+                        window.collided = True
 
         # check if any of the collided windows have found a line in the previous section
         # if they have not, we can assume that the line has finished
-        for i, k in overlapped_windows:
-            # if they don't we stop the window
-            if not windows[i].found_in_previous and not windows[k].found_in_previous:
-                windows[i].collided = True
-                windows[k].collided = True
 
-            if windows[i].found_in_previous:
-                windows[k].collided = True
-            if windows[k].found_in_previous:
-                windows[i].collided = True
-
-        for i, window in enumerate(windows):
+        for window in windows:
             if window.collided:
                 continue
 
@@ -208,23 +93,30 @@ def window_search(img: np.ndarray, window_count: int, pixels_per_window: int = 1
             win_x_high = window.x + window.margin
 
             # check how many white pixels are in the window
-            coords = np.argwhere(img[win_y_low:win_y_high, win_x_low:win_x_high] >= 100)
+            non_zero_count = np.count_nonzero(img[win_y_low:win_y_high, win_x_low:win_x_high])
+
+            # TODO: move the y axis into the direction of the line.
+            # this will allow us to better detect corners
 
             # If you found > minpix pixels, recenter next window on the top nonzero pixels position
-            if len(coords) > pixels_per_window:
-                window.x = int(np.mean(coords[:, 1])) + win_x_low
-                line_points[i].append([window.x, window.y])
-                window.found_in_previous = True
+            if non_zero_count > pixels_per_window:
+                coords = np.nonzero(img[win_y_low:win_y_high, win_x_low:win_x_high])
+                window.move(int(np.mean(coords[1])) + win_x_low, win_y_low)
             else:
-                window.found_in_previous = False
+                if window.found_in_previous:
+                    # remove the last point
+                    window.points = window.points[:-1]
+                    window.found_in_previous = False
 
-            window.y = win_y_low
+                window.move(window.x, win_y_low, False)
+
+    # remove all none values
 
     # create the lines. we first calculate how many gaps we have filtered out.
     # this is used to determine if the line is solid or dashed. we also allow
     # for 2 extra gaps jsut in case
     filtered_count = len(filter_peaks) - len(stop_lines_y)
-    lines = [Line(np.array(points), window_height, gaps_allowed=filtered_count + 2) for points in line_points]
+    lines = [Line(np.array(window.points), window_height, gaps_allowed=filtered_count + 2) for window in windows]
 
     if len(stop_lines_y) == 0:
         return lines
@@ -236,6 +128,8 @@ def window_search(img: np.ndarray, window_count: int, pixels_per_window: int = 1
     # get the closest point for each solid line at the y of the stop lines
     closest_points = []
     for line in solid_lines:
+        if line.points.shape[0] == 0:
+            continue
         closest_point = line.points[np.argmin(np.abs(line.points[:, 1] - stop_lines_y))]
         closest_points.append(closest_point)
 
