@@ -9,6 +9,29 @@ from lane_assist.line_detection.window_search import window_search
 from src.utils.image import list_images
 
 
+def filter_lines(lines: list[Line], starting_point: int, ret_stoplines: bool = False) -> list[Line]:
+    """Get the lines between the solid lines closest to each side of the starting point."""
+    solid_lines = [line for line in lines if line.line_type != LineType.STOP]
+    i = 0
+    j = 0
+    while i < len(solid_lines):
+        # check if we are after the starting point
+        if solid_lines[i].points[0][0] >= starting_point and solid_lines[i].line_type == LineType.SOLID:
+            # back up until we find a solid line
+            j = i
+            while j > 0:
+                j -= 1
+                if lines[j].line_type == LineType.SOLID:
+                    break
+            break
+        i += 1
+
+    if ret_stoplines:
+        return solid_lines[j : i + 1] + [line for line in lines if line.line_type == LineType.STOP]
+
+    return solid_lines[j : i + 1]
+
+
 def get_lines(image: np.ndarray) -> list[Line]:
     """Get the lines in the image.
 
@@ -47,6 +70,7 @@ def main() -> None:
     for img in test_images:
         td_img = topdown(img)  # convert too topdown to draw the lines
         lines = get_lines(td_img)
+        lines = filter_lines(lines, 400)
 
         # draw the points on the topdown image
         for line in lines:
