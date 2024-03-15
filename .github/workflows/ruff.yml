@@ -1,6 +1,12 @@
 name: Ruff
 on:
+  # only run when ruff relevant files are changed.
+  # or when it it is a pull request to master
   push:
+    paths:
+      - '**.py'
+      - '.ruff.toml'
+      - '.github/workflows/ruff.yml'
   pull_request:
     branches:
     - master
