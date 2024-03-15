@@ -3,7 +3,7 @@ import numpy as np
 
 from common.config import Calibration as Config
 from lane_assist.image_manipulation.dynamic_calibrate.utils import corners_to_grid, find_largest_rectangle, \
-    euclidean_distance
+    euclidean_distance, adjust_perspective
 
 
 def get_board_shape() -> tuple[int, int]:
@@ -73,19 +73,25 @@ def get_max_distance(corners: np.ndarray, shape: tuple[int, int]) -> float:
     return max(dist_t, dist_b, dist_l, dist_r)
 
 
-def remove_perspective(corners: np.ndarray, shape: tuple[int, int], length: int) -> np.ndarray:
+def remove_perspective(
+        corners: np.ndarray,
+        shape: tuple[int, int],
+        length: int,
+        scale_factor: float = 1
+) -> np.ndarray:
     """Remove perspective from a set of corners.
 
     :param corners: The corners to remove perspective from.
     :param shape: The shape of the original image.
     :param length: The length of the squares of the ChArUco board.
+    :param scale_factor: The scale factor to apply to the corners.
     :return: The corners with perspective removed.
     """
     w, h = shape
     cx, cy = np.mean(corners, axis=0)
 
-    new_w = int(w * length)
-    new_h = int(h * length)
+    new_w = int(w * length * scale_factor)
+    new_h = int(h * length * scale_factor)
 
     new_corners = np.array([
         [cx - new_h / 2, cy + new_w / 2],
@@ -110,17 +116,31 @@ def calibrate_cameras(batch: np.ndarray) -> np.ndarray:
     all_corners = np.empty((len(batch), 4, 2), dtype=np.float32)
     all_shapes = np.empty((len(batch), 2), dtype=np.int32)
 
+    min_size = float("inf")
+    min_scale_factor = float("inf")
+
+    # Find the corners and shapes of the ChArUco boards.
     for i, image in enumerate(batch):
         all_corners[i], all_shapes[i] = find_corners(image, detector)
 
-    min_size = float("inf")
+    # Find the minimum size.
     for src_corners, shape in zip(all_corners, all_shapes):
         max_dist = get_max_distance(src_corners, shape)
         min_size = min(min_size, max_dist)
 
-    dst_matrices = np.empty((len(batch), 3, 3), dtype=np.float32)
+    # Find the minimum scale factor.
     for i, (src_corners, shape) in enumerate(zip(all_corners, all_shapes)):
         dst_corners = remove_perspective(src_corners, shape, min_size)
+        dst_matrix, _ = cv2.findHomography(src_corners, dst_corners)
+
+        _, new_w, new_h = adjust_perspective(dst_matrix, (batch[i].shape[0], batch[i].shape[1]))
+
+        min_scale_factor = min(min_scale_factor, Config.MAX_IMAGE_WIDTH / new_w, Config.MAX_IMAGE_HEIGHT / new_h)
+
+    # Calibrate the cameras.
+    dst_matrices = np.empty((len(batch), 3, 3), dtype=np.float32)
+    for i, (src_corners, shape) in enumerate(zip(all_corners, all_shapes)):
+        dst_corners = remove_perspective(src_corners, shape, min_size, min_scale_factor)
         dst_matrices[i] = cv2.findHomography(src_corners, dst_corners)[0]
 
     return dst_matrices

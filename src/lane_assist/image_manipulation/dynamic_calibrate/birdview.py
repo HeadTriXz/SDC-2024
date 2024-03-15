@@ -16,11 +16,6 @@ def warp_image(image: np.ndarray, matrix: np.ndarray) -> np.ndarray:
     """
     matrix, width, height = adjust_perspective(matrix, (image.shape[0], image.shape[1]))
 
-    # scale_factor = min(Config.MAX_IMAGE_WIDTH / width, Config.MAX_IMAGE_HEIGHT / height)
-    # matrix = scale_matrix(matrix, scale_factor)
-    # new_height = int(height * scale_factor)
-    # new_width = int(width * scale_factor)
-
     return cv2.warpPerspective(image, matrix, (width, height))
 
 
