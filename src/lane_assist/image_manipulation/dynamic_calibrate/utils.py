@@ -91,10 +91,7 @@ def adjust_perspective(matrix: np.ndarray, shape: tuple[int, int]) -> tuple[np.n
     new_w = int(max_x - min_x)
     new_h = int(max_y - min_y)
 
-    adjusted_matrix = np.array([[1, 0, -min_x if min_x < 0 else 0],
-                                [0, 1, -min_y if min_y < 0 else 0],
-                                [0, 0, 1]])
-
+    adjusted_matrix = np.array([[1, 0, -min_x], [0, 1, -min_y], [0, 0, 1]])
     adjusted_matrix = np.dot(adjusted_matrix, matrix)
 
     return adjusted_matrix, new_w, new_h
