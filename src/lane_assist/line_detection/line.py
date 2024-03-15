@@ -70,3 +70,7 @@ class Line:
             "SOLID" if self.line_type == LineType.SOLID else "DASHED" if self.line_type == LineType.DASHED else "STOP"
         )
         return f"Line(points={len(self.points)}, line_type={type_str})"
+
+    def as_definition(self) -> str:
+        """Get the line as a definition."""
+        return f"Line(np.array({self.points.tolist()}), line_type=LineType.{self.line_type.name})"
