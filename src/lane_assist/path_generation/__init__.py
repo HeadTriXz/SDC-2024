@@ -131,5 +131,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    generate_tests("../../../tests/lane_assist/line_generation/lines.py")
+    generate_tests("../../../tests/line_generation/lines.py")
     main()
