@@ -75,11 +75,10 @@ def basic_simulation():
 
         # calculate the angle to the target point. with rotation as the current rotation of the car
         # get the angle of speed vector
-        speed_angle = np.arctan2(speed[1], speed[0])
-        angle = np.arctan2(target_point[1] - pos[1], target_point[0] - pos[0]) - speed_angle
+        current_angle = np.arctan2(speed[1], speed[0])
+        control_variable = pid(x_distance_to_target)
 
-        # control_variable = pid(x_distance_to_target)
-        # angle += control_variable
+        angle = current_angle - control_variable
 
         if angle > max_angle_change_per_iteration:
             angle = max_angle_change_per_iteration
@@ -94,7 +93,7 @@ def basic_simulation():
         pos = (pos[0] + speed[0], pos[1] + speed[1])
         # print(pos, rotation)
         plt.plot(pos[0], pos[1], "ro")
-        # time.sleep(0.01)
+        time.sleep(1 / 60)
         # update the plot
     # draw line to target point
 
