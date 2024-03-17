@@ -1,6 +1,7 @@
 # ruff: noqa: ERA001
 import cv2
 import numpy as np
+from matplotlib import pyplot as plt
 
 from lane_assist.image_manipulation.top_down_transfrom import topdown
 from lane_assist.line_detection.line import Line, LineType
@@ -40,6 +41,9 @@ def get_lines(image: np.ndarray) -> list[Line]:
     """
     white = cv2.inRange(image, 200, 255)
     return window_search(white, 110)
+
+    # fit the lines
+
 
 
 def main() -> None:
