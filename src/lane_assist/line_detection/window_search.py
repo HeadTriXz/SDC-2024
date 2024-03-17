@@ -1,3 +1,6 @@
+from enum import IntEnum
+
+import cv2
 import numpy as np
 import scipy
 
@@ -8,7 +11,7 @@ LINE_WIDTH = 50
 ZEBRA_CROSSING_THRESHOLD = 20000
 FILTER_WIDTH = LINE_WIDTH * 4
 
-LINE_THRESHOLD = 5000
+LINE_THRESHOLD = 2500
 LINE_DECAY = 1
 
 
@@ -57,7 +60,6 @@ def window_search(img: np.ndarray, window_count: int, pixels_per_window: int = 1
     # create the windows
     window_height = img.shape[0] // window_count  # get the height of the windows based on the amount we want.
     windows = [Window(center, img.shape[0], window_width // 2) for center in merged_peaks]
-
     for _ in range(window_count):
         # check which windows overlap
         # time the window search
@@ -150,3 +152,77 @@ def window_search(img: np.ndarray, window_count: int, pixels_per_window: int = 1
     )
     lines.append(Line(points, window_height, LineType.STOP))
     return lines
+
+
+class Directions(IntEnum):
+    LEFT = 0
+    RIGHT = 1
+    UP = 2
+    DOWN = 3
+
+
+def get_directions(img: np.ndarray, position) -> list[Directions]:
+    directions = []
+
+    # check which directions there are pixels
+    if img[position[1], position[0] - 1] == 255:
+        directions.append(Directions.LEFT)
+    if img[position[1], position[0] + 1] == 255:
+        directions.append(Directions.RIGHT)
+    if img[position[1] - 1, position[0]] == 255:
+        directions.append(Directions.UP)
+    if img[position[1] + 1, position[0]] == 255:
+        directions.append(Directions.DOWN)
+    return directions
+
+
+def get_oposite_direction(direction: Directions) -> Directions:
+    if direction == Directions.LEFT:
+        return Directions.RIGHT
+    if direction == Directions.RIGHT:
+        return Directions.LEFT
+    if direction == Directions.UP:
+        return Directions.DOWN
+    if direction == Directions.DOWN:
+        return Directions.UP
+
+
+def is_line_end(directions, prev_direction) -> bool:
+    if len(directions) == 1 and prev_direction is not None and directions[0] == get_oposite_direction(prev_direction):
+        return True
+    return False
+
+
+def flood_fill_search(img: np.ndarray):
+    """Get the lines in the image using the flood fill algorithm.
+
+    This function will take an image and return the lines in the image.
+    the image should be stitched and not top down
+    """
+    # convert image to whitescale
+    white = cv2.inRange(img, 200, 255)
+
+    # start from the bottom left corner and move left until we find a white pixel
+    # this is the starting point of the line
+    start = (0, white.shape[0] - 1)
+    while white[start[1], start[0]] != 255:
+        start = (start[0] + 1, start[1])
+
+    lines = []
+    prev_direction = None
+    while True:
+        # get the directions of the current pixel
+        directions = get_directions(white, start)
+
+        # if there are no directions, something has gone wrong and we should stop
+        if len(directions) == 0:
+            break
+
+        # if there is only one direciton and it is the opoosite of the previous direction.
+        # we can assume that the line has ended
+        if is_line_end(directions, prev_direction):
+            break
+
+        # keep track of the previous direction
+        prev_direction = directions[0] if len(directions) == 1 else None
+
