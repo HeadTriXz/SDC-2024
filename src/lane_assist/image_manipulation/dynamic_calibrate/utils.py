@@ -72,12 +72,12 @@ def corners_to_grid(corners: np.ndarray, ids: np.ndarray, shape: tuple[int, int]
     return grid
 
 
-def adjust_perspective(matrix: np.ndarray, shape: tuple[int, int]) -> tuple[np.ndarray, int, int]:
-    """Adjust the perspective matrix to fit within the new image.
+def get_transformed_corners(matrix: np.ndarray, shape: tuple[int, int]) -> tuple[int, int, int, int]:
+    """Get the transformed corners of the image.
 
     :param matrix: The perspective matrix.
-    :param shape: The shape of the old image.
-    :return: The adjusted perspective matrix and the new shape of the image.
+    :param shape: The shape of the image.
+    :return: The transformed corners of the image.
     """
     h, w = shape
     src_points = np.array([[0, 0], [w, 0], [w, h], [0, h]], dtype=np.float32).reshape(-1, 1, 2)
@@ -87,6 +87,33 @@ def adjust_perspective(matrix: np.ndarray, shape: tuple[int, int]) -> tuple[np.n
     min_y = np.amin(dst_points[:, 0, 1])
     max_x = np.amax(dst_points[:, 0, 0])
     max_y = np.amax(dst_points[:, 0, 1])
+    return int(min_x), int(min_y), int(max_x), int(max_y)
+
+
+def get_scale_factor(matrix: np.ndarray, shape: tuple[int, int], max_height: int, max_width: int) -> float:
+    """Get the scale factor for the perspective matrix.
+
+    :param matrix: The perspective matrix.
+    :param shape: The shape of the image.
+    :param max_height: The maximum height of the new image.
+    :param max_width: The maximum width of the new image.
+    :return: The scale factor for the perspective matrix.
+    """
+    min_x, min_y, max_x, max_y = get_transformed_corners(matrix, shape)
+    new_w = int(max_x - min_x)
+    new_h = int(max_y - min_y)
+
+    return min(max_width / new_w, max_height / new_h)
+
+
+def adjust_perspective(matrix: np.ndarray, shape: tuple[int, int]) -> tuple[np.ndarray, int, int]:
+    """Adjust the perspective matrix to fit within the new image.
+
+    :param matrix: The perspective matrix.
+    :param shape: The shape of the old image.
+    :return: The adjusted perspective matrix and the new shape of the image.
+    """
+    min_x, min_y, max_x, max_y = get_transformed_corners(matrix, shape)
 
     new_w = int(max_x - min_x)
     new_h = int(max_y - min_y)
