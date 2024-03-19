@@ -108,7 +108,6 @@ class BasicControllerDriving:
 
     def __set_steering(self, _event: EventType, _button: ControllerButton, val: float) -> None:
         if abs(val) > 0.1:
-            print(val)
             self.can_controller.set_steering(val)
             # Cancel the existing timer if it exists
             if self.__steering_timer is not None:
@@ -119,12 +118,8 @@ class BasicControllerDriving:
 
     def __enable_assisted_steering(self) -> None:
         self.__steering_timer = None
-        print("Timer stop")
 
     def receive_lane_assist_value(self, lane_assist_value: float) -> None:
         """Receive the steering value from the lane assist and adjust steering accordingly."""
         if self.__steering_timer is None:
-            print("lane assist, value:")
-            print(lane_assist_value)
             self.can_controller.set_steering(lane_assist_value)
-            
