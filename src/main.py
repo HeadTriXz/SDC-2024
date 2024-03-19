@@ -3,29 +3,46 @@ from matplotlib import pyplot as plt
 
 from lane_assist.image_manipulation.image_stitch import adjust_gamma, stitch_images
 from lane_assist.image_manipulation.top_down_transfrom import topdown
-from lane_assist.line_detection import get_lines
+from lane_assist.line_detection import get_lines, filter_lines
+from lane_assist.path_generation import generate_driving_path
 
 if __name__ == "__main__":
+    # load cameras
+    cam1 = cv2.VideoCapture(0)
+    cam2 = cv2.VideoCapture(1)
+    cam3 = cv2.VideoCapture(2)
+
+
     # load images
-    center_img = cv2.imread("../resources/images/straight/center.jpg")
-    left_img = cv2.imread("../resources/images/straight/left.jpg")
-    right_img = cv2.imread("../resources/images/straight/right.jpg")
+    while True:
+        # maken fotos
+        ret1, frame1 = cam1.read()
+        ret2, frame2 = cam2.read()
+        ret3, frame3 = cam3.read()
 
-    # adjust the gamma of the images so the bright unstitched_ are giving less false positives
-    left_img = adjust_gamma(left_img, 0.62)
-    right_img = adjust_gamma(right_img, 0.62)
-    stitched = stitch_images(left_img, center_img, right_img)
-    gs = cv2.cvtColor(stitched, cv2.COLOR_BGR2GRAY)
-    td = topdown(gs)
+        # convert to grayscale
+        frame1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
+        frame2 = cv2.cvtColor(frame2, cv2.COLOR_BGR2GRAY)
+        frame3 = cv2.cvtColor(frame3, cv2.COLOR_BGR2GRAY)
 
-    plt.imshow(td, cmap="gray")
+        # adjust gamma
+        frame1 = adjust_gamma(frame1, 0.6)
+        frame2 = adjust_gamma(frame2, 0.6)
+        frame3 = adjust_gamma(frame3, 0.6)
 
-    # get the lines of the image
-    lines = get_lines(td)
-    print(lines)  # noqa: T201
+        # stitch/topdown
+        stitched = stitch_images(frame1, frame2, frame3)
+        topdown_image = topdown(stitched)
 
-    for line in lines:
-        for point in line.points:
-            plot = plt.plot(point[0], point[1], "ro")
+        # get lines
+        lines = get_lines(topdown_image)
+        lines = filter_lines(lines, 400)
+        # generate driving path
+        path = generate_driving_path(lines, 1)
 
-    plt.show()
+        # get steering angle
+        steering_angle = get_steering_angle(path, 400)
+
+
+        # follow path
+            # set steering
