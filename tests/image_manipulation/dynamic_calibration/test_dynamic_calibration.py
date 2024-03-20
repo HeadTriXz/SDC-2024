@@ -34,14 +34,13 @@ def get_stitched_image(calibrator: CameraCalibrator, images: list[np.ndarray]) -
     stitched = np.zeros(calibrator.shape, dtype=np.uint8)
     stitched = stitch_images(stitched, warped_left, calibrator.offsets[0])
     stitched = stitch_images(stitched, warped_right, calibrator.offsets[2])
-    stitched = stitch_images(stitched, warped_center, calibrator.offsets[1])
-
-    return stitched
+    return stitch_images(stitched, warped_center, calibrator.offsets[1])
 
 
 @pytest.mark.benchmark(group="dynamic_calibration", min_rounds=5)
 @pytest.mark.skipif("BENCHMARK" not in os.environ, reason="Skip benchmarks if not explicitly requested")
 def test_dynamic_calibration_benchmark(benchmark: BenchmarkFixture) -> None:
+    """Run a benchmark of the complete dynamic calibration system."""
     filenames = ["left.png", "center.png", "right.png"]
     images = [cv2.imread(get_path(f"images/{img}")) for img in filenames]
     images = [cv2.resize(img, (1280, 720))[ROI_CROP_TOP:] for img in images]
