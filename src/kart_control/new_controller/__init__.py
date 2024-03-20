@@ -1,12 +1,47 @@
 import math
 from enum import Enum
 from threading import Thread, Timer
+from typing import Any
 
 import inputs
 from inputs import get_gamepad
 
-MAX_TRIG_VAL = math.pow(2, 8)
+MAX_TRIG_VAL = math.pow(2, 10)
 MAX_JOY_VAL = math.pow(2, 15)
+
+
+def tuple_equals(a: tuple, b: tuple) -> bool:
+    """Checks if two tuples are equal based on their hash code.
+
+    :param a: The first tuple to compare.
+    :param b: The second tuple to compare with.
+    :return: Whether two tuples are equal.
+    """
+    return hash(a) == hash(b)
+
+
+def tuple_in_dict(t: tuple, d: dict) -> bool:
+    """Check if a tuple is a key in a dictionary.
+
+    :param t: The tuple to check for.
+    :param d: The dictionary to check the keys for.
+    :return: Whether the tuple is a key in the dictionary.
+    """
+    return any([tuple_equals(t, key) for key in d.keys()])
+
+
+def tuple_key_to_value(t: tuple, d: dict) -> Any:
+    """Get a value from a dictionary based on a tuple key.
+
+    :param t: The tuple to check for.
+    :param d: The dictionary to get the value from.
+    :return: The value, if any.
+    """
+    for key, value in d.items():
+        if tuple_equals(t, key):
+            return value
+
+    return None
 
 
 class ControllerButton(Enum):
@@ -105,8 +140,8 @@ class Controller:
                         self._handle_button_event(event)
                     elif event.ev_type == "Absolute":
                         self._handle_axis_event(event)
-            except Exception:
-                pass
+            except Exception as e:
+                print(e)
 
     def vibrate(self, duration: int = 1000) -> None:
         """Vibrate the controller.
@@ -140,11 +175,12 @@ class Controller:
             raise ValueError(f"Invalid button or axis: {button_or_axis}")
 
         key = (event_type, button_or_axis)
-        if key not in self._listeners:
+        if not tuple_in_dict(key, self._listeners):
             self._listeners[key] = []
-        self._listeners[key].append(callback)
 
-    def _handle_button_event(self, event: EventType) -> None:
+        tuple_key_to_value(key, self._listeners).append(callback)
+
+    def _handle_button_event(self, event: inputs.InputEvent) -> None:
         button = ControllerButton(event.code)
 
         if event.state:
@@ -158,14 +194,14 @@ class Controller:
             self._cancel_long_press_timer(button)
         self._last_buttons[button] = event.state
 
-    def _handle_axis_event(self, event: EventType) -> None:
+    def _handle_axis_event(self, event: inputs.InputEvent) -> None:
         axis = ControllerAxis(event.code)
 
         if axis in (
-            ControllerAxis.LS_X,
-            ControllerAxis.LS_Y,
-            ControllerAxis.RS_X,
-            ControllerAxis.RS_Y,
+                ControllerAxis.LS_X,
+                ControllerAxis.LS_Y,
+                ControllerAxis.RS_X,
+                ControllerAxis.RS_Y,
         ):
             value = event.state / MAX_JOY_VAL
         elif axis not in (ControllerAxis.DPAD_X, ControllerAxis.DPAD_Y):
@@ -176,19 +212,18 @@ class Controller:
         self._check_events(EventType.AXIS_CHANGED, axis, value)
 
     def _check_events(
-        self, event_type: EventType, data: ControllerButton | ControllerAxis, value: float = None
+            self, event_type: EventType, data: ControllerButton | ControllerAxis, value: float = None
     ) -> None:
         key = (event_type, data)
-        if key not in self._listeners:
+        if not tuple_in_dict(key, self._listeners):
             return
 
-        # an axis changed needs the new value of the axis. the events contain the data in its event
         if event_type == EventType.AXIS_CHANGED:
-            for callback in self._listeners[key]:
+            for callback in tuple_key_to_value(key, self._listeners):
                 callback(event_type, data, value)
-
-        for callback in self._listeners[key]:
-            callback(event_type, data)
+        else:
+            for callback in tuple_key_to_value(key, self._listeners):
+                callback(event_type, data)
 
     def _start_long_press_timer(self, button: ControllerButton, timeout: float = 1.5) -> None:
         def timer_callback() -> None:
