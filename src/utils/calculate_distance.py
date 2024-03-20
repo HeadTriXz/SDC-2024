@@ -1,10 +1,9 @@
 import logging
-import matplotlib.pyplot as plt
-import numpy as np
-
-from scipy.optimize import curve_fit
 from typing import TypeVar
 
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import curve_fit
 
 """Calibrated parameters"""
 a0 = 1.015988
@@ -16,14 +15,18 @@ T = TypeVar("T", np.ndarray, float)
 POPT = (float, float, float, float)
 
 """Functions"""
+
+
 def formula(x: T, a: float, b: float, c: float, d: float) -> T:
     """The formula to calculate the distance from the y-value."""
     return a / (x - c) ** b + d
+
 
 def recalibrate_parameters(x: np.ndarray, y: np.ndarray) -> POPT:
     """Recalibrate the parameters of the formula to fit the given data."""
     fit = curve_fit(formula, x, y, p0=[a0, b0, c0, d0])
     return fit[0]
+
 
 def plot_data(x: np.ndarray, y: np.ndarray, popt: POPT) -> None:
     """Plot the given data and the fitted line."""
@@ -35,6 +38,7 @@ def plot_data(x: np.ndarray, y: np.ndarray, popt: POPT) -> None:
 
     plt.show()
 
+
 def y_to_meters(y: int, height: int) -> float:
     """Convert a y-value to meters."""
     rel_y = y / height
@@ -43,10 +47,12 @@ def y_to_meters(y: int, height: int) -> float:
 
     return formula(rel_y, a0, b0, c0, d0)
 
+
 def meters_to_y(meters: float, height: int) -> int:
     """Convert meters to a y-value."""
-    rel_y = ((a0 / (meters - d0)) ** (1 / b0) + c0)
+    rel_y = (a0 / (meters - d0)) ** (1 / b0) + c0
     return int(round(rel_y * height))
+
 
 if __name__ == "__main__":
     X = np.array([1028, 840, 733, 621, 561, 523, 499, 481, 468, 457, 449, 443]) / 1080

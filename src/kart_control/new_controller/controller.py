@@ -105,37 +105,35 @@ class Controller:
                 elif event.ev_type == "Absolute":
                     self._handle_axis_event(event)
 
-    def vibrate(self, duration: int=1000) -> None:
+    def vibrate(self, duration: int = 1000) -> None:
         """Vibrate the controller.
-        
+
         Parameters
         ----------
         :param duration int: the duration to vibrate in miliseconds. default = 1000
-        
+
         """
         try:
             self.gamepad.set_vibration(1, 1, duration)
         except Exception:  # noqa: BLE001
-            print("Failed to vibrate")   # noqa: T201
+            print("Failed to vibrate")  # noqa: T201
 
-    def add_listener(self, event_type: EventType, button_or_axis: ControllerButton | ControllerAxis, 
-                        callback: callable) -> None:
+    def add_listener(
+        self, event_type: EventType, button_or_axis: ControllerButton | ControllerAxis, callback: callable
+    ) -> None:
         """Add a listener to be executed on that event.
-        
+
         Parameters
         ----------
         :param event_type EventType: the type of event to call it on.
         :param button_or_axis ControllerButton | ControllerAxis: the axis or button that the event needs to be for.
         :param callback callable: the callback to call when the event occurs
-        
+
         """
         if event_type not in EventType:
             raise ValueError(f"Invalid event type: {event_type}")
 
-        if (
-            button_or_axis not in ControllerButton
-            and button_or_axis not in ControllerAxis
-        ):
+        if button_or_axis not in ControllerButton and button_or_axis not in ControllerAxis:
             raise ValueError(f"Invalid button or axis: {button_or_axis}")
         key = (event_type, button_or_axis)
         if key not in self._listeners:
@@ -173,7 +171,9 @@ class Controller:
         self._axes[axis] = value
         self._check_events(EventType.AXIS_CHANGED, axis, value)
 
-    def _check_events(self, event_type: EventType, data: ControllerButton | ControllerAxis, value: float=None) -> None:
+    def _check_events(
+        self, event_type: EventType, data: ControllerButton | ControllerAxis, value: float = None
+    ) -> None:
         key = (event_type, data)
         if key not in self._listeners:
             return
@@ -186,7 +186,7 @@ class Controller:
         for callback in self._listeners[key]:
             callback(event_type, data)
 
-    def _start_long_press_timer(self, button: ControllerButton, timeout: float=1.5) -> None:
+    def _start_long_press_timer(self, button: ControllerButton, timeout: float = 1.5) -> None:
         def timer_callback() -> None:
             if self._buttons[button]:
                 self._check_events(EventType.LONG_PRESS, button)
