@@ -98,12 +98,15 @@ class Controller:
 
     def __start(self) -> None:
         while True:
-            events = get_gamepad()
-            for event in events:
-                if event.ev_type == "Key":
-                    self._handle_button_event(event)
-                elif event.ev_type == "Absolute":
-                    self._handle_axis_event(event)
+            try:
+                events = get_gamepad()
+                for event in events:
+                    if event.ev_type == "Key":
+                        self._handle_button_event(event)
+                    elif event.ev_type == "Absolute":
+                        self._handle_axis_event(event)
+            except Exception:
+                pass
 
     def vibrate(self, duration: int = 1000) -> None:
         """Vibrate the controller.
@@ -130,11 +133,12 @@ class Controller:
         :param callback callable: the callback to call when the event occurs
 
         """
-        if event_type not in EventType:
+        if event_type.value not in EventType:
             raise ValueError(f"Invalid event type: {event_type}")
 
-        if button_or_axis not in ControllerButton and button_or_axis not in ControllerAxis:
+        if button_or_axis.value not in ControllerButton and button_or_axis.value not in ControllerAxis:
             raise ValueError(f"Invalid button or axis: {button_or_axis}")
+
         key = (event_type, button_or_axis)
         if key not in self._listeners:
             self._listeners[key] = []
