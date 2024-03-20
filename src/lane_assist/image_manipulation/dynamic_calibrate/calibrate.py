@@ -8,8 +8,13 @@ from common.config import Calibration as Config
 from lane_assist.image_manipulation.dynamic_calibrate.utils.charuco import find_corners
 from lane_assist.image_manipulation.dynamic_calibrate.utils.corners import get_dst_corners, get_transformed_corners
 from lane_assist.image_manipulation.dynamic_calibrate.utils.grid import get_src_grid, get_dst_grid, crop_grid
-from lane_assist.image_manipulation.dynamic_calibrate.utils.other import get_charuco_detector, get_slope, \
-    get_scale_factor, get_transformed_shape, find_offsets
+from lane_assist.image_manipulation.dynamic_calibrate.utils.other import (
+    get_charuco_detector,
+    get_slope,
+    get_scale_factor,
+    get_transformed_shape,
+    find_offsets
+)
 
 
 class CameraCalibrator:
@@ -62,7 +67,9 @@ class CameraCalibrator:
             all_img_points.append(img_points)
 
         ref_shape = self.images[self.ref_idx].shape[:2]
-        retval, self.camera_matrix, self.dist_coeffs, _, _ = cv2.calibrateCamera(all_obj_points, all_img_points, ref_shape, None, None)
+        retval, self.camera_matrix, self.dist_coeffs, _, _ = cv2.calibrateCamera(
+            all_obj_points, all_img_points, ref_shape, None, None
+        )
 
     def calibrate_matrices(self) -> None:
         """Calibrate the matrices."""
