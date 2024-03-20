@@ -5,16 +5,18 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 from common.config import Calibration as Config
-from lane_assist.image_manipulation.dynamic_calibrate.utils import get_scale_factor, get_charuco_detector, \
-    find_corners, get_slope, get_transformed_shape, find_offsets, get_src_grid, get_dst_grid
+from lane_assist.image_manipulation.dynamic_calibrate.utils.charuco import find_corners
+from lane_assist.image_manipulation.dynamic_calibrate.utils.corners import get_dst_corners, get_transformed_corners
+from lane_assist.image_manipulation.dynamic_calibrate.utils.grid import get_src_grid, get_dst_grid, crop_grid
+from lane_assist.image_manipulation.dynamic_calibrate.utils.other import get_charuco_detector, get_slope, \
+    get_scale_factor, get_transformed_shape, find_offsets
 
 
 class CameraCalibrator:
     """A class for calibrating multiple cameras."""
 
-    image_left: Optional[np.ndarray]
-    image_center: Optional[np.ndarray]
-    image_right: Optional[np.ndarray]
+    images: Optional[list[np.ndarray]]
+    ref_idx: int
 
     camera_matrix: Optional[np.ndarray]
     dist_coeffs: Optional[np.ndarray]
@@ -24,24 +26,14 @@ class CameraCalibrator:
 
     _grids: np.ndarray
 
-    def __init__(self, left: np.ndarray = None, center: np.ndarray = None, right: np.ndarray = None) -> None:
+    def __init__(self, images: list[np.ndarray] = None, ref_idx: int = 1) -> None:
         """Initialize the camera calibrator.
 
-        :param left: The image from the left camera.
-        :param center: The image from the center camera.
-        :param right: The image from the right camera.
+        :param images: The images to calibrate.
+        :param ref_idx: The index of the reference image.
         """
-        self.image_left = left
-        self.image_center = center
-        self.image_right = right
-
-    @property
-    def images(self) -> list[np.ndarray]:
-        """Return the images."""
-        if self.image_left is None or self.image_center is None or self.image_right is None:
-            raise ValueError("The images have not been set")
-
-        return [self.image_left, self.image_center, self.image_right]
+        self.images = images
+        self.ref_idx = ref_idx
 
     def calibrate(self) -> None:
         """Calibrate the cameras."""
@@ -51,6 +43,9 @@ class CameraCalibrator:
 
     def calibrate_cameras(self) -> None:
         """Calibrate the cameras."""
+        if self.images is None:
+            raise ValueError("No images to calibrate")
+
         detector = get_charuco_detector()
         board = detector.getBoard()
 
@@ -66,76 +61,70 @@ class CameraCalibrator:
             all_obj_points.append(obj_points)
             all_img_points.append(img_points)
 
-        retval, self.camera_matrix, self.dist_coeffs, _, _ = cv2.calibrateCamera(all_obj_points, all_img_points, self.image_center.shape, None, None)
+        ref_shape = self.images[self.ref_idx].shape[:2]
+        retval, self.camera_matrix, self.dist_coeffs, _, _ = cv2.calibrateCamera(all_obj_points, all_img_points, ref_shape, None, None)
 
     def calibrate_matrices(self) -> None:
         """Calibrate the matrices."""
+        if self.images is None:
+            raise ValueError("No images to calibrate")
+
         detector = get_charuco_detector()
         src_grids = [get_src_grid(detector, image) for image in self.images]
         all_src_corners, all_shapes = zip(*[find_corners(grid) for grid in src_grids])
 
-        h_change, v_change = get_slope(all_src_corners[1][0], all_src_corners[1][3], all_shapes[1][1])
-        base_dst_grid = get_dst_grid(h_change, v_change)
-
         # Calculate the scale factor
-        center_dst_grid = base_dst_grid.copy()
-        center_dst_grid[src_grids[1][:, :, 0] == 0] = 0
+        ref_src_corners = all_src_corners[self.ref_idx]
+        h_change, v_change = get_slope(ref_src_corners[0], ref_src_corners[3], all_shapes[self.ref_idx][1])
 
-        center_dst_corners, _ = find_corners(center_dst_grid)
-        center_matrix, _ = cv2.findHomography(all_src_corners[1], center_dst_corners)
+        ref_dst_grid = get_dst_grid(h_change, v_change)
+        ref_dst_grid[np.all(src_grids[self.ref_idx] == 0, axis=2)] = 0
 
-        h, w = self.image_center.shape[:2]
-        scale_factor = get_scale_factor(center_matrix, (h, w), Config.MAX_IMAGE_HEIGHT, Config.MAX_IMAGE_WIDTH)
-        h_change *= scale_factor
-        v_change *= scale_factor
+        ref_dst_corners, _ = find_corners(ref_dst_grid)
+        ref_matrix, _ = cv2.findHomography(ref_src_corners, ref_dst_corners)
 
-        # Scale the destination grids
-        base_dst_grid = get_dst_grid(h_change, v_change)
-        dst_grids = np.zeros((len(src_grids), *base_dst_grid.shape), dtype=np.float32)
-        for i, src_grid in enumerate(src_grids):
-            dst_grids[i] = base_dst_grid.copy()
-            dst_grids[i, np.all(src_grid == 0, axis=2)] = 0
+        h, w = self.images[self.ref_idx].shape[:2]
+        scale_factor = get_scale_factor(ref_matrix, (h, w), Config.MAX_IMAGE_HEIGHT, Config.MAX_IMAGE_WIDTH)
 
-        all_dst_corners, _ = zip(*[find_corners(grid) for grid in dst_grids])
-
-        # START DEBUGGING: Draw the grids
-        for image, src_grid, dst_grid, src_corners, dst_corners in zip(self.images, src_grids, dst_grids, all_src_corners, all_dst_corners):
-            image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
-            for i, point in enumerate(dst_grid.reshape(-1, 2).astype(int)):
-                if point[0] == 0 and point[1] == 0:
-                    continue
-
-                cv2.circle(image, tuple(point), 5, (0, 255, 0), -1)
-                cv2.putText(image, str(i), tuple(point), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-
-            for i, point in enumerate(src_grid.reshape(-1, 2).astype(int)):
-                if point[0] == 0 and point[1] == 0:
-                    continue
-
-                cv2.circle(image, tuple(point), 5, (0, 0, 255), -1)
-                cv2.putText(image, str(i), tuple(point), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-
-            for i, point in enumerate(src_corners.astype(int)):
-                cv2.circle(image, tuple(point), 5, (255, 0, 0), -1)
-                cv2.putText(image, str(i), tuple(point), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
-
-            for i, point in enumerate(dst_corners.astype(int)):
-                cv2.circle(image, tuple(point), 5, (255, 0, 0), -1)
-                cv2.putText(image, str(i), tuple(point), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
-        # END DEBUGGING
-
-        self._grids = dst_grids
+        # Calculate the perspective matrices.
         self.matrices = np.zeros((len(self.images), 3, 3), dtype=np.float32)
-        for i, (src_corners, dst_corners) in enumerate(zip(all_src_corners, all_dst_corners)):
+        for i, (src_corners, shape) in enumerate(zip(all_src_corners, all_shapes)):
+            dst_corners = get_dst_corners(src_corners, h_change, v_change, shape, scale_factor)
             self.matrices[i] = cv2.findHomography(src_corners, dst_corners)[0]
+
+        # Calculate the destination points of the ChArUco board.
+        self._grids = np.zeros((len(self.images), *ref_dst_grid.shape), dtype=np.float32)
+        for i, (image, matrix, src_grid) in enumerate(zip(self.images, self.matrices, src_grids)):
+            dst_grid = cv2.perspectiveTransform(src_grid.reshape(-1, 1, 2), matrix).reshape(src_grid.shape)
+
+            h, w = image.shape[:2]
+            min_x, min_y = get_transformed_corners(matrix, (h, w))[:2]
+            dst_grid -= [min_x, min_y]
+
+            dst_grid[np.all(src_grid == 0, axis=2)] = 0
+            self._grids[i] = dst_grid
 
     def calibrate_offsets(self) -> None:
         """Calibrate the offsets."""
+        if self.images is None:
+            raise ValueError("No images to calibrate")
+
         if self.matrices is None or self._grids is None:
             raise ValueError("The cameras have not been calibrated")
 
-        shapes = np.array([get_transformed_shape(matrix, image.shape) for matrix, image in zip(self.matrices, self.images)])
-        self.offsets, width, height = find_offsets(self._grids, shapes)
+        h, w = self.images[self.ref_idx].shape[:2]
+        ref_shape, _ = get_transformed_shape(self.matrices[self.ref_idx], (h, w))
+
+        shapes = np.zeros((len(self.images), 2), dtype=np.int32)
+        for i, (matrix, image) in enumerate(zip(self.matrices, self.images)):
+            if i == self.ref_idx:
+                shapes[i] = ref_shape
+                continue
+
+            shapes[i], cropped = get_transformed_shape(matrix, image.shape[:2], ref_shape[0])
+            self._grids[i] = crop_grid(self._grids[i], cropped)
+
+        self.offsets, width, height = find_offsets(self._grids, shapes, self.ref_idx)
         self.shape = (height, width)
 
     def save(self, save_dir: Path | str) -> None:
