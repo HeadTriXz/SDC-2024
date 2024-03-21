@@ -81,7 +81,9 @@ class VideoStream:
     def start(self) -> None:
         """Starts the video stream."""
         self.stopped = False
-        self.__thread.start()
+
+        if not self.__thread.is_alive():
+            self.__thread.start()
 
     def update(self) -> None:
         """Reads frames from the video stream."""
