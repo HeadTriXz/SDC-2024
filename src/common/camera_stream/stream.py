@@ -1,8 +1,9 @@
+from threading import Thread
+
 import cv2
 import numpy as np
 
 from common.constants import CameraFramerate, CameraResolution
-from threading import Thread
 
 
 class VideoStream:
@@ -28,10 +29,10 @@ class VideoStream:
     __thread: Thread
 
     def __new__(
-            cls,
-            camera_id: int,
-            resolution: CameraResolution = CameraResolution.HD,   # noqa: ARG003
-            frame_rate: CameraFramerate = CameraFramerate.FPS_60  # noqa: ARG003
+        cls,
+        camera_id: int,
+        resolution: CameraResolution = CameraResolution.HD,  # noqa: ARG003
+        frame_rate: CameraFramerate = CameraFramerate.FPS_60,  # noqa: ARG003
     ) -> "VideoStream":
         """Creates a new instance of the video stream.
 
@@ -47,10 +48,10 @@ class VideoStream:
         return cls.__instances[camera_id]
 
     def __init__(
-            self,
-            camera_id: int,
-            resolution: CameraResolution = CameraResolution.HD,
-            frame_rate: CameraFramerate = CameraFramerate.FPS_60
+        self,
+        camera_id: int,
+        resolution: CameraResolution = CameraResolution.HD,
+        frame_rate: CameraFramerate = CameraFramerate.FPS_60,
     ) -> None:
         """Initializes the video stream.
 
@@ -80,6 +81,9 @@ class VideoStream:
 
     def start(self) -> None:
         """Starts the video stream."""
+        if self.__thread.is_alive():
+            return
+
         self.stopped = False
         self.__thread.start()
 

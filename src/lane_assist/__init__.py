@@ -4,6 +4,7 @@ from threading import Thread
 import cv2
 
 from common.camera_stream.stream import VideoStream
+from common.constants import Gear
 from globals import GLOBALS
 from kart_control.can_controller import CANController
 from lane_assist.image_manipulation.image_stitch import adjust_gamma, stitch_images
@@ -36,7 +37,7 @@ def lane_assist(
 
     """
     thread = threading.Thread(
-        target=lane_assist, args=(left_cam, center_cam, right_cam, line_following, can_controller), daemon=True
+        target=__lane_assist, args=(left_cam, center_cam, right_cam, line_following, can_controller), daemon=True
     )
     thread.start()
 
@@ -52,6 +53,7 @@ def __lane_assist(
 ) -> None:
     while left_cam.has_next() and center_cam.has_next() and right_cam.has_next():
         # take pictures from the cameras
+        can_controller.set_throttle(GLOBALS["SET_SPEED"], Gear.DRIVE)
 
         left_image = left_cam.next()
         center_image = center_cam.next()
@@ -63,7 +65,7 @@ def __lane_assist(
         right_image = cv2.cvtColor(right_image, cv2.COLOR_BGR2GRAY)
 
         # adjust the gamma of the images
-        if GLOBALS["GAMMA"]["adjust_gamma"]:
+        if GLOBALS["GAMMA"]["ADJUST"]:
             left_image = adjust_gamma(left_image, GLOBALS["GAMMA"]["LEFT"])
             center_image = adjust_gamma(center_image, GLOBALS["GAMMA"]["CENTER"])
             right_image = adjust_gamma(right_image, GLOBALS["GAMMA"]["RIGHT"])
@@ -75,9 +77,16 @@ def __lane_assist(
         # get the lines in the image
         lines = get_lines(topdown_image)
         lines = filter_lines(lines, topdown_image.shape[1] // 2)
+        if len(lines) < 2:
+            continue
 
         # get the path to drive on.
         path = generate_driving_path(lines, GLOBALS["REQUESTED_LANE"])
         # follow the path
-        steering_percent = line_following.get_steering_fraction(path, GLOBALS["CAR_POSITION"])
+        steering_percent = line_following.get_steering_fraction(path, GLOBALS["REQUESTED_LANE"])
         can_controller.set_steering(steering_percent)
+
+    print("Done")
+    can_controller.set_brake(100)
+    can_controller.set_throttle(0, Gear.NEUTRAL)
+    can_controller.set_steering(0)

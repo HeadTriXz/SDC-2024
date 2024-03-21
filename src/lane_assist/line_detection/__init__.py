@@ -3,11 +3,12 @@ import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 
+from globals import GLOBALS
 from lane_assist.image_manipulation.top_down_transfrom import topdown
 from lane_assist.line_detection.line import Line, LineType
 from lane_assist.line_detection.window import Window
 from lane_assist.line_detection.window_search import window_search
-from src.utils.image import list_images
+from utils.image import list_images
 
 
 def filter_lines(lines: list[Line], starting_point: int, ret_stoplines: bool = False) -> list[Line]:
@@ -39,7 +40,7 @@ def get_lines(image: np.ndarray) -> list[Line]:
     This function will take an image and return the lines in the image.
     the image should be stitched and not top down
     """
-    white = cv2.inRange(image, 200, 255)
+    white = cv2.inRange(image, GLOBALS["WHITE"]["MIN"], GLOBALS["WHITE"]["MAX"])
     return window_search(white, 110)
 
     # fit the lines

@@ -136,8 +136,6 @@ def window_search(img: np.ndarray, window_count: int, pixels_per_window: int = 1
         if len(window.points) > 5
     ]
 
-    print(lines)
-
     if len(stop_lines_y) == 0:
         return lines
 

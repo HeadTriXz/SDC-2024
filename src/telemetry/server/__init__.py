@@ -41,9 +41,9 @@ async def read_pid(request: Request):
 def update_pid(kp: float = Form(...), ki: float = Form(...), kd: float = Form(...)):
     """Update the pid values."""
     if _line_follower is not None:
-        _line_follower.pid.kp = kp
-        _line_follower.pid.ki = ki
-        _line_follower.pid.kd = kd
+        _line_follower.pid.Kp = kp
+        _line_follower.pid.Ki = ki
+        _line_follower.pid.Kd = kd
 
     # redirect to the home page
     return Response(status_code=303, headers={"Location": "/"})
@@ -111,6 +111,20 @@ def set_gamma(
         "CENTER": center,
         "RIGHT": right,
         "ADJUST": gamma,
+    }
+    return Response(status_code=303, headers={"Location": "/"})
+
+
+@app.get("/white")
+def get_white() -> Any:
+    return GLOBALS["WHITE"]
+
+
+@app.post("/white")
+def set_white(min: int = Form(...), max: int = Form(...)) -> Any:
+    GLOBALS["WHITE"] = {
+        "MIN": min,
+        "MAX": max,
     }
     return Response(status_code=303, headers={"Location": "/"})
 

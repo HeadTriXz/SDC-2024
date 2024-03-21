@@ -127,9 +127,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-<<<<<<< HEAD
-    generate_tests("../../../tests/line_generation/lines.py")
-=======
     # generate_tests("../../../tests/lane_assist/line_generation/lines.py")
->>>>>>> d4c644c (first version. just steer towards the line)
     main()

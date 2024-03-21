@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from src.utils.image import cut_image
+from utils.image import cut_image
 
 pts = np.array([[55, 900], [1841, 253], [2067, 253], [3861, 900]], dtype=np.float32)
 ipm_pts = np.array([[780, 450], [800, 1100], [600, 1100], [620, 450]], dtype=np.float32)

@@ -13,4 +13,8 @@ GLOBALS = {
         "LINE_THRESHOLD": 2_500,
         "PIXELS_IN_WINDOW": 1,
     },
+    "WHITE": {
+        "MIN": 200,
+        "MAX": 255,
+    },
 }

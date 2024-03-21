@@ -1,4 +1,5 @@
 import threading
+import time
 from enum import IntEnum
 
 import can
