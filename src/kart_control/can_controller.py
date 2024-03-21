@@ -49,7 +49,7 @@ class CANController:
 
         self.bus.send(message)
 
-    def set_steering(self, angle: int) -> None:
+    def set_steering(self, angle: float) -> None:
         """Set the angle of the steering wheel.
 
         :param angle: The angle of the steering wheel.

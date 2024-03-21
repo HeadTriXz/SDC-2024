@@ -2,8 +2,8 @@ import sys
 from os import system
 
 import can
-import cv2
 
+from common.camera_stream.stream import VideoStream
 from kart_control.can_controller import CANController
 from lane_assist import LineFollowing, lane_assist
 from telemetry import start as start_telemetry
@@ -27,9 +27,14 @@ def get_can_real_or_virtual() -> can.Bus:
 
 if __name__ == "__main__":
     # load cameras
-    cam1 = cv2.VideoCapture(0)
-    cam2 = cv2.VideoCapture(1)
-    cam3 = cv2.VideoCapture(2)
+    cam1 = VideoStream(0)
+    cam2 = VideoStream(4)
+    cam3 = VideoStream(2)
+
+    cam1.start()
+    cam2.start()
+    cam3.start()
+
 
     # connect to can bus
     bus = get_can_real_or_virtual()

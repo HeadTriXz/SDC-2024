@@ -3,9 +3,10 @@ from threading import Thread
 
 import cv2
 
+from common.camera_stream.stream import VideoStream
 from globals import GLOBALS
 from kart_control.can_controller import CANController
-from lane_assist.image_manipulation.image_stitch import stitch_images
+from lane_assist.image_manipulation.image_stitch import adjust_gamma, stitch_images
 from lane_assist.image_manipulation.top_down_transfrom import topdown
 from lane_assist.line_detection import filter_lines, get_lines
 from lane_assist.path_following import LineFollowing
@@ -13,9 +14,9 @@ from lane_assist.path_generation import generate_driving_path
 
 
 def lane_assist(
-    left_cam: cv2.VideoCapture,
-    center_cam: cv2.VideoCapture,
-    right_cam: cv2.VideoCapture,
+    left_cam: VideoStream,
+    center_cam: VideoStream,
+    right_cam: VideoStream,
     line_following: LineFollowing,
     can_controller: CANController,
 ) -> Thread:
@@ -43,17 +44,18 @@ def lane_assist(
 
 
 def __lane_assist(
-    left_cam: cv2.VideoCapture,
-    center_cam: cv2.VideoCapture,
-    right_cam: cv2.VideoCapture,
+    left_cam: VideoStream,
+    center_cam: VideoStream,
+    right_cam: VideoStream,
     line_following: LineFollowing,
     can_controller: CANController,
 ) -> None:
-    while True:
+    while left_cam.has_next() and center_cam.has_next() and right_cam.has_next():
         # take pictures from the cameras
-        ret, left_image = left_cam.read()
-        ret, center_image = center_cam.read()
-        ret, right_image = right_cam.read()
+
+        left_image = left_cam.next()
+        center_image = center_cam.next()
+        right_image = right_cam.next()
 
         # convert to grayscale
         left_image = cv2.cvtColor(left_image, cv2.COLOR_BGR2GRAY)
@@ -62,9 +64,9 @@ def __lane_assist(
 
         # adjust the gamma of the images
         if GLOBALS["GAMMA"]["adjust_gamma"]:
-            left_image = cv2.LUT(left_image, GLOBALS["GAMMA"]["LEFT"])
-            center_image = cv2.LUT(center_image, GLOBALS["GAMMA"]["CENTER"])
-            right_image = cv2.LUT(right_image, GLOBALS["GAMMA"]["RIGHT"])
+            left_image = adjust_gamma(left_image, GLOBALS["GAMMA"]["LEFT"])
+            center_image = adjust_gamma(center_image, GLOBALS["GAMMA"]["CENTER"])
+            right_image = adjust_gamma(right_image, GLOBALS["GAMMA"]["RIGHT"])
 
         # stitch the images together, convert to topdown
         stitched_image = stitch_images(left_image, center_image, right_image)
