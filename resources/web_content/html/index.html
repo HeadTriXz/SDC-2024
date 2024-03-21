@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+
+            gap: 2em;
+        }
+
+        form {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 0.25em 1em;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <h4> PID settings </h4>
+        <form action="/pid" method="post">
+            <label for="kp">Kp:</label>
+            <input type="number" id="kp" name="kp" value="0.0" step="0.001">
+            <label for="ki">Ki:</label>
+            <input type="number" id="ki" name="ki" value="0.0" step="0.001">
+            <label for="kd">Kd:</label>
+            <input type="number" id="kd" name="kd" value="0.0" step="0.001">
+            <input type="submit" value="Submit">
+            <button onclick="updatePID()" type="button"> reload</button>
+        </form>
+    </div>
+
+    <div>
+        <h4> GAMMA settings</h4>
+        <form action="/gamma" method="post">
+            <label for="left" >Left:</label>
+            <input type="number" id="left" name="left" value="0.0" step="0.001">
+            <label for="center">Center:</label>
+            <input type="number" id="center" name="center" value="0.0" step="0.001">
+            <label for="right">Right:</label>
+            <input type="number" id="right" name="right" value="0.0" step="0.001">
+            <label for="gamma">Adjust gamma:</label>
+            <input type="checkbox" id="gamma" name="gamma" value="1">
+            <input type="submit" value="Submit">
+            <button onclick="updateGAMMA()" type="button"> reload</button>
+        </form>
+    </div>
+
+    <div>
+        <h4> General control </h4>
+        <form action="/speed" method="post">
+            <label for="speed">Speed:</label>
+            <input type="number" id="speed" name="speed" value="0">
+            <input type="submit" value="Submit">
+            <button onclick="updateSpeed()" type="button"> reload</button>
+        </form>
+        <form action="/lane" method="post">
+            <label for="lane">Lane</label>
+            <input type="number" id="lane" name="lane" value="0">
+            <input type="submit" value="Submit">
+            <button onclick="updateLane()" type="button"> reload</button>
+        </form>
+    </div>
+
+    <div>
+        <h4> Line following </h4>
+        <form action="/line_following" method="post">
+            <label for="line_width">Line width:</label>
+            <input type="number" id="line_width" name="line_width" value="0">
+            <label for="zebra_crossing_threshold">Zebra crossing threshold:</label>
+            <input type="number" id="zebra_crossing_threshold" name="zebra_crossing_threshold" value="0">
+            <label for="line_threshold">Line threshold:</label>
+            <input type="number" id="line_threshold" name="line_threshold" value="0">
+            <label for="pixels_in_window">Pixels in window:</label>
+            <input type="number" id="pixels_in_window" name="pixels_in_window" value="0">
+            <input type="submit" value="Submit">
+        </form>
+    </div>
+
+
+    <script>
+        function updatePID() {
+            fetch('/pid')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('kp').value = data.kp;
+                    document.getElementById('ki').value = data.ki;
+                    document.getElementById('kd').value = data.kd;
+                });
+        }
+
+        function updateGAMMA() {
+            fetch('/gamma')
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data)
+                    document.getElementById('left').value = data.LEFT;
+                    document.getElementById('center').value = data.CENTER;
+                    document.getElementById('right').value = data.RIGHT;
+                    document.getElementById('gamma').checked = data.ADJUST;
+                });
+        }
+
+        function updateSpeed() {
+            fetch('/speed')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('speed').value = data.speed;
+                });
+        }
+
+        function updateLane() {
+            fetch('/lane')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('lane').value = data.lane;
+                });
+        }
+
+        function updateLineFollowing() {
+            fetch('/line_following')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('line_width').value = data.LINE_WIDTH;
+                    document.getElementById('zebra_crossing_threshold').value = data.ZEBRA_CROSSING_THRESHOLD;
+                    document.getElementById('line_threshold').value = data.LINE_THRESHOLD;
+                    document.getElementById('pixels_in_window').value = data.PIXELS_IN_WINDOW;
+                });
+        }
+
+
+
+        updatePID();
+        updateGAMMA();
+        updateSpeed();
+        updateLane();
+        updateLineFollowing();
+    </script>
+</body>
+</html>

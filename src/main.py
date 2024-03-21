@@ -1,10 +1,29 @@
-import cv2
-from matplotlib import pyplot as plt
+import sys
+from os import system
 
-from lane_assist.image_manipulation.image_stitch import adjust_gamma, stitch_images
-from lane_assist.image_manipulation.top_down_transfrom import topdown
-from lane_assist.line_detection import get_lines, filter_lines
-from lane_assist.path_generation import generate_driving_path
+import can
+import cv2
+
+from kart_control.can_controller import CANController
+from lane_assist import LineFollowing, lane_assist
+from telemetry import start as start_telemetry
+
+
+def initialize_can() -> can.Bus:
+    """Initialize the can bus."""
+    system("ip link set can0 type can bitrate 500000")
+    system("ip link set can0 up")
+
+    return can.Bus(interface="socketcan", channel="can0", bitrate=500000)
+
+
+def get_can_real_or_virtual() -> can.Bus:
+    """Get the can bus."""
+    if sys.platform == "linux":
+        return initialize_can()
+
+    return can.Bus(interface="virtual", channel="vcan0")
+
 
 if __name__ == "__main__":
     # load cameras
@@ -12,37 +31,15 @@ if __name__ == "__main__":
     cam2 = cv2.VideoCapture(1)
     cam3 = cv2.VideoCapture(2)
 
+    # connect to can bus
+    bus = get_can_real_or_virtual()
+    can_controller = CANController(bus)
 
-    # load images
-    while True:
-        # maken fotos
-        ret1, frame1 = cam1.read()
-        ret2, frame2 = cam2.read()
-        ret3, frame3 = cam3.read()
+    # configure a lane follower
+    line_following = LineFollowing(0.1, 0.01, 0.05, look_ahead_distance=10)
 
-        # convert to grayscale
-        frame1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
-        frame2 = cv2.cvtColor(frame2, cv2.COLOR_BGR2GRAY)
-        frame3 = cv2.cvtColor(frame3, cv2.COLOR_BGR2GRAY)
+    # start the lane assist
+    lane_assist_thread = lane_assist(cam1, cam2, cam3, line_following, can_controller)
 
-        # adjust gamma
-        frame1 = adjust_gamma(frame1, 0.6)
-        frame2 = adjust_gamma(frame2, 0.6)
-        frame3 = adjust_gamma(frame3, 0.6)
-
-        # stitch/topdown
-        stitched = stitch_images(frame1, frame2, frame3)
-        topdown_image = topdown(stitched)
-
-        # get lines
-        lines = get_lines(topdown_image)
-        lines = filter_lines(lines, 400)
-        # generate driving path
-        path = generate_driving_path(lines, 1)
-
-        # get steering angle
-        steering_angle = get_steering_angle(path, 400)
-
-
-        # follow path
-            # set steering
+    # start the webserver
+    start_telemetry(line_following)

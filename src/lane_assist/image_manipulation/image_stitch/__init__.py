@@ -94,7 +94,7 @@ def stitch_images(left: np.ndarray, center: np.ndarray, right: np.ndarray) -> np
     cx1, cy1, cx2, cy2 = get_ltbr(cxc, cyc, MAX_WIDTH, MAX_HEIGHT)
 
     # Create result image
-    result = np.zeros((result_height, result_width, 3), dtype=np.uint8)
+    result = np.zeros((result_height, result_width), dtype=np.uint8)
     result = merge_image(result, left_res, lx1, ly1, lx2, ly2)
     result = merge_image(result, right_res, rx1, ry1, rx2, ry2)
     return merge_image(result, center, cx1, cy1, cx2, cy2)

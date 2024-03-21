@@ -5,10 +5,9 @@ import cv2
 import numpy as np
 import pytest
 from src.lane_assist.line_detection import Line, get_lines
+from tests.line_detection.lines import CORNER, CROSSING, STOP_LINE, STRAIGHT
 
 from lane_assist.image_manipulation.top_down_transfrom import topdown
-
-from .lines import CORNER, CROSSING, STOP_LINE, STRAIGHT
 
 BENCHMARK_ITERATIONS = 10000
 

@@ -1,96 +1,101 @@
-import cv2
-import matplotlib.pyplot as plt
+from typing import Any
+
 import numpy as np
 from simple_pid import PID
 
-from lane_assist.image_manipulation.top_down_transfrom import topdown
-from lane_assist.line_detection import filter_lines, get_lines
-from lane_assist.path_generation import generate_driving_path
-
-pid = PID(0.1, 0.05, 0.01, setpoint=0)
+from globals import GLOBALS
 
 
-def get_steering_angle(path, x):
-    if path.shape[0] == 0:
-        return 0
+class LineFollowing:
+    """A class to follow a path using a PID controller."""
 
-    target_point = path[-1] if path.shape[0] < 10 else path[10]
+    def __init__(
+        self,
+        kp: float,
+        ki: float,
+        kd: float,
+        setpoint: float = 0,
+        look_ahead_distance: int = 10,
+        max_steering_range: float = 30.0,
+    ) -> None:
+        """Initialize the LineFollowing class.
 
-    # get the y distacne to the target point
-    x_distance_to_target = target_point[0] - x
-    angle = pid(x_distance_to_target)
-    print(angle, x_distance_to_target, x, target_point[0])
+        Parameters
+        ----------
+        :param kp: the proportional gain.
+        :param ki: the integral gain.
+        :param kd: the derivative gain.
+        :param setpoint: the setpoint of the PID controller.
+        :param look_ahead_distance: the distance to look ahead.
 
-    return angle
+        """
+        self.pid = PID(Kp=kp, Ki=ki, Kd=kd, setpoint=setpoint)
+        self.look_ahead_distance = look_ahead_distance
+        self.max_steering_range = max_steering_range
 
+    def get_steering_fraction(self, path: np.ndarray, car_position: int) -> float:
+        """Get the steering percentage to follow the path.
 
-def rotate_vector(vector, angle):
-    x = vector[0] * np.cos(angle) - vector[1] * np.sin(angle)
-    y = vector[0] * np.sin(angle) + vector[1] * np.cos(angle)
-    return x, y
+        this is will return the steering angle remapped to the range of -1 to 1.
 
+        Parameters
+        ----------
+        :param path: the path to follow.
+        :param car_position: the current x position.
 
-import time
+        Returns
+        -------
+        :return: the steering percentage to follow the path.
 
+        """
+        angle = self.get_steering_angle(path, car_position)
+        angle = np.clip(angle, -self.max_steering_range, self.max_steering_range)
+        return angle / self.max_steering_range
 
-def basic_simulation():
-    stitched = cv2.imread("../../../resources/stitched_images/crossing.jpg", cv2.IMREAD_GRAYSCALE)
-    # get the lines of the image
-    stitched = topdown(stitched)
-    lines = get_lines(stitched)
+    def get_steering_angle(self, path: np.ndarray, car_position: int) -> float:
+        """Get the steering angle to follow the path.
 
-    lines = filter_lines(lines, 400)
-    # draw the filtered lines
-    for line in lines:
-        plt.plot(line.points[:, 0], line.points[:, 1], "b")
-    # get the driving path
-    path = generate_driving_path(lines, 0)
-    # draw the path
-    plt.plot(path[:, 0], path[:, 1], "--", color="black")
+        This function will use pid to get the steering angle to follow the path.
+        It will not limit the angle to the max steering angle, it is the raw
+        result from the PID controller.
 
-    # simulator settings
-    max_angle_change_per_iteration = np.deg2rad(30)
+        Parameters
+        ----------
+        :param path: the path to follow.
+        :param car_position: the current x position.
 
-    # simulate the car driving
-    bounds = (800, 900)
-    pos = (400, 900)
+        Returns
+        -------
+        :return: the steering angle to follow the path.
 
-    speed = (0, -20)
-    max_iters = 1_000
-    while True:
-        if pos[0] < 0 or pos[0] > bounds[1] or pos[1] < 0 or pos[1] > bounds[1]:
-            print("out of bounds")
-            break
+        """
+        if path.shape[0] == 0:
+            return 0
 
-        max_iters -= 1
-        if max_iters < 0:
-            print("max iterations reached")
-            break
+        target_point = path[-1] if path.shape[0] < self.look_ahead_distance else path[self.look_ahead_distance]
 
-        # get the steering angle
-        current_angle = np.arctan2(speed[1], speed[0])
-        steering_angle = get_steering_angle(path, pos[0])
+        # get the y distacne to the target point
+        x_distance_to_target: int | Any = target_point[0] - car_position
+        return -self.pid(x_distance_to_target)
+        # limit the angle to the max steering angle.
 
-        new_steering_angle = current_angle - steering_angle
+    def update_pid(
+        self, kp: float | None = None, ki: float | None = None, kd: float | None = None, setpoint: float | None = None
+    ) -> None:
+        """Update the PID controller.
 
-        if new_steering_angle > max_angle_change_per_iteration:
-            new_steering_angle = max_angle_change_per_iteration
-        elif new_steering_angle < -max_angle_change_per_iteration:
-            new_steering_angle = -max_angle_change_per_iteration
+        Parameters
+        ----------
+        :param kp: the proportional gain.
+        :param ki: the integral gain.
+        :param kd: the derivative gain.
 
-        # steer into the direction of the target point
-        speed = rotate_vector(speed, new_steering_angle)
-        # get the angle of the speed vector
-
-        pos = (pos[0] + speed[0], pos[1] + speed[1])
-        # print(pos, rotation)
-        plt.plot(pos[0], pos[1], "ro")
-        time.sleep(1 / 60)
-        # update the plot
-    # draw line to target point
-
-
-if __name__ == "__main__":
-    basic_simulation()
-    plt.gca().invert_yaxis()
-    plt.show()
+        """
+        if kp is not None:
+            self.pid.Kp = kp
+        if ki is not None:
+            self.pid.Ki = ki
+        if kd is not None:
+            self.pid.Kd = kd
+        if setpoint is not None:
+            self.pid.setpoint = setpoint

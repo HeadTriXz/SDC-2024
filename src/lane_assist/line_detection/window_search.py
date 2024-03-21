@@ -4,15 +4,16 @@ import cv2
 import numpy as np
 import scipy
 
+from globals import GLOBALS
 from lane_assist.line_detection.line import Line, LineType
 from lane_assist.line_detection.window import Window
 
-LINE_WIDTH = 50
-ZEBRA_CROSSING_THRESHOLD = 20000
-FILTER_WIDTH = LINE_WIDTH * 4
-
-LINE_THRESHOLD = 2500
-LINE_DECAY = 1
+# REPLACED WITH THE VALUES IN GLOBALS
+# LINE_WIDTH = 50
+# ZEBRA_CROSSING_THRESHOLD = 20000
+# FILTER_WIDTH = LINE_WIDTH * 4
+#
+# LINE_THRESHOLD = 2500
 
 
 def window_search(img: np.ndarray, window_count: int, pixels_per_window: int = 1, window_width: int = 60) -> list[Line]:
@@ -39,14 +40,18 @@ def window_search(img: np.ndarray, window_count: int, pixels_per_window: int = 1
     """
     # take a histogram over the horizontal pixels.
     # this is used to filter out the zebra crossing.
+    gl = GLOBALS["LANE_DETECTION"]
+
     histogram = np.sum(img[:], axis=1)
-    filter_peaks = scipy.signal.find_peaks(histogram, height=ZEBRA_CROSSING_THRESHOLD, distance=FILTER_WIDTH)[0]
+    filter_peaks = scipy.signal.find_peaks(
+        histogram, height=gl["ZEBRA_CROSSING_THRESHOLD"], distance=gl["LINE_WIDTH"] * 4
+    )[0]
     widths, _, lefts, rights = scipy.signal.peak_widths(histogram, filter_peaks, rel_height=0.98)
     stop_lines_y = []
 
     # mask out these peaks if they are wider then a line
     for peak, width, left, right in zip(filter_peaks, widths, lefts, rights):
-        if width > LINE_WIDTH:
+        if width > gl["LINE_WIDTH"]:
             img[int(left) : int(right)] = 0
         else:
             stop_lines_y.append(int(peak))
@@ -55,11 +60,14 @@ def window_search(img: np.ndarray, window_count: int, pixels_per_window: int = 1
     # we only use the bottom half because that should be where the lines are.
     # to get the lines we will detect and get the peaks
     histogram = np.sum(img[img.shape[0] // 2 :], axis=0)
-    merged_peaks = scipy.signal.find_peaks(histogram, height=LINE_THRESHOLD, distance=LINE_WIDTH)[0]
+    merged_peaks = scipy.signal.find_peaks(histogram, height=gl["LINE_THRESHOLD"], distance=gl["LINE_WIDTH"])[0]
 
     # create the windows
     window_height = img.shape[0] // window_count  # get the height of the windows based on the amount we want.
     windows = [Window(center, img.shape[0], window_width // 2) for center in merged_peaks]
+
+    total_pixels_per_window = window_height * window_width
+
     for _ in range(window_count):
         # check which windows overlap
         # time the window search
@@ -74,8 +82,12 @@ def window_search(img: np.ndarray, window_count: int, pixels_per_window: int = 1
                     and window.x + window.margin > other_window.x - other_window.margin
                 ):
                     if window.found_in_previous and other_window.found_in_previous:
-                        window.collided = True
-                        other_window.collided = True
+                        # kill the one furthest from the center
+                        if abs(window.x - img.shape[1] // 2) < abs(other_window.x - img.shape[1] // 2):
+                            other_window.collided = True
+                        else:
+                            window.collided = True
+
                     elif window.found_in_previous:
                         other_window.collided = True
                     elif other_window.found_in_previous:
@@ -98,11 +110,11 @@ def window_search(img: np.ndarray, window_count: int, pixels_per_window: int = 1
             non_zero_count = np.count_nonzero(img[win_y_low:win_y_high, win_x_low:win_x_high])
 
             # TODO: move the y axis into the direction of the line.
-            # this will allow us to better detect corners
+            #       this will allow us to better detect corners
 
-            # If you found > minpix pixels, recenter next window on the top nonzero pixels position
-            if non_zero_count > pixels_per_window:
+            if non_zero_count > gl["PIXELS_IN_WINDOW"]:
                 coords = np.nonzero(img[win_y_low:win_y_high, win_x_low:win_x_high])
+                # get the right most pixel. this is the new position of the window
                 window.move(int(np.mean(coords[1])) + win_x_low, win_y_low)
             else:
                 if window.found_in_previous:
@@ -123,6 +135,8 @@ def window_search(img: np.ndarray, window_count: int, pixels_per_window: int = 1
         for window in windows
         if len(window.points) > 5
     ]
+
+    print(lines)
 
     if len(stop_lines_y) == 0:
         return lines
@@ -225,4 +239,3 @@ def flood_fill_search(img: np.ndarray):
 
         # keep track of the previous direction
         prev_direction = directions[0] if len(directions) == 1 else None
-
