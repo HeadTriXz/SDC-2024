@@ -1,4 +1,4 @@
-from enum import IntEnum
+from enum import Enum, IntEnum
 
 
 class CANControlIdentifier(IntEnum):
@@ -19,7 +19,7 @@ class CANFeedbackIdentifier(IntEnum):
     THROTTLE = 0x730
 
 
-class CameraResolution:
+class CameraResolution(tuple[int, int], Enum):
     """The camera resolutions that the Logitech StreamCam supports."""
 
     FHD = (1920, 1080)
@@ -27,7 +27,7 @@ class CameraResolution:
     VGA = (848, 480)
 
 
-class CameraFramerate:
+class CameraFramerate(float, Enum):
     """The camera framerates that the Logitech StreamCam supports."""
 
     FPS_60 = 60
