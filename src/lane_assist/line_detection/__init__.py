@@ -45,7 +45,6 @@ def get_lines(image: np.ndarray) -> list[Line]:
     # fit the lines
 
 
-
 def main() -> None:
     """Line detection example.
 
@@ -74,7 +73,7 @@ def main() -> None:
     for img in test_images:
         td_img = topdown(img)  # convert too topdown to draw the lines
         lines = get_lines(td_img)
-        lines = filter_lines(lines, 400)
+        # lines = filter_lines(lines, 400)
 
         # draw the points on the topdown image
         for line in lines:
