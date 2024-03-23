@@ -1,6 +1,11 @@
 from enum import Enum, IntEnum
 
 
+"""Constants"""
+CAN_SEND_PERIOD = 0.04
+
+
+"""Enums"""
 class CANControlIdentifier(IntEnum):
     """The identifiers for the CAN messages sent to the go-kart."""
 

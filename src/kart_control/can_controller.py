@@ -1,9 +1,17 @@
+import can
 import struct
 import threading
 
-import can
+from common.constants import CAN_SEND_PERIOD, CANControlIdentifier, CANFeedbackIdentifier, Gear
 
-from common.constants import CANControlIdentifier, CANFeedbackIdentifier, Gear
+
+def initialize_can_message(message_id: CANControlIdentifier) -> can.Message:
+    """Initialize a CAN message.
+
+    :param message_id: The identifier of the message.
+    :return: The initialized CAN message.
+    """
+    return can.Message(arbitration_id=message_id, data=[0, 0, 0, 0, 0, 0, 0, 0], is_extended_id=False)
 
 
 class CANController:
@@ -28,6 +36,15 @@ class CANController:
         self.__listeners = {}
         self.__thread = threading.Thread(target=self.__listen, daemon=True)
 
+        self.__throttle_message = initialize_can_message(CANControlIdentifier.THROTTLE)
+        self.__throttle_task = can_bus.send_periodic(self.__throttle_message, CAN_SEND_PERIOD)
+
+        self.__brake_message = initialize_can_message(CANControlIdentifier.BRAKE)
+        self.__brake_task = can_bus.send_periodic(self.__brake_message, CAN_SEND_PERIOD)
+
+        self.__steering_message = initialize_can_message(CANControlIdentifier.STEERING)
+        self.__steering_task = can_bus.send_periodic(self.__steering_message, CAN_SEND_PERIOD)
+
     def add_listener(self, message_id: CANFeedbackIdentifier, listener: callable) -> None:
         """Add a listener for a message.
 
@@ -44,20 +61,16 @@ class CANController:
 
         :param brake: The percentage of the brake-force to apply.
         """
-        data = [brake, 0, 0, 0, 0, 0, 0, 0]
-        message = can.Message(arbitration_id=CANControlIdentifier.BRAKE, data=data)
+        self.__brake_message.data = [brake, 0, 0, 0, 0, 0, 0, 0]
+        self.__brake_task.modify_data(self.__brake_message)
 
-        self.bus.send(message)
-
-    def set_steering(self, angle: int) -> None:
+    def set_steering(self, angle: float) -> None:
         """Set the angle of the steering wheel.
 
         :param angle: The angle of the steering wheel.
         """
-        data = list(bytearray(struct.pack("f", float(angle)))) + [0, 0, 195, 0]
-        message = can.Message(arbitration_id=CANControlIdentifier.STEERING, data=data)
-
-        self.bus.send(message)
+        self.__steering_message.data = list(bytearray(struct.pack("f", angle))) + [0, 0, 195, 0]
+        self.__steering_task.modify_data(self.__steering_message)
 
     def set_throttle(self, throttle: int, gear: Gear) -> None:
         """Set the percentage of the throttle to apply.
@@ -65,10 +78,8 @@ class CANController:
         :param throttle: The percentage of the throttle to apply.
         :param gear: The gear to put the go-kart in.
         """
-        data = [throttle, 0, gear, 0, 0, 0, 0, 0]
-        message = can.Message(arbitration_id=CANControlIdentifier.THROTTLE, data=data)
-
-        self.bus.send(message)
+        self.__throttle_message.data = [throttle, 0, gear, 0, 0, 0, 0, 0]
+        self.__throttle_task.modify_data(self.__throttle_message)
 
     def start(self) -> None:
         """Start the CAN controller."""
