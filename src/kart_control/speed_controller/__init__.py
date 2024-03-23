@@ -1,3 +1,4 @@
+import logging
 import threading
 from enum import IntEnum
 
@@ -9,7 +10,7 @@ from kart_control.can_controller import CANController
 
 
 class SpeedControllerState(IntEnum):
-    """The states the speed controller can be in."""
+    """States the speed controller can be in."""
 
     STOPPED = 0
     WAITING_TO_STOP = 1
@@ -21,36 +22,49 @@ class SpeedController:
 
     Attributes
     ----------
-        current_speed (float): The current speed of the go-kart.
-        gear (Gear): The gear of the go-kart.
-        max_speed (int): The maximum speed of the go-kart.
-        target_speed (int): The target speed of the go-kart.
-        stopped (bool): Whether the go-kart is stopped.
+        Current_speed (float): The current speed of the go-kart.
+        Gear (Gear): The gear of the go-kart.
+        Max_speed (int): The maximum speed of the go-kart.
+        Target_speed (int): The target speed of the go-kart.
+        State (SpeedControllerState): The state of the speed controller.
 
     """
 
-    current_speed: float
-    gear: Gear
-    satte: SpeedControllerState
+    current_speed: float = 0
+    gear: Gear = Gear.NEUTRAL
 
     __can: CANController
-    __max_speed: int
-    __target_speed: int
-    __thread: threading.Thread
+    __max_speed: int = 0
+    __target_speed: int = 0
+    __state: SpeedControllerState = SpeedControllerState.STOPPED
 
     def __init__(self, can_bus: CANController) -> None:
         """Initialize the speed controller.
 
         :param can_bus: The CAN controller to use.
         """
-        self.current_speed = 0
-        self.gear = Gear.NEUTRAL
-        self.state = SpeedControllerState.STOPPED
-
         self.__can = can_bus
-        self.__max_speed = 0
-        self.__target_speed = 0
-        self.__thread = threading.Thread(target=self.__listen, daemon=True)
+        self.logger = logging.getLogger(__name__)
+
+    def start(self) -> None:
+        """Start the speed controller."""
+        self.__can.add_listener(CANFeedbackIdentifier.SPEED_SENSOR, self.__update_speed)
+
+    @property
+    def state(self) -> SpeedControllerState:
+        """The state of the speed controller."""
+        return self.__state
+
+    @state.setter
+    def state(self, state: SpeedControllerState) -> None:
+        """Set the state of the speed controller."""
+        self.__state = state
+        self.__adjust_speed()
+
+    @property
+    def can_controller(self) -> CANController:
+        """The CAN controller."""
+        return self.__can
 
     @property
     def max_speed(self) -> int:
@@ -67,6 +81,7 @@ class SpeedController:
             self.__target_speed = speed
 
         self.__max_speed = speed
+        self.__adjust_speed()
 
     @property
     def target_speed(self) -> int:
@@ -81,35 +96,37 @@ class SpeedController:
 
         if speed > self.__max_speed:
             speed = self.__max_speed
-            print("The target speed cannot be greater than the maximum speed.")  # noqa: T201 TODO: change to use logger
+            self.logger.warning("The target speed cannot be greater than the maximum speed.")
 
         self.__target_speed = speed
-
-    def start(self) -> None:
-        """Start the speed controller."""
-        self.__can.add_listener(CANFeedbackIdentifier.SPEED_SENSOR, self.__update_speed)
-        self.__thread.start()
+        self.__adjust_speed()
 
     def __get_target_percentage(self) -> int:
         """Get the target percentage of the throttle to apply."""
         return int(config.speed / self.__target_speed * 100)
 
-    def __listen(self) -> None:
-        """Listen for changes in the speed of the go-kart."""
-        while True:
-            if self.state == SpeedControllerState.STOPPED:
-                self.__can.set_throttle(0, Gear.NEUTRAL)
-                self.__can.set_brake(100)  # TODO: change brake value.
-                continue
+    def __adjust_speed(self) -> None:
+        """Adjust the speed of the kart.
 
-            self.__can.set_throttle(self.__get_target_percentage(), self.gear)
+        This function will be called when one of the following things happens:
+        - the state of the kart changes
+        - the target speed changes
+        - the max speed changes
+        - the current speed changes
+        """
+        # make sure the kart is stationary if it needs to be stopped
+        if self.__state == SpeedControllerState.STOPPED:
+            self.__can.set_throttle(0, gear=Gear.NEUTRAL)
+            self.__can.set_brake(100)  # brake at the threshold
+            return
 
-            if self.current_speed < self.__target_speed:
-                self.__can.set_brake(0)
-            else:
-                self.__can.set_brake(30)  # TODO: Dynamically calculate required braking force.
+        # apply throttle and brake.
+        # we can always set the throttle, the brake will be set if we are driving too fast.
+        self.__can.set_throttle(self.__get_target_percentage(), gear=self.gear)
+        self.__can.set_brake(0 if self.current_speed <= self.__target_speed else 30)  # TODO: brake at threshold
 
     def __update_speed(self, message: can.Message) -> None:
         """Update the speed of the go-kart."""
         value = int.from_bytes(message.data[:2], byteorder="big")
         self.current_speed = value / 10
+        self.__adjust_speed()
