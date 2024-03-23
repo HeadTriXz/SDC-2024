@@ -1,9 +1,17 @@
+import can
 import struct
 import threading
 
-import can
+from common.constants import CAN_SEND_PERIOD, CANControlIdentifier, CANFeedbackIdentifier, Gear
 
-from common.constants import CANControlIdentifier, CANFeedbackIdentifier, Gear
+
+def initialize_can_message(message_id: CANControlIdentifier) -> can.Message:
+    """Initialize a CAN message.
+
+    :param message_id: The identifier of the message.
+    :return: The initialized CAN message.
+    """
+    return can.Message(arbitration_id=message_id, data=[0, 0, 0, 0, 0, 0, 0, 0], is_extended_id=False)
 
 
 class CANController:
@@ -28,18 +36,14 @@ class CANController:
         self.__listeners = {}
         self.__thread = threading.Thread(target=self.__listen, daemon=True)
 
-        self.__throttle_message = can.Message(
-            arbitration_id=CANControlIdentifier.THROTTLE, data=[0, 0, 0, 0, 0, 0, 0, 0]
-        )
-        self.__throttle_task = can_bus.send_periodic(self.__throttle_message, 0.04)
+        self.__throttle_message = initialize_can_message(CANControlIdentifier.THROTTLE)
+        self.__throttle_task = can_bus.send_periodic(self.__throttle_message, CAN_SEND_PERIOD)
 
-        self.__brake_message = can.Message(arbitration_id=CANControlIdentifier.BRAKE, data=[0, 0, 0, 0, 0, 0, 0, 0])
-        self.__brake_task = can_bus.send_periodic(self.__brake_message, 0.04)
+        self.__brake_message = initialize_can_message(CANControlIdentifier.BRAKE)
+        self.__brake_task = can_bus.send_periodic(self.__brake_message, CAN_SEND_PERIOD)
 
-        self.__steering_message = can.Message(
-            arbitration_id=CANControlIdentifier.STEERING, data=[0, 0, 0, 0, 0, 0, 0, 0]
-        )
-        self.__steering_task = can_bus.send_periodic(self.__steering_message, 0.04)
+        self.__steering_message = initialize_can_message(CANControlIdentifier.STEERING)
+        self.__steering_task = can_bus.send_periodic(self.__steering_message, CAN_SEND_PERIOD)
 
     def add_listener(self, message_id: CANFeedbackIdentifier, listener: callable) -> None:
         """Add a listener for a message.
