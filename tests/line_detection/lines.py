@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.lane_assist.line_detection.line import Line, LineType
+from lane_assist.line_detection.line import Line, LineType
 
 CORNER = [
     Line(

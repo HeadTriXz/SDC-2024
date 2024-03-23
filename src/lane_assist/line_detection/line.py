@@ -58,7 +58,7 @@ class Line:
         else:
             self.line_type = LineType.SOLID
 
-    def __eq__(self, other: object) -> bool:  # noqa: N807, ANN001
+    def __eq__(self, other: object) -> bool:
         """Check if the lines are equal."""
         if not isinstance(other, Line):
             return False
