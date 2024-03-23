@@ -4,7 +4,7 @@ import airsim
 class SimCanController:
     """Simulate the can controller."""
 
-    def __init__(self, client) -> None:
+    def __init__(self, client: airsim.CarControls) -> None:
         """Initialize the can controller."""
         self.client = client
         self.brake = 0
@@ -20,7 +20,7 @@ class SimCanController:
         self.brake = brake / 100
         self.update()
 
-    def set_throttle(self, throttle: int, gear: int) -> None:
+    def set_throttle(self, throttle: int, _gear: int) -> None:
         """Set the speed."""
         self.throttle = throttle / 100
         self.update()
