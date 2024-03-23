@@ -1,9 +1,6 @@
-from typing import Any, Tuple
-
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy
 from numpy import ndarray
 
 from lane_assist.image_manipulation.top_down_transfrom import topdown
@@ -31,6 +28,9 @@ def generate_driving_path(lines: list[Line], requested_lane: int) -> ndarray:
     # the last line is part of lane 0
     lanes = [[lines[i], lines[i - 1]] for i in range(len(lines) - 1, 0, -1)]
 
+    if requested_lane >= len(lanes):
+        raise ValueError(f'Requested lane "{requested_lane}" does not exist. lanes: {len(lanes)}')
+
     # get the lines of the lane we want to drive in.
     a1 = lanes[requested_lane][0]
     a2 = lanes[requested_lane][1]
@@ -44,9 +44,7 @@ def generate_driving_path(lines: list[Line], requested_lane: int) -> ndarray:
     # generate a centerline based on the two lines
     midx = [np.mean([new_a1_x[i], new_a2_x[i]]) for i in range(inter_line_points)]
     midy = [np.mean([new_a1_y[i], new_a2_y[i]]) for i in range(inter_line_points)]
-    centerline = np.array([midx, midy]).T
-    # v1 is just a centerline
-    return centerline
+    return np.array([midx, midy]).T
 
 
 def interpolate_line(line: Line, points: int) -> tuple[np.ndarray, np.ndarray]:
@@ -81,6 +79,8 @@ def generate_tests(filename: str) -> None:
 
     # write to the lines file so we can import them in the tests
     with open(filename, "w") as f:
+        f.write("import numpy as np\n\n")
+
         for i, image in enumerate(images):
             lines = get_lines(image)
             filtered = filter_lines(lines, 400)
@@ -110,7 +110,6 @@ def main() -> None:
     grayscale = [cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) for image in images]
 
     for i, image in enumerate(grayscale):
-        print(images_names[i], end=":\n")
         lines = get_lines(image)
         filtered = filter_lines(lines, 400)
 
@@ -120,12 +119,9 @@ def main() -> None:
         plt.plot(path[:, 0], path[:, 1], "r")
 
         plt.imshow(images[i])
-
-        print("\n\n\n")
-
         plt.show()
 
 
 if __name__ == "__main__":
-    # generate_tests("../../../tests/lane_assist/line_generation/lines.py")
+    # generate_tests("../../../tests/line_generation/test_data.py") # noqa
     main()

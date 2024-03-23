@@ -44,12 +44,12 @@ def basic_simulation() -> None:
     max_iters = 1_000
     while True:
         if pos[0] < 0 or pos[0] > bounds[1] or pos[1] < 0 or pos[1] > bounds[1]:
-            print("out of bounds")
+            print("out of bounds")  # noqa
             break
 
         max_iters -= 1
         if max_iters < 0:
-            print("max iterations reached")
+            print("max iterations reached")  # noqa
             break
 
         # get the steering angle
@@ -68,7 +68,6 @@ def basic_simulation() -> None:
         # get the angle of the speed vector
 
         pos = (pos[0] + speed[0], pos[1] + speed[1])
-        # print(pos, rotation)
         plt.plot(pos[0], pos[1], "ro")
         time.sleep(1 / 60)
         # update the plot

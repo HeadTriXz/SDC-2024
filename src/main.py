@@ -1,4 +1,5 @@
 import sys
+import threading
 from os import system
 
 import can
@@ -8,8 +9,9 @@ from common.constants import Gear
 from globals import GLOBALS
 from kart_control.can_controller import CANController
 from kart_control.speed_controller import SpeedController
-from lane_assist import LineFollowing, lane_assist
-from telemetry import start as start_telemetry
+from lane_assist import LaneLynx, LineFollowing
+from lane_assist.image_manipulation import td_stitched_image_generator
+from telemetry import start_telemetry
 
 
 def initialize_can() -> can.Bus:
@@ -28,13 +30,6 @@ def get_can_real_or_virtual() -> can.Bus:
     return can.Bus(interface="virtual", channel="vcan0")
 
 
-def adust_speed(speed_controller: SpeedController) -> None:
-    """Adjust the speed to the global set speed"""
-    while True:
-        speed_controller.max_speed = GLOBALS["SET_SPEED"]
-        speed_controller.target_speed = GLOBALS["SET_SPEED"]
-
-
 if __name__ == "__main__":
     # load cameras
     cam1 = VideoStream(0)
@@ -48,17 +43,20 @@ if __name__ == "__main__":
     # connect to can bus
     bus = get_can_real_or_virtual()
     can_controller = CANController(bus)
-    # speed_controller = SpeedController(can_controller)
-    # speed_controller.start()
-    # speed_controller.gear = Gear.DRIVE
+    can_controller.start()
 
-    # speed_controller_thread = threading.Thread(target=adust_speed, args=(speed_controller,), daemon=True)
-    # speed_controller_thread.start()
-
-    # configure a lane follower
     line_following = LineFollowing(0.1, 0.01, 0.05, look_ahead_distance=10)
-    # start the lane assist
-    lane_assist_thread = lane_assist(cam1, cam2, cam3, line_following, can_controller)
 
-    # start the webserver
-    start_telemetry(line_following)
+    telem_thread = threading.Thread(target=start_telemetry, args=(line_following,), daemon=True)
+    telem_thread.start()
+    #
+    speed_controller = SpeedController(can_controller)
+    speed_controller.gear = Gear.DRIVE
+
+    lynx = LaneLynx(
+        td_stitched_image_generator(cam1, cam2, cam3),
+        line_following,
+        speed_controller,
+        adjust_speed=lambda _: GLOBALS["SET_SPEED"],
+    )
+    lynx.start()

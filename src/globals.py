@@ -1,3 +1,4 @@
+# TODO: convert to proper application state management
 GLOBALS = {
     "REQUESTED_LANE": 0,
     "SET_SPEED": 5,
@@ -5,7 +6,7 @@ GLOBALS = {
         "LEFT": 1,
         "CENTER": 1,
         "RIGHT": 1,
-        "ADJUST": True,
+        "ADJUST": False,
     },
     "LANE_DETECTION": {
         "LINE_WIDTH": 50,

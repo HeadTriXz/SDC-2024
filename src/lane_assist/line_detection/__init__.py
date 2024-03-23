@@ -43,8 +43,6 @@ def get_lines(image: np.ndarray) -> list[Line]:
     white = cv2.inRange(image, GLOBALS["WHITE"]["MIN"], GLOBALS["WHITE"]["MAX"])
     return window_search(white, 110)
 
-    # fit the lines
-
 
 def main() -> None:
     """Line detection example.
@@ -71,6 +69,7 @@ def main() -> None:
 
     # names = ["corner", "straight", "crossing", "stopline"]
     # f = open("../../../tests/line_detection/lines.py", "w")
+    # f.write("import numpy as np\nfrom lane_assist import Line, LineType\n\n")
     for img in test_images:
         td_img = topdown(img)  # convert too topdown to draw the lines
         lines = get_lines(td_img)
@@ -82,7 +81,7 @@ def main() -> None:
                 colour = colours[line.line_type]
                 cv2.circle(td_img, (point[0], point[1]), 10, colour, -1)
 
-        # write the lines to the file. this will be used for generating tests
+        # # write the lines to the file. this will be used for generating tests
         # f.write(f"{names.pop(0)} = [\n")
         # for line in lines:
         #     f.write("\t" + line.as_definition() + ",\n")
@@ -91,8 +90,6 @@ def main() -> None:
         final_images.append(td_img)
     # f.close()
     list_images(final_images, rows=4, cols=2)
-
-    # export the lines so we can use them in the tests
 
 
 if __name__ == "__main__":

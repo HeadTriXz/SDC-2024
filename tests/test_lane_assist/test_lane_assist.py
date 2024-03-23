@@ -20,28 +20,25 @@ def get_image(file: str) -> np.ndarray:
 
 
 @pytest.mark.benchmark(group="line_detection", min_rounds=5, disable_gc=True)
-# @pytest.mark.skipif("BENCHMARK" not in os.environ, reason="Skip benchmark if not set")
+@pytest.mark.skipif("BENCHMARK" not in os.environ, reason="Skip benchmark if not set")
 def test_lane_assist_benchmark(benchmark: any) -> None:
     """Benchmark the line detection.
 
     to make sure it is a realistic situation all images in the test folder are used.
     this benchmark will not include stitching the images.
     """
-    center_img = get_image("../resources/images/crossing/center.jpg")
-    left_img = get_image("../resources/images/crossing/left.jpg")
-    right_img = get_image("../resources/images/crossing/right.jpg")
+    center_img = get_image("../../resources/images/crossing/center.jpg")
+    left_img = get_image("../../resources/images/crossing/left.jpg")
+    right_img = get_image("../../resources/images/crossing/right.jpg")
 
     assert center_img is not None
     assert left_img is not None
     assert right_img is not None
 
-    print(center_img.shape)
-    print(left_img.shape)
-    print(right_img.shape)
-
     line_following = LineFollowing(0, 0, 0)
 
-    def get_steering_angle():
+    def get_steering_angle() -> float:
+        """Get the steering angle."""
         nonlocal center_img, left_img, right_img
 
         # convert to grayscale
@@ -58,8 +55,7 @@ def test_lane_assist_benchmark(benchmark: any) -> None:
         lines = filter_lines(lines, topdown_image.shape[1] // 2)
 
         path = generate_driving_path(lines, GLOBALS["REQUESTED_LANE"])
-        steering_percent = line_following.get_steering_fraction(path, GLOBALS["REQUESTED_LANE"])
-        return steering_percent
+        return line_following.get_steering_fraction(path, GLOBALS["REQUESTED_LANE"])
 
     # start the benchmark
     benchmark(get_steering_angle)

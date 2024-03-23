@@ -1,3 +1,5 @@
+# ruff: noqa: ERA001, D103, ANN201, A002, ARG001
+# we ignore a large amount of linting errros because this file will hopefully be removed soon.
 from typing import Any
 
 import uvicorn
@@ -76,36 +78,34 @@ def update_thresholds(
 
 
 @app.get("/speed")
-def get_speed() -> Any:
+def get_speed():
     return {"speed": GLOBALS["SET_SPEED"]}
 
 
 @app.post("/speed")
-def set_speed(speed: int = Form(...)) -> Any:
+def set_speed(speed: int = Form(...)):
     GLOBALS["SET_SPEED"] = speed
     return Response(status_code=303, headers={"Location": "/"})
 
 
 @app.get("/lane")
-def get_lane() -> Any:
+def get_lane():
     return {"lane": GLOBALS["REQUESTED_LANE"]}
 
 
 @app.post("/lane")
-def set_lane(lane: int = Form(...)) -> Any:
+def set_lane(lane: int = Form(...)):
     GLOBALS["REQUESTED_LANE"] = lane
     return Response(status_code=303, headers={"Location": "/"})
 
 
 @app.get("/gamma")
-def get_gamma() -> Any:
+def get_gamma():
     return GLOBALS["GAMMA"]
 
 
 @app.post("/gamma")
-def set_gamma(
-    left: float = Form(...), center: float = Form(...), right: float = Form(...), gamma: bool = Form(...)
-) -> Any:
+def set_gamma(left: float = Form(...), center: float = Form(...), right: float = Form(...), gamma: bool = Form(...)):
     GLOBALS["GAMMA"] = {
         "LEFT": left,
         "CENTER": center,
@@ -116,12 +116,12 @@ def set_gamma(
 
 
 @app.get("/white")
-def get_white() -> Any:
+def get_white():
     return GLOBALS["WHITE"]
 
 
 @app.post("/white")
-def set_white(min: int = Form(...), max: int = Form(...)) -> Any:
+def set_white(min: int = Form(...), max: int = Form(...)):
     GLOBALS["WHITE"] = {
         "MIN": min,
         "MAX": max,

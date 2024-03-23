@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 import pytest
 from src.lane_assist.line_detection import Line, get_lines
-from tests.line_detection.lines import CORNER, CROSSING, STOP_LINE, STRAIGHT
+from tests.line_detection.test_data import corner, crossing, stopline, straight
 
 from lane_assist.image_manipulation.top_down_transfrom import topdown
 
@@ -30,25 +30,25 @@ class TestDetectLines(unittest.TestCase):
         """Test the line detection on the corner image."""
         image = get_image("./images/corner.jpg")
         self.assertIsNotNone(image, "Image not found")
-        self.__test_line_detection(image, CORNER)
+        self.__test_line_detection(image, corner)
 
     def test_line_detection_straight(self) -> None:
         """Test the line detection on the straight image."""
         image = get_image("./images/straight.jpg")
         self.assertIsNotNone(image, "Image not found")
-        self.__test_line_detection(image, STRAIGHT)
+        self.__test_line_detection(image, straight)
 
     def test_line_detection_crossing(self) -> None:
         """Test the line detection on the crossing image."""
         image = get_image("./images/crossing.jpg")
         self.assertIsNotNone(image, "Image not found")
-        self.__test_line_detection(image, CROSSING)
+        self.__test_line_detection(image, crossing)
 
     def test_line_detection_stopline(self) -> None:
         """Test the line detection on the stopline image."""
         image = get_image("./images/stopline.jpg")
         self.assertIsNotNone(image, "Image not found")
-        self.__test_line_detection(image, STOP_LINE)
+        self.__test_line_detection(image, stopline)
 
     def __test_line_detection(self, image: np.ndarray, expected_lines: list[Line]) -> None:
         """Test the line detection on the given image."""

@@ -1,92 +1,120 @@
 import threading
+import time
+from collections.abc import Callable, Generator
 from threading import Thread
 
-import cv2
+import numpy as np
 
-from common.camera_stream.stream import VideoStream
-from common.constants import Gear
 from globals import GLOBALS
-from kart_control.can_controller import CANController
+from kart_control.speed_controller import SpeedController, SpeedControllerState
 from lane_assist.image_manipulation.image_stitch import adjust_gamma, stitch_images
 from lane_assist.image_manipulation.top_down_transfrom import topdown
-from lane_assist.line_detection import filter_lines, get_lines
+from lane_assist.line_detection import Line, LineType, filter_lines, get_lines
 from lane_assist.path_following import LineFollowing
 from lane_assist.path_generation import generate_driving_path
 
 
-def lane_assist(
-    left_cam: VideoStream,
-    center_cam: VideoStream,
-    right_cam: VideoStream,
-    line_following: LineFollowing,
-    can_controller: CANController,
-) -> Thread:
-    """Follow the path based on the lines of the road.
+class LaneLynx:
+    """A class to add lane assist to the kart.
 
-    this function will spawn a new thread. this thread will take pictures from the cameras, convert them to topdown
-    and then get the lines in the image. it will then generate a path to follow and follow the path using the line
-    following class.
+    This class takes a function that generates an image, a line follower class and a can controller.
+    It will then generate a path to follow and follow the path using the line following class.
 
-    Parameters
+    The image should be in grayscale and topdown.
+
+    Attributes
     ----------
-    :param left_cam: the left camera.
-    :param center_cam: the center camera.
-    :param right_cam: the right camera.
-    :param line_following: the line following class.
-    :param can_controller: the can controller.
+    :param image_generation: A function that generates images.
+    :param line_follower: The line follower class.
+    :param speed_controller: The speed controller.
+    :param adjust_speed: A function that calculates the dynamic speed that can be driven on the generated path.
 
     """
-    thread = threading.Thread(
-        target=__lane_assist, args=(left_cam, center_cam, right_cam, line_following, can_controller), daemon=True
-    )
-    thread.start()
 
-    return thread
+    def __init__(
+        self,
+        image_generation: Generator[np.ndarray, None, None],
+        line_follower: LineFollowing,
+        speed_controller: SpeedController,
+        adjust_speed: Callable[[np.ndarray], int] = lambda _: 100,
+    ) -> None:
+        """Initialize the lane assist."""
+        # functions
+        self.image_generator = image_generation
+        self.adjust_speed = adjust_speed
 
+        # kart controllers
+        self.can_controller = speed_controller.can_controller
+        self.speed_controller = speed_controller
 
-def __lane_assist(
-    left_cam: VideoStream,
-    center_cam: VideoStream,
-    right_cam: VideoStream,
-    line_following: LineFollowing,
-    can_controller: CANController,
-) -> None:
-    while left_cam.has_next() and center_cam.has_next() and right_cam.has_next():
-        # take pictures from the cameras
-        can_controller.set_throttle(GLOBALS["SET_SPEED"], Gear.DRIVE)
+        # remaining
+        self.line_follower = line_follower
 
-        left_image = left_cam.next()
-        center_image = center_cam.next()
-        right_image = right_cam.next()
+    def start(self, multithreading: bool = False) -> None | Thread:
+        """Start the lane assist.
 
-        # convert to grayscale
-        left_image = cv2.cvtColor(left_image, cv2.COLOR_BGR2GRAY)
-        center_image = cv2.cvtColor(center_image, cv2.COLOR_BGR2GRAY)
-        right_image = cv2.cvtColor(right_image, cv2.COLOR_BGR2GRAY)
+        This function will start the lane assist. It will generate images and follow the path.
 
-        # adjust the gamma of the images
-        if GLOBALS["GAMMA"]["ADJUST"]:
-            left_image = adjust_gamma(left_image, GLOBALS["GAMMA"]["LEFT"])
-            center_image = adjust_gamma(center_image, GLOBALS["GAMMA"]["CENTER"])
-            right_image = adjust_gamma(right_image, GLOBALS["GAMMA"]["RIGHT"])
+        Parameters
+        ----------
+        :param multithreading: if the lane assist should run on a separate thread.
 
-        # stitch the images together, convert to topdown
-        stitched_image = stitch_images(left_image, center_image, right_image)
-        topdown_image = topdown(stitched_image)
+        """
+        if multithreading:  # TODO: investigate why multi threaded is extremely slow
+            thread = threading.Thread(target=self.__run, daemon=True)
+            thread.start()
+            return thread
+        # if we want to run on the current thread, we can just call the run function
+        return self.__run()
 
-        # get the lines in the image
-        lines = get_lines(topdown_image)
-        lines = filter_lines(lines, topdown_image.shape[1] // 2)
+    def __run(self) -> None:
+        for image in self.image_generator:
+            # get the lines in the image and split them
+            lines = get_lines(image)
+            driving_lines = filter_lines(lines, image.shape[1] // 2)
+            stop_lines = list(filter(lambda line: line.line_type == LineType.STOP, lines))
+
+            if len(driving_lines) < 2:
+                continue
+
+            # act on the lines in the image
+            self.__follow_path(driving_lines, image.shape[1] // 2, GLOBALS["REQUESTED_LANE"])
+            self.__handle_stoplines(stop_lines)
+
+            time.sleep(0)
+
+    def __handle_stoplines(self, stoplines: list[Line]) -> None:
+        if not stoplines or len(stoplines) == 0:
+            return
+
+        # if we see a stopline and the state is waiting to stop, set the state to stopped.
+        # this will cause the car to stop.
+        if self.speed_controller.state == SpeedControllerState.WAITING_TO_STOP:
+            # TODO: take the distance to the stopline and speed into account
+            self.speed_controller.state = SpeedControllerState.STOPPED
+
+    def __follow_path(self, lines: list[Line], car_position: float, lane: int) -> None:
+        """Follow the path.
+
+        This function will follow the path based on the lines in the image.
+        If the lane is not available, it will throw an error
+
+        Parameters
+        ----------
+        :param lines: the lines in the image.
+        :param lane: The lane to follow.
+
+        """
+        # if there are less than 2 lines, we can't create a path
         if len(lines) < 2:
-            continue
+            return
 
-        # get the path to drive on.
-        path = generate_driving_path(lines, GLOBALS["REQUESTED_LANE"])
-        # follow the path
-        steering_percent = line_following.get_steering_fraction(path, GLOBALS["REQUESTED_LANE"])
-        can_controller.set_steering(steering_percent)
+        # generate the driving path
+        path = generate_driving_path(lines, lane)
 
-    print("Done")
-    can_controller.set_brake(100)
-    can_controller.set_throttle(0, Gear.NEUTRAL)
-    can_controller.set_steering(0)
+        # adjust the speed based on the path
+        self.adjust_speed(path)
+
+        # steer the kart based on the path and its position.
+        steering_percent = self.line_follower.get_steering_fraction(path, car_position)
+        self.can_controller.set_steering(steering_percent)

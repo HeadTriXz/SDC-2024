@@ -33,7 +33,7 @@ class LineFollowing:
         self.look_ahead_distance = look_ahead_distance
         self.max_steering_range = max_steering_range
 
-    def get_steering_fraction(self, path: np.ndarray, car_position: int) -> float:
+    def get_steering_fraction(self, path: np.ndarray, car_position: float) -> float:
         """Get the steering percentage to follow the path.
 
         this is will return the steering angle remapped to the range of -1 to 1.
@@ -52,7 +52,7 @@ class LineFollowing:
         angle = np.clip(angle, -self.max_steering_range, self.max_steering_range)
         return angle / self.max_steering_range
 
-    def get_steering_angle(self, path: np.ndarray, car_position: int) -> float:
+    def get_steering_angle(self, path: np.ndarray, car_position: float) -> float:
         """Get the steering angle to follow the path.
 
         This function will use pid to get the steering angle to follow the path.

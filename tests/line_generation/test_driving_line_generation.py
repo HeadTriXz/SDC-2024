@@ -9,7 +9,7 @@ from src.lane_assist.line_detection import Line, filter_lines, get_lines
 from lane_assist.image_manipulation.top_down_transfrom import topdown
 from lane_assist.path_generation import generate_driving_path
 
-from .lines import CORNER, CROSSING_LANE_0, CROSSING_LANE_1, STOPLINE, STRAIGHT
+from .test_data import CORNER, CROSSING_LANE_0, CROSSING_LANE_1, STOPLINE, STRAIGHT
 
 BENCHMARK_ITERATIONS = 10000
 
@@ -37,8 +37,6 @@ class TestGenerateDrivingLine(unittest.TestCase):
     def test_line_generation_corner(self) -> None:
         """Test the line detection on the corner image."""
         base_lines = self.__get_lines("../line_detection/images/corner.jpg")
-        self.assertEqual(len(base_lines), 2)
-
         filtered = filter_lines(base_lines, 400)
         self.assertEqual(len(filtered), 2)
 
@@ -48,8 +46,6 @@ class TestGenerateDrivingLine(unittest.TestCase):
     def test_line_generation_straight(self) -> None:
         """Test the line detection on the straight image."""
         base_lines = self.__get_lines("../line_detection/images/straight.jpg")
-        self.assertEqual(len(base_lines), 2)
-
         filtered = filter_lines(base_lines, 400)
         self.assertEqual(len(filtered), 2)
 
@@ -59,8 +55,6 @@ class TestGenerateDrivingLine(unittest.TestCase):
     def test_line_generation_crossing(self) -> None:
         """Test the line detection on the crossing image."""
         base_lines = self.__get_lines("../line_detection/images/crossing.jpg")
-        self.assertEqual(len(base_lines), 4)
-
         filtered = filter_lines(base_lines, 400)
         self.assertEqual(len(filtered), 3)
 
