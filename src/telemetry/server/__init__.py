@@ -6,7 +6,6 @@ import uvicorn
 from fastapi import FastAPI, Form, Request, Response
 
 import config
-from globals import GLOBALS
 from lane_assist import PathFollower
 from telemetry.server.utils import get_file_relative_path
 
@@ -54,7 +53,7 @@ def update_pid(kp: float = Form(...), ki: float = Form(...), kd: float = Form(..
 
 @app.get("/line_following")
 async def read_thresholds(request: Request):
-    return GLOBALS["LANE_DETECTION"]
+    return config.lane_detection
 
 
 @app.post("/line_following")
@@ -64,7 +63,7 @@ def update_thresholds(
     line_threshold: int = Form(...),
     pixels_in_window: int = Form(...),
 ):
-    GLOBALS["LANE_DETECTION"] = {
+    config.lane_detection = {
         "LINE_WIDTH": line_width,
         "ZEBRA_CROSSING_THRESHOLD": zebra_crossing_threshold,
         "LINE_THRESHOLD": line_threshold,
@@ -73,9 +72,6 @@ def update_thresholds(
 
     # redirect to the home page
     return Response(status_code=303, headers={"Location": "/"})
-
-
-## DONE
 
 
 @app.get("/speed")

@@ -31,7 +31,8 @@ def get_can_real_or_virtual() -> can.Bus:
     return can.Bus(interface="virtual", channel="vcan0")
 
 
-if __name__ == "__main__":
+def __kart_main() -> None:
+    """Run the kart main."""
     # load cameras
     cam1 = VideoStream(0)
     cam2 = VideoStream(0)
@@ -47,6 +48,7 @@ if __name__ == "__main__":
     can_controller.start()
 
     path_follower = PathFollower(0.1, 0.01, 0.05, look_ahead_distance=10)
+    path_follower.max_steering_range = 30.0
 
     telem_thread = threading.Thread(target=start_telemetry, args=(path_follower,), daemon=True)
     telem_thread.start()
@@ -61,3 +63,9 @@ if __name__ == "__main__":
         adjust_speed=lambda _: config.requested_speed,
     )
     lynx.start()
+
+
+if __name__ == "__main__":
+    from simulator import main
+
+    main()

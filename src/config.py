@@ -8,5 +8,5 @@ speed = speed_mode_to_speed[speed_mode]
 requested_lane = 0
 requested_speed = 5
 gamma = {"LEFT": 1, "CENTER": 1, "RIGHT": 1, "ADJUST": False}
-lane_detection = {"LINE_WIDTH": 50, "ZEBRA_CROSSING_THRESHOLD": 20_000, "LINE_THRESHOLD": 2_500, "PIXELS_IN_WINDOW": 1}
-white = {"MIN": 200, "MAX": 255}
+lane_detection = {"LINE_WIDTH": 50, "ZEBRA_CROSSING_THRESHOLD": 20_000, "LINE_THRESHOLD": 500, "PIXELS_IN_WINDOW": 1}
+white = {"MIN": 180, "MAX": 255}

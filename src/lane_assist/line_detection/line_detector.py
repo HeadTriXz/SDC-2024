@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 
+import config
 from lane_assist.line_detection.line import Line, LineType
 from lane_assist.line_detection.window_search import window_search
 from lane_assist.preprocessing.birdview import topdown
@@ -35,7 +36,9 @@ def get_lines(image: np.ndarray) -> list[Line]:
     This function will take an image and return the lines in the image.
     the image should be stitched and not top down
     """
-    white = cv2.inRange(image, 200, 255)
+    white = cv2.inRange(image, config.white["MIN"], config.white["MAX"])
+    cv2.imshow("white", white)
+    cv2.waitKey(1)
     return window_search(white, 110)
 
 

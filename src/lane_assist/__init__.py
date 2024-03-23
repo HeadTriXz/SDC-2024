@@ -3,6 +3,7 @@ import time
 from collections.abc import Callable, Generator
 from threading import Thread
 
+import cv2
 import numpy as np
 
 import config
@@ -71,9 +72,20 @@ class LaneLynx:
     def __run(self) -> None:
         for image in self.image_generator:
             # get the lines in the image and split them
+            cv2.imshow("image", image)
+            cv2.waitKey(1)
+
             lines = get_lines(image)
             driving_lines = filter_lines(lines, image.shape[1] // 2)
             stop_lines = list(filter(lambda line: line.line_type == LineType.STOP, lines))
+
+            # draw lines on the image
+            for line in lines:
+                for point in line.points:
+                    cv2.circle(image, point, 3, (255, 0, 0), -1)
+
+            cv2.imshow("lines", image)
+            cv2.waitKey(1)
 
             if len(driving_lines) < 2:
                 continue
@@ -116,8 +128,9 @@ class LaneLynx:
         path = generate_driving_path(lines, lane)
 
         # adjust the speed based on the path
-        self.adjust_speed(path)
+        speed = self.adjust_speed(path)
+        self.speed_controller.target_speed = speed
 
         # steer the kart based on the path and its position.
-        steering_percent = self.path_follower.get_steering_fraction(path, car_position)
-        self.can_controller.set_steering(steering_percent)
+        steering_fraction = self.path_follower.get_steering_fraction(path, car_position)
+        self.can_controller.set_steering(steering_fraction)
