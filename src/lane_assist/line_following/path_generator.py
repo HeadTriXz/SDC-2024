@@ -2,8 +2,9 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 
-from lane_assist.image_manipulation.top_down_transfrom import topdown
-from lane_assist.line_detection import Line, filter_lines, get_lines
+from lane_assist.line_detection.line import Line
+from lane_assist.line_detection.line_detector import filter_lines, get_lines
+from lane_assist.preprocessing.birdview import topdown
 
 
 def generate_driving_path(lines: list[Line], requested_lane: int) -> np.ndarray:
@@ -11,22 +12,11 @@ def generate_driving_path(lines: list[Line], requested_lane: int) -> np.ndarray:
 
     This function will take the lines and generate a driving path based on the lines.
 
-    Parameters
-    ----------
     :param requested_lane: the lane we want to drive in
     :param lines: the lines to generate the path from
-
-    Returns
-    -------
     :return: the driving path
-
     """
-    # plot the lines on a plt
-
-    # group the lines into lanes
-    # the last line is part of lane 0
     lanes = [[lines[i], lines[i - 1]] for i in range(len(lines) - 1, 0, -1)]
-    # generate the lines
     return generate_line(lanes[requested_lane])
 
 
@@ -35,15 +25,9 @@ def interpolate_line(line: Line, points: int) -> tuple[np.ndarray, np.ndarray]:
 
     This function will interpolate the line to the given points.
 
-    Parameters
-    ----------
     :param line: the line to interpolate
     :param points: the points to interpolate to
-
-    Returns
-    -------
     :return: the interpolated line
-
     """
     new_y = np.linspace(line.points[0, 1], line.points[-1, 1], points)
     new_x = np.interp(new_y, line.points[::-1, 1], line.points[::-1, 0])
@@ -56,11 +40,7 @@ def generate_line(lane: list[Line, Line]) -> np.ndarray:
 
     This function will generate the line based on the lane.
 
-    Parameters
-    ----------
-    :param current_pos: the current position of the car
     :param lane: the lane to generate the line from
-
     """
     a1 = lane[0]
     a2 = lane[1]
@@ -78,14 +58,12 @@ def generate_line(lane: list[Line, Line]) -> np.ndarray:
 
 def generate_tests(filename: str) -> None:
     """Generate the tests for the line generation."""
-    # load image and get the lines
     images_names = ["straight", "corner", "crossing", "stopline"]
     images = [
         cv2.imread(f"../../../resources/stitched_images/{image}.jpg", cv2.IMREAD_GRAYSCALE) for image in images_names
     ]
     images = [topdown(image) for image in images]
 
-    # write to the lines file so we can import them in the tests
     with open(filename, "w") as f:
         for i, image in enumerate(images):
             lines = get_lines(image)
@@ -104,7 +82,6 @@ def generate_tests(filename: str) -> None:
 
 def main() -> None:
     """Line detection example."""
-    # load image and get the lines
     images_names = ["straight", "corner", "crossing", "stopline"]
     images = [cv2.imread(f"../../../resources/stitched_images/{image}.jpg") for image in images_names]
     images = [topdown(image) for image in images]
@@ -131,5 +108,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    generate_tests("../../../tests/line_generation/lines.py")
+    generate_tests("../../../tests/line_following/lines.py")
     main()

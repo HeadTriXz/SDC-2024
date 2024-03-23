@@ -1,12 +1,10 @@
-# ruff: noqa: T201
-
 import threading
 import time
 
 import can
 
-from kart_control.can_controller import CANController
-from kart_control.new_controller.controller import (
+from driving.can_controller import CANController
+from driving.gamepad.base_controller import (
     Controller,
     ControllerAxis,
     ControllerButton,
@@ -18,7 +16,7 @@ class BasicControllerDriving(CANController):
     """Class that will drive the kart with an xbox controller.
 
     this class will register all needed buttons on the controller.
-    the controll scheme is as follows:
+    the control scheme is as follows:
         - left joystick: steering
         - right trigger: throttle
         - left trigger: brake
@@ -31,8 +29,7 @@ class BasicControllerDriving(CANController):
     Example:
     -------
     ```python
-    from kartcontroll.new_contorller.controller import Controller
-    from kartcontroll.new_contorller. import Controller
+    from driving.gamepad.base_controller import Controller
     import can
 
     if __name__ == "__main__":
@@ -45,8 +42,8 @@ class BasicControllerDriving(CANController):
         controller_driving.start()
     ```
 
-    this piece of code will start the canbus, controller and controller driving.
-    ater that you need to hold a and then you can drive.
+    this piece of code will start the can-bus, controller and controller driving.
+    after that you need to hold A and then you can drive.
 
     """
 
@@ -57,8 +54,8 @@ class BasicControllerDriving(CANController):
 
         Parameters
         ----------
-        :param can_bus can.Bus: the canbus that is used to controll the kart.
-        :param controller Controller: the controller to register the buttons on.
+        :param can_bus (can.Bus): the canbus that is used to controll the kart.
+        :param controller (Controller): the controller to register the buttons on.
 
         """
         super().__init__(can_bus)
@@ -66,7 +63,6 @@ class BasicControllerDriving(CANController):
 
     def start(self) -> None:
         """Start driving using a controller."""
-        # start __run on a new thread
         self.__run()
 
     def __run(self) -> None:

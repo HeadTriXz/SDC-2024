@@ -1,13 +1,13 @@
-import os
-import unittest
-
 import cv2
 import numpy as np
 import numpy.testing as npt
-from src.lane_assist.line_detection import Line, filter_lines, get_lines
+import os
+import unittest
 
-from lane_assist.image_manipulation.top_down_transfrom import topdown
-from lane_assist.path_generation import generate_driving_path
+from src.lane_assist.line_detection.line import Line
+from src.lane_assist.line_detection.line_detector import filter_lines, get_lines
+from src.lane_assist.line_following.path_generator import generate_driving_path
+from src.lane_assist.preprocessing.birdview import topdown
 
 from .lines import CORNER, CROSSING_LANE_0, CROSSING_LANE_1, STOPLINE, STRAIGHT
 
