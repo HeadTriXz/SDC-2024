@@ -1,10 +1,10 @@
 import can
+import config
 import logging
 
 from enum import IntEnum
-import config
 from constants import CANFeedbackIdentifier, Gear
-from kart_control.can_controller import CANController
+from driving.can_controller import CANController
 
 
 class SpeedControllerState(IntEnum):

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import curve_fit
 
-"""Calibrated parameters"""
+# Calibration parameters
 a0 = 1.015988
 b0 = 0.825809
 c0 = 0.357420
@@ -14,9 +14,8 @@ d0 = -1.46350
 T = TypeVar("T", np.ndarray, float)
 POPT = (float, float, float, float)
 
-"""Functions"""
 
-
+# Functions
 def formula(x: T, a: float, b: float, c: float, d: float) -> T:
     """The formula to calculate the distance from the y-value."""
     return a / (x - c) ** b + d
