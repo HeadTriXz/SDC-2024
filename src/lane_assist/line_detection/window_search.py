@@ -1,7 +1,7 @@
 import numpy as np
 import scipy
 
-from globals import GLOBALS
+import config
 from lane_assist.line_detection.line import Line, LineType
 from lane_assist.line_detection.window import Window
 
@@ -34,18 +34,19 @@ def window_search(
     """
     # take a histogram over the horizontal pixels.
     # this is used to filter out the zebra crossing.
-    gl = GLOBALS["LANE_DETECTION"]
 
     histogram = np.sum(img[:], axis=1)
     filter_peaks = scipy.signal.find_peaks(
-        histogram, height=gl["ZEBRA_CROSSING_THRESHOLD"], distance=gl["LINE_WIDTH"] * 4
+        histogram,
+        height=config.lane_detection["ZEBRA_CROSSING_THRESHOLD"],
+        distance=config.lane_detection["LINE_WIDTH"] * 4,
     )[0]
     widths, _, lefts, rights = scipy.signal.peak_widths(histogram, filter_peaks, rel_height=0.98)
     stop_lines_y = []
 
     # mask out these peaks if they are wider then a line
     for peak, width, left, right in zip(filter_peaks, widths, lefts, rights):
-        if width > gl["LINE_WIDTH"]:
+        if width > config.lane_detection["LINE_WIDTH"]:
             img[int(left) : int(right)] = 0
         else:
             stop_lines_y.append(int(peak))
@@ -54,7 +55,10 @@ def window_search(
     # we only use the bottom half because that should be where the lines are.
     # to get the lines we will detect and get the peaks
     histogram = np.sum(img[img.shape[0] // 2 :], axis=0)
-    merged_peaks = scipy.signal.find_peaks(histogram, height=gl["LINE_THRESHOLD"], distance=gl["LINE_WIDTH"])[0]
+    merged_peaks = scipy.signal.find_peaks(
+        histogram, height=config.lane_detection["LINE_THRESHOLD"],
+        distance=config.lane_detection["LINE_WIDTH"]
+    )[0]
 
     # create the windows
     window_height = img.shape[0] // window_count  # get the height of the windows based on the amount we want.
@@ -104,7 +108,7 @@ def window_search(
             #       this will allow us to better detect corners.
             #       will only be done if needed.
 
-            if non_zero_count > gl["PIXELS_IN_WINDOW"]:
+            if non_zero_count > config.lane_detection["PIXELS_IN_WINDOW"]:
                 coords = np.nonzero(img[win_y_low:win_y_high, win_x_low:win_x_high])
                 # get the right most pixel. this is the new position of the window
                 window.move(int(np.mean(coords[1])) + win_x_low, win_y_low)

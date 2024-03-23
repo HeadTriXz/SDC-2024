@@ -5,6 +5,7 @@ from threading import Thread
 
 import numpy as np
 
+import config
 from driving.speed_controller import SpeedController, SpeedControllerState
 from globals import GLOBALS
 from lane_assist.line_detection.line import Line, LineType
@@ -79,7 +80,9 @@ class LaneLynx:
                 continue
 
             # act on the lines in the image
-            self.__follow_path(driving_lines, image.shape[1] // 2, GLOBALS["REQUESTED_LANE"])
+            self.__follow_path(
+                driving_lines, image.shape[1] // 2, config.requested_lane
+            )  # TODO: make requested lane dynamic
             self.__handle_stoplines(stop_lines)
 
             time.sleep(0)

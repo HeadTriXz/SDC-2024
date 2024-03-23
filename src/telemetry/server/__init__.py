@@ -5,6 +5,7 @@ from typing import Any
 import uvicorn
 from fastapi import FastAPI, Form, Request, Response
 
+import config
 from globals import GLOBALS
 from lane_assist import PathFollower
 from telemetry.server.utils import get_file_relative_path
@@ -79,34 +80,34 @@ def update_thresholds(
 
 @app.get("/speed")
 def get_speed():
-    return {"speed": GLOBALS["SET_SPEED"]}
+    return {"speed": config.requested_speed}
 
 
 @app.post("/speed")
-def set_speed(speed: int = Form(...)):
-    GLOBALS["SET_SPEED"] = speed
+def requested_speed(speed: int = Form(...)):
+    config.requested_speed = speed
     return Response(status_code=303, headers={"Location": "/"})
 
 
 @app.get("/lane")
 def get_lane():
-    return {"lane": GLOBALS["REQUESTED_LANE"]}
+    return {"lane": config.requested_lane}
 
 
 @app.post("/lane")
 def set_lane(lane: int = Form(...)):
-    GLOBALS["REQUESTED_LANE"] = lane
+    config.requested_lane = lane
     return Response(status_code=303, headers={"Location": "/"})
 
 
 @app.get("/gamma")
 def get_gamma():
-    return GLOBALS["GAMMA"]
+    return config.gamma
 
 
 @app.post("/gamma")
 def set_gamma(left: float = Form(...), center: float = Form(...), right: float = Form(...), gamma: bool = Form(...)):
-    GLOBALS["GAMMA"] = {
+    config.gamma = {
         "LEFT": left,
         "CENTER": center,
         "RIGHT": right,
@@ -117,12 +118,12 @@ def set_gamma(left: float = Form(...), center: float = Form(...), right: float =
 
 @app.get("/white")
 def get_white():
-    return GLOBALS["WHITE"]
+    return config.white
 
 
 @app.post("/white")
 def set_white(min: int = Form(...), max: int = Form(...)):
-    GLOBALS["WHITE"] = {
+    config.white = {
         "MIN": min,
         "MAX": max,
     }
