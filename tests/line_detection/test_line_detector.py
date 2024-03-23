@@ -1,15 +1,14 @@
-import os
-import unittest
-
 import cv2
+import os
 import numpy as np
 import pytest
-from src.lane_assist.line_detection import Line, get_lines
-from tests.line_detection.test_data import corner, crossing, stopline, straight
+import unittest
 
-from lane_assist.image_manipulation.top_down_transfrom import topdown
+from src.lane_assist.line_detection.line import Line
+from src.lane_assist.line_detection.line_detector import get_lines
+from src.lane_assist.preprocessing.birdview import topdown
 
-BENCHMARK_ITERATIONS = 10000
+from .test_data import corner, crossing, stopline, straight
 
 
 def get_path(file: str) -> str:

@@ -1,15 +1,13 @@
+import can
+import inputs
 import math
 import struct
 import threading
+
 from datetime import datetime
 from os import system
 from time import sleep
-
-import can
-import inputs
-from inputs import get_gamepad
-
-CAN_MSG_SENDING_SPEED = 0.04  # 100Hz
+from src.constants import CAN_SEND_PERIOD
 
 
 class XboxController:
@@ -73,7 +71,7 @@ class XboxController:
     def _monitor_controller(self):
         while True:
             try:
-                events = get_gamepad()
+                events = inputs.get_gamepad()
                 for event in events:
                     if event.code == "ABS_Y":
                         self.LeftJoystickY = event.state / XboxController.MAX_JOY_VAL  # normalize between -1 and 1
@@ -151,13 +149,13 @@ if __name__ == "__main__":
     setup_completed = True
 
     brk_msg = can.Message(arbitration_id=0x110, data=[0, 0, 0, 0, 0, 0, 0, 0], is_extended_id=False)
-    brk_task = bus.send_periodic(brk_msg, CAN_MSG_SENDING_SPEED)
+    brk_task = bus.send_periodic(brk_msg, CAN_SEND_PERIOD)
 
     steering_msg = can.Message(arbitration_id=0x220, data=[0, 0, 0, 0, 0, 0, 195, 0], is_extended_id=False)
-    steering_task = bus.send_periodic(steering_msg, CAN_MSG_SENDING_SPEED)
+    steering_task = bus.send_periodic(steering_msg, CAN_SEND_PERIOD)
 
     acc_msg = can.Message(arbitration_id=0x330, is_extended_id=False, data=[0, 0, 1, 0, 0, 0, 0, 0])
-    acc_task = bus.send_periodic(acc_msg, CAN_MSG_SENDING_SPEED)
+    acc_task = bus.send_periodic(acc_msg, CAN_SEND_PERIOD)
 
     switch_sequence_time = 0
     switch_sequence_counter = 0

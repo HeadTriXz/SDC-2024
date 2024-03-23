@@ -1,17 +1,14 @@
+import can
+import cv2
 import sys
 import threading
 import time
+
 from datetime import datetime
 from pathlib import Path
 from queue import Queue
 from typing import Optional
-
-import can
-import cv2
-
-from src.common.constants import CameraFramerate, CameraResolution, CANFeedbackIdentifier
-
-CAN_MSG_SENDING_SPEED = 0.040  # 25Hz
+from src.constants import CameraFramerate, CameraResolution, CANFeedbackIdentifier
 
 
 class CanListener:

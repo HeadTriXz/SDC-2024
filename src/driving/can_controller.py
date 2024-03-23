@@ -2,7 +2,7 @@ import can
 import struct
 import threading
 
-from common.constants import CAN_SEND_PERIOD, CANControlIdentifier, CANFeedbackIdentifier, Gear
+from constants import CAN_SEND_PERIOD, CANControlIdentifier, CANFeedbackIdentifier, Gear
 
 
 def initialize_can_message(message_id: CANControlIdentifier) -> can.Message:

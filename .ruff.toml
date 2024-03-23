@@ -42,14 +42,14 @@ ignore = [
 ]
 
 exclude = [
-    "src/scripts/original_controller.py",
+    "scripts/**",
+    "src/driving/gamepad/driving_controller.py",
     "tests/**/test_data.py",
 ]
 
 # Ignore unused imports in __init__.py files (would need __all__ otherwise)
 [lint.per-file-ignores]
 "__init__.py" = ["F401"]
-"test_data.py" = ["F401"]
 
 
 [format]

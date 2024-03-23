@@ -106,17 +106,3 @@ def adjust_gamma(image: np.ndarray, gamma: float = 1.0) -> np.ndarray:
     table = np.array([((i / 255.0) ** inv_gamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
 
     return cv2.LUT(image, table)
-
-
-if __name__ == "__main__":
-    # Load images
-    center_img = cv2.imread("../../../../resources/images/stopline/center.jpg")
-    left_img = cv2.imread("../../../../resources/images/stopline/left.jpg")
-    right_img = cv2.imread("../../../../resources/images/stopline/right.jpg")
-
-    left_img = adjust_gamma(left_img, 0.62)
-    right_img = adjust_gamma(right_img, 0.62)
-
-    # Write result
-    result_img = stitch_images(left_img, center_img, right_img)
-    cv2.imwrite("images/result.jpg", result_img)
