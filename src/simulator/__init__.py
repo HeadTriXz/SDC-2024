@@ -1,8 +1,6 @@
-# ruff: noqa
-
-import airsim  # noqa: E402
 from typing import Generator
 
+import airsim
 import cv2
 
 from driving.speed_controller import SpeedController, SpeedControllerState
@@ -11,6 +9,7 @@ from simulator.simulator_can_controller import SimCanController
 
 
 def main() -> None:
+    """Run the simulator."""
     import numpy as np
 
     # startup the client

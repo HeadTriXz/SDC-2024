@@ -37,8 +37,6 @@ def get_lines(image: np.ndarray) -> list[Line]:
     the image should be stitched and not top down
     """
     white = cv2.inRange(image, config.white["MIN"], config.white["MAX"])
-    cv2.imshow("white", white)
-    cv2.waitKey(1)
     return window_search(white, 110)
 
 

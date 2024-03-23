@@ -72,8 +72,6 @@ class LaneLynx:
     def __run(self) -> None:
         for image in self.image_generator:
             # get the lines in the image and split them
-            cv2.imshow("image", image)
-            cv2.waitKey(1)
 
             lines = get_lines(image)
             driving_lines = filter_lines(lines, image.shape[1] // 2)
@@ -83,9 +81,6 @@ class LaneLynx:
             for line in lines:
                 for point in line.points:
                     cv2.circle(image, point, 3, (255, 0, 0), -1)
-
-            cv2.imshow("lines", image)
-            cv2.waitKey(1)
 
             if len(driving_lines) < 2:
                 continue
