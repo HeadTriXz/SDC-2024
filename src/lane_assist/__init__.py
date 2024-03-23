@@ -7,7 +7,6 @@ import numpy as np
 
 import config
 from driving.speed_controller import SpeedController, SpeedControllerState
-from globals import GLOBALS
 from lane_assist.line_detection.line import Line, LineType
 from lane_assist.line_detection.line_detector import filter_lines, get_lines
 from lane_assist.line_following.path_follower import PathFollower

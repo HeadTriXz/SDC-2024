@@ -4,8 +4,8 @@ import cv2
 import numpy as np
 import pytest
 
-from globals import GLOBALS
-from lane_assist import LineFollowing, filter_lines, generate_driving_path, get_lines, stitch_images, topdown
+import config
+from lane_assist import PathFollower, filter_lines, generate_driving_path, get_lines, stitch_images, topdown
 
 
 def get_path(file: str) -> str:
@@ -24,8 +24,8 @@ def get_image(file: str) -> np.ndarray:
 def test_lane_assist_benchmark(benchmark: any) -> None:
     """Benchmark the line detection.
 
-    to make sure it is a realistic situation all images in the test folder are used.
-    this benchmark will not include stitching the images.
+    To make sure it is a realistic situation, all images in the test folder are used.
+    This benchmark will not include stitching the images.
     """
     center_img = get_image("../../resources/images/crossing/center.jpg")
     left_img = get_image("../../resources/images/crossing/left.jpg")
@@ -35,7 +35,7 @@ def test_lane_assist_benchmark(benchmark: any) -> None:
     assert left_img is not None
     assert right_img is not None
 
-    line_following = LineFollowing(0, 0, 0)
+    line_following = PathFollower(0, 0, 0)
 
     def get_steering_angle() -> float:
         """Get the steering angle."""
@@ -54,8 +54,8 @@ def test_lane_assist_benchmark(benchmark: any) -> None:
         lines = get_lines(topdown_image)
         lines = filter_lines(lines, topdown_image.shape[1] // 2)
 
-        path = generate_driving_path(lines, GLOBALS["REQUESTED_LANE"])
-        return line_following.get_steering_fraction(path, GLOBALS["REQUESTED_LANE"])
+        path = generate_driving_path(lines, config.requested_lane)
+        return line_following.get_steering_fraction(path, topdown_image.shape[1] // 2)
 
     # start the benchmark
     benchmark(get_steering_angle)
