@@ -41,7 +41,7 @@ ignore = [
     "D401"
 ]
 
-exclude = ["src/scripts/original_controller.py"]
+exclude = ["scripts/**", "src/driving/gamepad/driving_controller.py"]
 
 # Ignore unused imports in __init__.py files (would need __all__ otherwise)
 [lint.per-file-ignores]
