@@ -4,14 +4,15 @@ from os import system
 
 import can
 
-from common.camera_stream.stream import VideoStream
-from common.constants import Gear
+from constants import Gear
+from driving.can_controller import CANController
+from driving.speed_controller import SpeedController
 from globals import GLOBALS
-from kart_control.can_controller import CANController
-from kart_control.speed_controller import SpeedController
-from lane_assist import LaneLynx, LineFollowing
-from lane_assist.image_manipulation import td_stitched_image_generator
+from lane_assist import LaneLynx
+from lane_assist.helpers import td_stitched_image_generator
+from lane_assist.line_following.path_follower import PathFollower
 from telemetry import start_telemetry
+from utils.video_stream import VideoStream
 
 
 def initialize_can() -> can.Bus:
@@ -45,9 +46,9 @@ if __name__ == "__main__":
     can_controller = CANController(bus)
     can_controller.start()
 
-    line_following = LineFollowing(0.1, 0.01, 0.05, look_ahead_distance=10)
+    path_follower = PathFollower(0.1, 0.01, 0.05, look_ahead_distance=10)
 
-    telem_thread = threading.Thread(target=start_telemetry, args=(line_following,), daemon=True)
+    telem_thread = threading.Thread(target=start_telemetry, args=(path_follower,), daemon=True)
     telem_thread.start()
     #
     speed_controller = SpeedController(can_controller)
@@ -55,7 +56,7 @@ if __name__ == "__main__":
 
     lynx = LaneLynx(
         td_stitched_image_generator(cam1, cam2, cam3),
-        line_following,
+        path_follower,
         speed_controller,
         adjust_speed=lambda _: GLOBALS["SET_SPEED"],
     )

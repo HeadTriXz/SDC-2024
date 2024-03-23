@@ -52,6 +52,7 @@ def interpolate_line(line: Line, points: int) -> tuple[np.ndarray, np.ndarray]:
 
     return new_x, new_y
 
+
 def generate_tests(filename: str) -> None:
     """Generate the tests for the line generation."""
     images_names = ["straight", "corner", "crossing", "stopline"]
@@ -102,5 +103,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    #generate_tests("../../../tests/line_following/lines.py")
+    # generate_tests("../../../tests/line_following/lines.py")
     main()

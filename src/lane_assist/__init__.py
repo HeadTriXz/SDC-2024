@@ -5,13 +5,14 @@ from threading import Thread
 
 import numpy as np
 
+from driving.speed_controller import SpeedController, SpeedControllerState
 from globals import GLOBALS
-from kart_control.speed_controller import SpeedController, SpeedControllerState
-from lane_assist.image_manipulation.image_stitch import adjust_gamma, stitch_images
-from lane_assist.image_manipulation.top_down_transfrom import topdown
-from lane_assist.line_detection import Line, LineType, filter_lines, get_lines
-from lane_assist.path_following import LineFollowing
-from lane_assist.path_generation import generate_driving_path
+from lane_assist.line_detection.line import Line, LineType
+from lane_assist.line_detection.line_detector import filter_lines, get_lines
+from lane_assist.line_following.path_follower import PathFollower
+from lane_assist.line_following.path_generator import generate_driving_path
+from lane_assist.preprocessing.birdview import topdown
+from lane_assist.preprocessing.stitching import adjust_gamma, stitch_images
 
 
 class LaneLynx:
@@ -25,7 +26,7 @@ class LaneLynx:
     Attributes
     ----------
     :param image_generation: A function that generates images.
-    :param line_follower: The line follower class.
+    :param path_follower: The line follower class.
     :param speed_controller: The speed controller.
     :param adjust_speed: A function that calculates the dynamic speed that can be driven on the generated path.
 
@@ -34,7 +35,7 @@ class LaneLynx:
     def __init__(
         self,
         image_generation: Generator[np.ndarray, None, None],
-        line_follower: LineFollowing,
+        path_follower: PathFollower,
         speed_controller: SpeedController,
         adjust_speed: Callable[[np.ndarray], int] = lambda _: 100,
     ) -> None:
@@ -48,7 +49,7 @@ class LaneLynx:
         self.speed_controller = speed_controller
 
         # remaining
-        self.line_follower = line_follower
+        self.path_follower = path_follower
 
     def start(self, multithreading: bool = False) -> None | Thread:
         """Start the lane assist.
@@ -116,5 +117,5 @@ class LaneLynx:
         self.adjust_speed(path)
 
         # steer the kart based on the path and its position.
-        steering_percent = self.line_follower.get_steering_fraction(path, car_position)
+        steering_percent = self.path_follower.get_steering_fraction(path, car_position)
         self.can_controller.set_steering(steering_percent)
