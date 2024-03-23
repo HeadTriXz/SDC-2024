@@ -1,17 +1,17 @@
 # ruff: noqa: ERA001, D103, ANN201, A002, ARG001
-# we ignore a large amount of linting errros because this file will hopefully be removed soon.
+# we ignore a large amount of linting errors because this file will hopefully be removed soon.
 from typing import Any
 
 import uvicorn
 from fastapi import FastAPI, Form, Request, Response
 
 from globals import GLOBALS
-from lane_assist import LineFollowing
+from lane_assist import PathFollower
 from telemetry.server.utils import get_file_relative_path
 
 app = FastAPI()
 
-_line_follower: LineFollowing | None = None
+_line_follower: PathFollower | None = None
 
 
 @app.get("/")
@@ -129,7 +129,7 @@ def set_white(min: int = Form(...), max: int = Form(...)):
     return Response(status_code=303, headers={"Location": "/"})
 
 
-def run(line_follower: LineFollowing) -> None:
+def run(line_follower: PathFollower) -> None:
     """Run the webserver server."""
     global _line_follower
     _line_follower = line_follower

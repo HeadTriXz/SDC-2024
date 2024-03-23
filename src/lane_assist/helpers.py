@@ -47,3 +47,4 @@ def td_stitched_image_generator(
             yield topdown_image
 
     return __generator()
+
