@@ -1,6 +1,6 @@
-from enum import IntEnum
-
 import numpy as np
+
+from enum import IntEnum
 
 
 class LineType(IntEnum):
@@ -22,7 +22,11 @@ class Line:
     line_type: LineType
 
     def __init__(
-        self, points: np.ndarray, window_height: int = None, line_type: LineType = None, gaps_allowed: int = 2
+            self,
+            points: np.ndarray,
+            window_height: int = None,
+            line_type: LineType = None,
+            gaps_allowed: int = 2
     ) -> None:
         """Initialize the line.
 
@@ -42,7 +46,7 @@ class Line:
         if window_height is None:
             raise ValueError("window_height or line_type must be provided")
 
-        # check if there are regular intervals greater then the height of a window
+        # check if there are regular intervals greater than the height of a window
         # if so we have a dashed line. if there are no regular intervals we have a solid line
         if len(points) < 2:
             self.line_type = LineType.SOLID
@@ -58,17 +62,25 @@ class Line:
         """Check if the lines are equal."""
         if not isinstance(other, Line):
             return False
+
         return np.array_equal(self.points, other.points) and self.line_type == other.line_type
 
-    def __ne__(self, other: object) -> bool:  # noqa: N807, ANN001
+    def __ne__(self, other: object) -> bool:
         """Check if the lines are not equal."""
         return not self.__eq__(other)
 
     def __repr__(self) -> str:
         """Get the string representation of the line."""
-        type_str = (
-            "SOLID" if self.line_type == LineType.SOLID else "DASHED" if self.line_type == LineType.DASHED else "STOP"
-        )
+        match self.line_type:
+            case LineType.SOLID:
+                type_str = "SOLID"
+            case LineType.DASHED:
+                type_str = "DASHED"
+            case LineType.STOP:
+                type_str = "STOP"
+            case _:
+                type_str = "UNKNOWN"
+
         return f"Line(points={len(self.points)}, line_type={type_str})"
 
     def as_definition(self) -> str:

@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from common.constants import CameraFramerate, CameraResolution
+from constants import CameraFramerate, CameraResolution
 from threading import Thread
 
 

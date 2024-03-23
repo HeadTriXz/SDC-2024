@@ -2,8 +2,8 @@ import can
 import logging
 
 from enum import IntEnum
-from common import config
-from common.constants import CANFeedbackIdentifier, Gear
+import config
+from constants import CANFeedbackIdentifier, Gear
 from kart_control.can_controller import CANController
 
 
