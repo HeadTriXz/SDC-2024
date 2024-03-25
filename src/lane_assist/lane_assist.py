@@ -12,8 +12,6 @@ from lane_assist.line_detection.line import Line, LineType
 from lane_assist.line_detection.line_detector import filter_lines, get_lines
 from lane_assist.line_following.path_follower import PathFollower
 from lane_assist.line_following.path_generator import generate_driving_path
-from lane_assist.preprocessing.birdview import topdown
-from lane_assist.preprocessing.stitching import adjust_gamma, stitch_images
 
 
 class LaneAssist:

@@ -34,7 +34,7 @@ class VideoStream:
         resolution: CameraResolution = CameraResolution.HD,  # noqa: ARG003
         frame_rate: CameraFramerate = CameraFramerate.FPS_60,  # noqa: ARG003
     ) -> "VideoStream":
-        """Creates a new instance of the video stream.
+        """Create a new instance of the video stream.
 
         :param camera_id: The camera ID.
         :param resolution: The resolution of the video stream (default is 720p).
