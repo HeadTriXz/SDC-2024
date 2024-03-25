@@ -10,3 +10,9 @@ requested_speed = 5
 gamma = {"LEFT": 1, "CENTER": 1, "RIGHT": 1, "ADJUST": False}
 lane_detection = {"LINE_WIDTH": 50, "ZEBRA_CROSSING_THRESHOLD": 20_000, "LINE_THRESHOLD": 25_00, "PIXELS_IN_WINDOW": 1}
 white = {"MIN": 200, "MAX": 255}
+
+camera_ids = {
+    "left": 0,
+    "center": 0,
+    "right": 0
+}

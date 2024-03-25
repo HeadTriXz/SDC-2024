@@ -34,9 +34,9 @@ def get_can_real_or_virtual() -> can.Bus:
 def __kart_main() -> None:
     """Run the kart main."""
     # load cameras
-    cam1 = VideoStream(0)
-    cam2 = VideoStream(0)
-    cam3 = VideoStream(0)
+    cam1 = VideoStream(config.camera_ids["left"])
+    cam2 = VideoStream(config.camera_ids["center"])
+    cam3 = VideoStream(config.camera_ids["right"])
 
     cam1.start()
     cam2.start()

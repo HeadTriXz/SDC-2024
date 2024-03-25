@@ -1,14 +1,13 @@
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-from numpy import ndarray
 
 from lane_assist.line_detection.line import Line
 from lane_assist.line_detection.line_detector import filter_lines, get_lines
 from lane_assist.preprocessing.birdview import topdown
 
 
-def generate_driving_path(lines: list[Line], requested_lane: int) -> ndarray:
+def generate_driving_path(lines: list[Line], requested_lane: int) -> np.ndarray:
     """Generate the driving path based on the lines.
 
     This function will take the lines and generate a driving path based on the lines.
