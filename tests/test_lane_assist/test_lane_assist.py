@@ -5,7 +5,9 @@ import numpy as np
 import pytest
 
 import config
-from lane_assist import PathFollower, filter_lines, generate_driving_path, get_lines, stitch_images, topdown
+from lane_assist.lane_assist import PathFollower, filter_lines, generate_driving_path, get_lines
+from lane_assist.preprocessing.birdview import topdown
+from lane_assist.preprocessing.stitching import stitch_images
 
 
 def get_path(file: str) -> str:
