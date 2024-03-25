@@ -14,6 +14,7 @@ class PedestrianHandler(BaseObjectHandler):
     Attributes
     ----------
         track_history (dict[int, list[int]]): The history of the pedestrians.
+
     """
 
     track_history: dict[int, np.ndarray]
@@ -33,8 +34,6 @@ class PedestrianHandler(BaseObjectHandler):
         """
         crosswalks = predictions.data[predictions.cls == Label.CROSSWALK]
         pedestrians = predictions.data[predictions.cls == Label.PERSON]
-
-        print(f"Found {len(pedestrians)} pedestrians")
 
         if len(crosswalks) == 0 or len(pedestrians) == 0:
             return
@@ -91,7 +90,8 @@ class PedestrianHandler(BaseObjectHandler):
 
         if history[0][0] < crosswalk[0] - margin_x:
             return -1
-        elif history[0][0] > crosswalk[2] + margin_x:
+
+        if history[0][0] > crosswalk[2] + margin_x:
             return 1
 
         return 0
@@ -129,8 +129,8 @@ class PedestrianHandler(BaseObjectHandler):
         margin_x = (crosswalk[2] - crosswalk[0]) * crosswalk_safe_zone_margin
         if direction == -1:
             return history[-1][0] < crosswalk[0] + margin_x
-        else:
-            return history[-1][0] > crosswalk[2] - margin_x
+
+        return history[-1][0] > crosswalk[2] - margin_x
 
     def __should_brake(self, crosswalk: np.ndarray) -> bool:
         """Checks if the crosswalk is close enough to stop.
@@ -138,7 +138,7 @@ class PedestrianHandler(BaseObjectHandler):
         :param crosswalk: The bounding box of the crosswalk.
         :return: Whether the crosswalk is close enough to stop.
         """
-        return True
+        return crosswalk[3] > 270  # TODO: Dynamically calculate the distance
 
     def __xyxy_to_centroid(self, xyxy: np.ndarray) -> np.ndarray:
         """Converts the bounding box from (x1, y1, x2, y2) to (x, y).
