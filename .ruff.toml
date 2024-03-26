@@ -30,7 +30,8 @@ select = [
 ]
 
 ignore = [
-    "ANN101", # missing type annotation for self in method
+    "ANN101",
+    "BLE001",
     "FIX002",
     "D100",
     "D401",
