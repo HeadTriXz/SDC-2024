@@ -100,7 +100,7 @@ class ConfigLoader(metaclass=SingletonMeta):
 
         OmegaConf.save(self.__loaded_config, file_path)
 
-    def rollback(self):
+    def rollback(self) -> None:
         """Rollback to the latest backup."""
         backup_path = os.path.join(os.path.dirname(__file__), "backups")
         backups = os.listdir(backup_path)
