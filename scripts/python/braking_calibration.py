@@ -149,7 +149,7 @@ if __name__ == "__main__":
     system("ip link set can0 type can bitrate 500000")
     system("ip link set can0 up")
 
-    can_bus = can.interface.Bus(interface="virtual", channel="can0", bitrate=500000)
+    can_bus = can.interface.Bus(interface="socketcan", channel="can0", bitrate=500000)
     can_controller = CANController(can_bus)
     can_controller.start()
 
