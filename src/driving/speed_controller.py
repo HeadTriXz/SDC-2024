@@ -118,7 +118,7 @@ class SpeedController:
             self.__can.set_brake(100)  # TODO: brake at the threshold
             return
 
-        self.__can.set_throttle(self.__get_target_percentage(), gear=self.__gear)
+        self.__can.set_throttle(self.__get_target_percentage(), self.__gear)
         self.__can.set_brake(0 if self.current_speed <= self.__target_speed else 30)  # TODO: brake at threshold
 
     def __get_target_percentage(self) -> int:

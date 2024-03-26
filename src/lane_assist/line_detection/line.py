@@ -1,6 +1,6 @@
-import numpy as np
-
 from enum import IntEnum
+
+import numpy as np
 
 
 class LineType(IntEnum):
@@ -22,11 +22,7 @@ class Line:
     line_type: LineType
 
     def __init__(
-            self,
-            points: np.ndarray,
-            window_height: int = None,
-            line_type: LineType = None,
-            gaps_allowed: int = 2
+        self, points: np.ndarray, window_height: int = None, line_type: LineType = None, gaps_allowed: int = 2
     ) -> None:
         """Initialize the line.
 
@@ -53,7 +49,7 @@ class Line:
             return
 
         intervals = np.diff(points[:, 1])
-        if len(np.where(abs(intervals) > window_height * 2)[0]) > gaps_allowed:
+        if len(np.where(abs(intervals) > window_height)[0]) > gaps_allowed * 1.5:
             self.line_type = LineType.DASHED
         else:
             self.line_type = LineType.SOLID

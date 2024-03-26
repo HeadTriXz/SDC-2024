@@ -4,7 +4,8 @@ import cv2
 import numpy as np
 
 import config
-from lane_assist import adjust_gamma, stitch_images, topdown
+from lane_assist.preprocessing.birdview import topdown
+from lane_assist.preprocessing.stitching import adjust_gamma, stitch_images
 from utils.video_stream import VideoStream
 
 

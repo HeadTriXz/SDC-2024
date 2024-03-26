@@ -13,6 +13,12 @@ from lane_assist.line_detection.line_detector import filter_lines, get_lines
 from lane_assist.line_following.path_follower import PathFollower
 from lane_assist.line_following.path_generator import generate_driving_path
 
+colours = {
+    LineType.SOLID: (0, 255, 0),
+    LineType.DASHED: (0, 0, 255),
+    LineType.STOP: (255, 0, 0),
+}
+
 
 class LaneAssist:
     """A class to add lane assist to the kart.
@@ -36,7 +42,7 @@ class LaneAssist:
         image_generation: Generator[np.ndarray, None, None],
         path_follower: PathFollower,
         speed_controller: SpeedController,
-        adjust_speed: Callable[[np.ndarray], int] = lambda _: 100,
+        adjust_speed: Callable[[np.ndarray], int] = lambda _: 1,
     ) -> None:
         """Initialize the lane assist."""
         # functions
@@ -68,24 +74,42 @@ class LaneAssist:
         return self.__run()
 
     def __run(self) -> None:
-        for image in self.image_generator:
+        for gray_image in self.image_generator:
             # get the lines in the image and split them
 
-            lines = get_lines(image)
-            driving_lines = filter_lines(lines, image.shape[1] // 2)
+            lines = get_lines(gray_image)
+            driving_lines = filter_lines(lines, gray_image.shape[1] // 2)
             stop_lines = list(filter(lambda line: line.line_type == LineType.STOP, lines))
 
+            # convert image to colour
+            colour_image = cv2.cvtColor(gray_image, cv2.COLOR_GRAY2BGR)
+            white_img = cv2.inRange(gray_image, config.white["MIN"], config.white["MAX"])
+            cv2.imshow("white", white_img)
+
             # draw lines on the image
-            for line in lines:
+            for line in driving_lines:
                 for point in line.points:
-                    cv2.circle(image, point, 3, (255, 0, 0), -1)
+                    cv2.circle(colour_image, point, 3, colours[line.line_type], -1)
+
+            histogram = np.sum(white_img[:], axis=1)
+            # draw the histogram on the image. it should be on the left edge of the image
+
+            for i, value in enumerate(histogram):
+                cv2.circle(colour_image, (int(value / 100), i), 2, (255, 0, 255), -1)
 
             if len(driving_lines) < 2:
                 continue
 
+            path = generate_driving_path(driving_lines, 0)
+            for point in path:
+                cv2.circle(colour_image, (int(point[0]), int(point[1])), 3, (255, 255, 255), -1)
+
+            cv2.imshow("image", colour_image)
+            cv2.waitKey(1)
+
             # act on the lines in the image
             self.__follow_path(
-                driving_lines, image.shape[1] // 2, config.requested_lane
+                driving_lines, gray_image.shape[1] // 2, config.requested_lane
             )  # TODO: make requested lane dynamic
             self.__handle_stoplines(stop_lines)
 
@@ -99,7 +123,12 @@ class LaneAssist:
         # this will cause the car to stop.
         if self.speed_controller.state == SpeedControllerState.WAITING_TO_STOP:
             # TODO: take the distance to the stopline and speed into account
-            self.speed_controller.state = SpeedControllerState.STOPPED
+            # check if the stoplines are in the bottom half of the image
+            # if they are, we should stop
+            for stopline in stoplines:
+                if stopline.points[0][1] > 400 and stopline.points[0][1] < 100:
+                    self.speed_controller.state = SpeedControllerState.STOPPED
+                    return
 
     def __follow_path(self, lines: list[Line], car_position: float, lane: int) -> None:
         """Follow the path.

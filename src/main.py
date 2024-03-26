@@ -7,9 +7,9 @@ import can
 import config
 from constants import Gear
 from driving.can_controller import CANController
-from driving.speed_controller import SpeedController
-from lane_assist import LaneLynx
+from driving.speed_controller import SpeedController, SpeedControllerState
 from lane_assist.helpers import td_stitched_image_generator
+from lane_assist.lane_assist import LaneAssist
 from lane_assist.line_following.path_follower import PathFollower
 from telemetry import start_telemetry
 from utils.video_stream import VideoStream
@@ -55,12 +55,14 @@ def __kart_main() -> None:
     #
     speed_controller = SpeedController(can_controller)
     speed_controller.gear = Gear.DRIVE
+    speed_controller.state = SpeedControllerState.WAITING_TO_STOP
+    speed_controller.max_speed = 50
 
-    lynx = LaneLynx(
+    lynx = LaneAssist(
         td_stitched_image_generator(cam1, cam2, cam3),
         path_follower,
         speed_controller,
-        adjust_speed=lambda _: config.requested_speed,
+        adjust_speed=lambda _: 1,
     )
     lynx.start()
 

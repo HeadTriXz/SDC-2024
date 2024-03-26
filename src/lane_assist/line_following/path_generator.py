@@ -19,7 +19,7 @@ def generate_driving_path(lines: list[Line], requested_lane: int) -> np.ndarray:
     lanes = [[lines[i], lines[i - 1]] for i in range(len(lines) - 1, 0, -1)]
 
     if requested_lane >= len(lanes):
-        raise ValueError(f'Requested lane "{requested_lane}" does not exist. lanes: {len(lanes)}')
+        requested_lane = len(lanes) - 1
 
     # get the lines of the lane we want to drive in.
     a1 = lanes[requested_lane][0]

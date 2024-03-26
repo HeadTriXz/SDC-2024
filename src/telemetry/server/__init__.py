@@ -6,7 +6,7 @@ import uvicorn
 from fastapi import FastAPI, Form, Request, Response
 
 import config
-from lane_assist import PathFollower
+from lane_assist.line_following.path_follower import PathFollower
 from telemetry.server.utils import get_file_relative_path
 
 app = FastAPI()

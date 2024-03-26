@@ -39,30 +39,48 @@ def window_search(
     filter_peaks = scipy.signal.find_peaks(
         histogram,
         height=config.lane_detection["ZEBRA_CROSSING_THRESHOLD"],
-        distance=config.lane_detection["LINE_WIDTH"] * 4,
+        distance=config.lane_detection["LINE_WIDTH"],
     )[0]
-    widths, _, lefts, rights = scipy.signal.peak_widths(histogram, filter_peaks, rel_height=0.98)
+    widths, _, lefts, rights = scipy.signal.peak_widths(histogram, filter_peaks, rel_height=0.90)
     stop_lines_y = []
+
+    # draw the peaks on the image
 
     # mask out these peaks if they are wider then a line
     for peak, width, left, right in zip(filter_peaks, widths, lefts, rights):
-        if width > config.lane_detection["LINE_WIDTH"]:
-            img[int(left) : int(right)] = 0
-        else:
+        if width > config.lane_detection["LINE_WIDTH"] * 4:
             stop_lines_y.append(int(peak))
+        img[int(left) : int(right)] = 0
+
+    # check if the peaks are connected to the bottom of the image
+    # if they are we need to start window search above them
+
+    start_position = img.shape[0] - 1
+    if len(rights) > 0:  # check if we have any peaks
+        lowest_end_index = np.argmax(rights)
+
+        if rights[lowest_end_index] > img.shape[0] - 10:
+            start_position = int(lefts[lowest_end_index])
 
     # create a histogram of the image to find the lines.
     # we only use the bottom half because that should be where the lines are.
     # to get the lines we will detect and get the peaks
-    histogram = np.sum(img[img.shape[0] // 2 :], axis=0)
+    weights = np.linspace(0, 1, img.shape[0] // 2)
+    pixels = img[img.shape[0] // 2 :]
+    pixels = np.multiply(pixels, weights[:, np.newaxis])
+    histogram = np.sum(pixels, axis=0)
+
     merged_peaks = scipy.signal.find_peaks(
-        histogram, height=config.lane_detection["LINE_THRESHOLD"],
-        distance=config.lane_detection["LINE_WIDTH"]
+        histogram, height=config.lane_detection["LINE_THRESHOLD"], distance=config.lane_detection["LINE_WIDTH"]
     )[0]
 
     # create the windows
     window_height = img.shape[0] // window_count  # get the height of the windows based on the amount we want.
-    windows = [Window(center, img.shape[0], window_width // 2) for center in merged_peaks]
+
+    # update the window count
+    window_count = start_position // window_height
+
+    windows = [Window(center, start_position, window_width // 2) for center in merged_peaks]
 
     for _ in range(window_count):
         # check which windows overlap
@@ -93,7 +111,8 @@ def window_search(
 
         for window in windows:
             if window.collided:
-                continue
+                # continue
+                pass
 
             # set the current position of the window
             win_y_low = window.y - window_height
