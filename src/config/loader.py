@@ -3,7 +3,7 @@ import time
 
 from omegaconf import DictConfig, ListConfig, OmegaConf
 
-from utils.SingletonMeta import SingletonMeta
+from utils.singleton_meta import SingletonMeta
 
 
 class ConfigLoader(metaclass=SingletonMeta):
