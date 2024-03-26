@@ -56,6 +56,9 @@ class LaneAssist:
         # remaining
         self.path_follower = path_follower
 
+        self.errors = []
+        self.stop_lines_found = 0
+
     def start(self, multithreading: bool = False) -> None | Thread:
         """Start the lane assist.
 
@@ -87,7 +90,7 @@ class LaneAssist:
             cv2.imshow("white", white_img)
 
             # draw lines on the image
-            for line in driving_lines:
+            for line in lines:
                 for point in line.points:
                     cv2.circle(colour_image, point, 3, colours[line.line_type], -1)
 
@@ -117,18 +120,20 @@ class LaneAssist:
 
     def __handle_stoplines(self, stoplines: list[Line]) -> None:
         if not stoplines or len(stoplines) == 0:
+            self.stop_lines_found -= 1
+            self.stop_lines_found = max(0, self.stop_lines_found)
             return
 
         # if we see a stopline and the state is waiting to stop, set the state to stopped.
         # this will cause the car to stop.
+        if self.stop_lines_found < 3:
+            self.stop_lines_found += 1
+            return
+
         if self.speed_controller.state == SpeedControllerState.WAITING_TO_STOP:
             # TODO: take the distance to the stopline and speed into account
-            # check if the stoplines are in the bottom half of the image
-            # if they are, we should stop
-            for stopline in stoplines:
-                if stopline.points[0][1] > 400 and stopline.points[0][1] < 100:
-                    self.speed_controller.state = SpeedControllerState.STOPPED
-                    return
+            self.speed_controller.state = SpeedControllerState.STOPPED
+            self.stop_lines_found = 0
 
     def __follow_path(self, lines: list[Line], car_position: float, lane: int) -> None:
         """Follow the path.

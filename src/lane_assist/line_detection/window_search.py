@@ -39,7 +39,7 @@ def window_search(
     filter_peaks = scipy.signal.find_peaks(
         histogram,
         height=config.lane_detection["ZEBRA_CROSSING_THRESHOLD"],
-        distance=config.lane_detection["LINE_WIDTH"],
+        distance=config.lane_detection["LINE_WIDTH"] * 4,
     )[0]
     widths, _, lefts, rights = scipy.signal.peak_widths(histogram, filter_peaks, rel_height=0.90)
     stop_lines_y = []
@@ -47,9 +47,14 @@ def window_search(
     # draw the peaks on the image
 
     # mask out these peaks if they are wider then a line
-    for peak, width, left, right in zip(filter_peaks, widths, lefts, rights):
-        if width > config.lane_detection["LINE_WIDTH"] * 4:
-            stop_lines_y.append(int(peak))
+    for left, right in zip(lefts, rights):
+        if (
+            right - left < (config.lane_detection["LINE_WIDTH"] * 2)
+            and left > config.lane_detection["LINE_WIDTH"] * 2.1
+            and right < img.shape[0] - config.lane_detection["LINE_WIDTH"] * 2.1
+        ):
+            stop_lines_y.append(int((left + right) / 2))
+
         img[int(left) : int(right)] = 0
 
     # check if the peaks are connected to the bottom of the image
@@ -111,8 +116,8 @@ def window_search(
 
         for window in windows:
             if window.collided:
-                # continue
-                pass
+                continue
+                # pass
 
             # set the current position of the window
             win_y_low = window.y - window_height
@@ -158,24 +163,36 @@ def window_search(
     # get the solid lines in the image
     solid_lines = [line for line in lines if line.line_type == LineType.SOLID]
 
-    # get the closest point for each solid line at the y of the stop lines
-    closest_points = []
-    for line in solid_lines:
-        if line.points.shape[0] == 0 or len(stop_lines_y) > 1:
-            continue
-        closest_point = line.points[np.argmin(np.abs(line.points[:, 1] - stop_lines_y))]
-        closest_points.append(closest_point)
-
-    if len(closest_points) == 0:
+    # chck if the stop lines are at a right angle to the solid lines
+    if len(solid_lines) == 0:
         return lines
 
-    # get the distance between the closest points and the stop lines
-    distances = closest_points[-1][0] - closest_points[0][0]
+    closest_indexes = []
+    for stop_line in stop_lines_y:
+        closest_index = np.argmin([abs(line.points[0][1] - stop_line) for line in solid_lines])
+        closest_indexes.append(closest_index)
 
-    # generate points in between them with a gap of window height
-    points = np.array(
-        [(closest_points[0][0] + i, stop_lines_y[0]) for i in range(0, distances, window_height)]
-        + [(closest_points[-1][0], stop_lines_y[0])]
-    )
-    lines.append(Line(points, window_height, LineType.STOP))
+    # get the angle of the points of the solid lines
+    angles = [
+        np.arctan2(
+            line.points[closest_index - 2][1] - line.points[closest_index][1],
+            line.points[closest_index][0] - line.points[closest_index - 2][0],
+        )
+        for line in solid_lines
+    ]
+
+    if len(angles) == 0:
+        return lines
+
+    for angle in angles:
+        # check if it is in the driving direction
+        print(angle)
+        if abs(angle) < 1.2:
+            return lines
+
+    # get a close point
+    closest_points = [solid_lines[i].points[closest_index] for i, closest_index in enumerate(closest_indexes)]
+    line = Line(np.array(closest_points), line_type=LineType.STOP)
+    lines.append(line)
+
     return lines

@@ -31,6 +31,8 @@ class PathFollower:
         self.look_ahead_distance = look_ahead_distance
         self.max_steering_range = max_steering_range
 
+        self.errors = []
+
     def get_steering_fraction(self, path: np.ndarray, car_position: float) -> float:
         """Get the steering percentage to follow the path.
 
@@ -74,6 +76,7 @@ class PathFollower:
 
         # get the y distacne to the target point
         x_distance_to_target: int | Any = target_point[0] - car_position
+        self.errors.append(x_distance_to_target)
         return -self.pid(x_distance_to_target)
         # limit the angle to the max steering angle.
 

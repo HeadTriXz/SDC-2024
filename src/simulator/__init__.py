@@ -3,6 +3,7 @@ from typing import Generator
 import airsim
 import cv2
 
+import config
 from driving.speed_controller import SpeedController, SpeedControllerState
 from lane_assist.lane_assist import LaneAssist, PathFollower
 from simulator.simulator_can_controller import SimCanController
@@ -44,7 +45,8 @@ def main() -> None:
         get_sim_image_generator(),
         path_follower,
         speed_controller,
-        adjust_speed=lambda _: 10,
+        adjust_speed=lambda _: config.requested_speed,
     )
 
-    lx.start()
+    lx.start(True)
+    input("Press enter to stop")
