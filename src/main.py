@@ -1,5 +1,6 @@
 import can
 
+from config import config
 from driving.can_controller import CANController
 from driving.speed_controller import SpeedController
 from object_recognition.handlers.pedestrian_handler import PedestrianHandler
@@ -19,7 +20,7 @@ if __name__ == "__main__":
     controller.add_handler(SpeedLimitHandler(controller))
     controller.add_handler(TrafficLightHandler(controller))
 
-    detector = ObjectDetector.from_model("../resources/models/best.pt", controller, 0)
+    detector = ObjectDetector.from_model(config.object_detection.model_path, controller, 0)
     can_controller.start()
     speed_controller.start()
     detector.start()
