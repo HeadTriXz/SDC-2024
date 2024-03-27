@@ -1,6 +1,6 @@
 import numpy as np
 
-from config import crosswalk_overlap_margin, crosswalk_safe_zone_margin
+from config import config
 from constants import Label
 from driving.speed_controller import SpeedControllerState
 from object_recognition.handlers.base_handler import BaseObjectHandler
@@ -32,6 +32,9 @@ class PedestrianHandler(BaseObjectHandler):
 
         :param predictions: The detected pedestrians (.data: x1, y1, x2, y2, track_id, conf, cls).
         """
+        if not predictions.is_track:
+            return
+
         crosswalks = predictions.data[predictions.cls == Label.CROSSWALK]
         pedestrians = predictions.data[predictions.cls == Label.PERSON]
 
@@ -52,7 +55,7 @@ class PedestrianHandler(BaseObjectHandler):
 
                 centroid = self.__xyxy_to_centroid(pedestrian[:4])
 
-                p_id = pedestrian[4]
+                p_id = int(pedestrian[4])
                 if p_id not in self.track_history:
                     self.track_history[p_id] = np.array([centroid])
                 else:
@@ -86,7 +89,7 @@ class PedestrianHandler(BaseObjectHandler):
         :param history: The pedestrian's previous positions.
         :return: The initial side the pedestrian started from. -1 if left, 1 if right.
         """
-        margin_x = (crosswalk[2] - crosswalk[0]) * crosswalk_safe_zone_margin
+        margin_x = (crosswalk[2] - crosswalk[0]) * config.pedestrian_detection.crosswalk_safe_zone_margin
 
         if history[0][0] < crosswalk[0] - margin_x:
             return -1
@@ -103,13 +106,17 @@ class PedestrianHandler(BaseObjectHandler):
         :param pedestrian: The bounding box of the pedestrian.
         :return: True if the bounding boxes overlap, False otherwise.
         """
-        margin = (crosswalk[3] - crosswalk[1]) * crosswalk_overlap_margin
-        min_y_crosswalk = crosswalk[1] - margin
-        max_y_crosswalk = crosswalk[3] + margin
+        margin_x = (crosswalk[2] - crosswalk[0]) * config.pedestrian_detection.crosswalk_overlap_margin
+        margin_y = (crosswalk[3] - crosswalk[1]) * config.pedestrian_detection.crosswalk_overlap_margin
+
+        min_x_crosswalk = crosswalk[0] - margin_x
+        max_x_crosswalk = crosswalk[2] + margin_x
+        min_y_crosswalk = crosswalk[1] - margin_y
+        max_y_crosswalk = crosswalk[3] + margin_y
 
         return (min_y_crosswalk <= pedestrian[3] <= max_y_crosswalk and
-                (crosswalk[0] <= pedestrian[0] <= crosswalk[2] or
-                 crosswalk[0] <= pedestrian[2] <= crosswalk[2]))
+                (min_x_crosswalk <= pedestrian[0] <= max_x_crosswalk or
+                 min_x_crosswalk <= pedestrian[2] <= max_x_crosswalk))
 
     def __reached_safe_zone(self, crosswalk: np.ndarray, history: np.ndarray) -> bool:
         """Checks if the pedestrian has reached the safe zone.
@@ -126,7 +133,7 @@ class PedestrianHandler(BaseObjectHandler):
         if direction == side:
             return False
 
-        margin_x = (crosswalk[2] - crosswalk[0]) * crosswalk_safe_zone_margin
+        margin_x = (crosswalk[2] - crosswalk[0]) * config.pedestrian_detection.crosswalk_safe_zone_margin
         if direction == -1:
             return history[-1][0] < crosswalk[0] + margin_x
 
