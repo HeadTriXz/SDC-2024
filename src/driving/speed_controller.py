@@ -122,7 +122,13 @@ class SpeedController:
 
     def __get_target_percentage(self) -> int:
         """Get the target percentage of the throttle to apply."""
-        return int(config.speed_modes.selected / self.__target_speed * 100)
+        if self.__target_speed == 0:
+            return 0
+
+        if self.__target_speed >= config.speed_modes.selected:
+            return 100
+
+        return int((self.__target_speed / config.speed_modes.selected) * 100)
 
     def __update_speed(self, message: can.Message) -> None:
         """Update the speed of the go-kart."""

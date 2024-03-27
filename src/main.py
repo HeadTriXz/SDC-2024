@@ -1,25 +1,29 @@
-import cv2
+import can
 
-from lane_assist.preprocessing.stitching import adjust_gamma, stitch_images
-from lane_assist.preprocessing.birdview import topdown
-from lane_assist.line_detection.line_detector import get_lines
+from config import config
+from driving.can_controller import CANController
+from driving.speed_controller import SpeedController
+from object_recognition.handlers.pedestrian_handler import PedestrianHandler
+from object_recognition.handlers.speed_limit_handler import SpeedLimitHandler
+from object_recognition.handlers.traffic_light_handler import TrafficLightHandler
+from object_recognition.object_controller import ObjectController
+from object_recognition.object_detector import ObjectDetector
 
 
 if __name__ == "__main__":
-    # load images
-    center_img = cv2.imread("../resources/images/straight/center.jpg")
-    left_img = cv2.imread("../resources/images/straight/left.jpg")
-    right_img = cv2.imread("../resources/images/straight/right.jpg")
+    can_bus = can.Bus(interface="virtual", channel="can0", bitrate=500000)
+    can_controller = CANController(can_bus)
+    speed_controller = SpeedController(can_controller)
 
-    # adjust the gamma of the images so the bright unstitched are giving less false positives
-    left_img = adjust_gamma(left_img, 0.62)
-    right_img = adjust_gamma(right_img, 0.62)
-    stitched = stitch_images(left_img, center_img, right_img)
+    controller = ObjectController(speed_controller)
+    controller.add_handler(PedestrianHandler(controller))
+    controller.add_handler(SpeedLimitHandler(controller))
+    controller.add_handler(TrafficLightHandler(controller))
 
-    # convert image to topdown and grayscale
-    graysacle = cv2.cvtColor(stitched, cv2.COLOR_BGR2GRAY)
-    top_down_img = topdown(graysacle)
+    detector = ObjectDetector.from_model(config.object_detection.model_path, controller, 0)
+    can_controller.start()
+    speed_controller.start()
+    detector.start()
 
-    # get the lines of the image
-    lines = get_lines(top_down_img)
-    print(lines)  # noqa: T201
+    while True:
+        pass
