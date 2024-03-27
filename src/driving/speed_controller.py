@@ -1,10 +1,10 @@
 import can
-import config
 import logging
 
-from enum import IntEnum
+from config import config
 from constants import CANFeedbackIdentifier, Gear
 from driving.can_controller import CANController
+from enum import IntEnum
 
 
 class SpeedControllerState(IntEnum):
@@ -122,7 +122,7 @@ class SpeedController:
 
     def __get_target_percentage(self) -> int:
         """Get the target percentage of the throttle to apply."""
-        return int(config.speed / self.__target_speed * 100)
+        return int(config.speed_modes.selected / self.__target_speed * 100)
 
     def __update_speed(self, message: can.Message) -> None:
         """Update the speed of the go-kart."""
