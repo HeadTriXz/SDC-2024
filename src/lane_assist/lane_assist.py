@@ -1,17 +1,16 @@
 import threading
-import time
 from collections.abc import Callable, Generator
 from threading import Thread
 
 import cv2
 import numpy as np
 
-import config
+from config import config
 from driving.speed_controller import SpeedController, SpeedControllerState
 from lane_assist.line_detection.line import Line, LineType
 from lane_assist.line_detection.line_detector import filter_lines, get_lines
 from lane_assist.line_following.path_follower import PathFollower
-from lane_assist.line_following.path_generator import generate_driving_path
+from lane_assist.line_following.path_generator import Path, generate_driving_path
 
 colours = {
     LineType.SOLID: (0, 255, 0),
@@ -42,7 +41,7 @@ class LaneAssist:
         image_generation: Generator[np.ndarray, None, None],
         path_follower: PathFollower,
         speed_controller: SpeedController,
-        adjust_speed: Callable[[np.ndarray], int] = lambda _: 1,
+        adjust_speed: Callable[[Path], int] = lambda _: 1,
     ) -> None:
         """Initialize the lane assist."""
         # functions
@@ -55,8 +54,6 @@ class LaneAssist:
 
         # remaining
         self.path_follower = path_follower
-
-        self.errors = []
         self.stop_lines_found = 0
 
     def start(self, multithreading: bool = False) -> None | Thread:
@@ -86,7 +83,7 @@ class LaneAssist:
 
             # convert image to colour
             colour_image = cv2.cvtColor(gray_image, cv2.COLOR_GRAY2BGR)
-            white_img = cv2.inRange(gray_image, config.white["MIN"], config.white["MAX"])
+            white_img = cv2.inRange(gray_image, config.image_manipulation.white_threshold, 255)
             cv2.imshow("white", white_img)
 
             # draw lines on the image
@@ -104,7 +101,7 @@ class LaneAssist:
                 continue
 
             path = generate_driving_path(driving_lines, 0)
-            for point in path:
+            for point in path.points:
                 cv2.circle(colour_image, (int(point[0]), int(point[1])), 3, (255, 255, 255), -1)
 
             cv2.imshow("image", colour_image)
@@ -112,11 +109,9 @@ class LaneAssist:
 
             # act on the lines in the image
             self.__follow_path(
-                driving_lines, gray_image.shape[1] // 2, config.requested_lane
+                driving_lines, gray_image.shape[1] // 2, config.lane_assist.line_following.requested_lane
             )  # TODO: make requested lane dynamic
             self.__handle_stoplines(stop_lines)
-
-            time.sleep(0)
 
     def __handle_stoplines(self, stoplines: list[Line]) -> None:
         if not stoplines or len(stoplines) == 0:
@@ -153,11 +148,10 @@ class LaneAssist:
 
         # generate the driving path
         path = generate_driving_path(lines, lane)
-
         # adjust the speed based on the path
         speed = self.adjust_speed(path)
         self.speed_controller.target_speed = speed
 
         # steer the kart based on the path and its position.
-        steering_fraction = self.path_follower.get_steering_fraction(path, car_position)
+        steering_fraction = self.path_follower.get_steering_fraction(path.points, car_position)
         self.can_controller.set_steering(steering_fraction)

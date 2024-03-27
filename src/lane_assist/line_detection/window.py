@@ -23,8 +23,6 @@ class Window:
             self.points = np.vstack((self.points, [[x, y]]))
             self.found_in_previous = True
 
-        # TODO: move with the line. this will allow us to better detect corners
-
     def __eq__(self, other: object) -> bool:
         """Check if the windows are equal."""
         if not isinstance(other, Window):

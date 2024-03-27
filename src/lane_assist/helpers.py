@@ -3,7 +3,7 @@ from typing import Generator
 import cv2
 import numpy as np
 
-import config
+from config import config
 from lane_assist.preprocessing.birdview import topdown
 from lane_assist.preprocessing.stitching import adjust_gamma, stitch_images
 from utils.video_stream import VideoStream
@@ -37,10 +37,10 @@ def td_stitched_image_generator(
             center_image = cv2.cvtColor(center_image, cv2.COLOR_BGR2GRAY)
             right_image = cv2.cvtColor(right_image, cv2.COLOR_BGR2GRAY)
 
-            if config.gamma["ADJUST"]:
-                left_image = adjust_gamma(left_image, config.gamma["LEFT"])
-                center_image = adjust_gamma(center_image, config.gamma["CENTER"])
-                right_image = adjust_gamma(right_image, config.gamma["RIGHT"])
+            if config.gamma.adjust:
+                left_image = adjust_gamma(left_image, config.gamma.left)
+                center_image = adjust_gamma(center_image, config.gamma.center)
+                right_image = adjust_gamma(right_image, config.gamma.right)
 
             stitched_image = stitch_images(left_image, center_image, right_image)
             topdown_image = topdown(stitched_image)

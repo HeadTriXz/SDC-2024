@@ -1,11 +1,12 @@
 import numpy as np
 import scipy
 
-import config
+from config import config
 from lane_assist.line_detection.line import Line, LineType
 from lane_assist.line_detection.window import Window
 
 # REPLACED WITH THE VALUES IN GLOBALS
+THRESHOLDS = config.lane_assist.line_detection.thresholds
 
 
 def window_search(
@@ -38,8 +39,8 @@ def window_search(
     histogram = np.sum(img[:], axis=1)
     filter_peaks = scipy.signal.find_peaks(
         histogram,
-        height=config.lane_detection["ZEBRA_CROSSING_THRESHOLD"],
-        distance=config.lane_detection["LINE_WIDTH"] * 4,
+        height=THRESHOLDS.zebra_crossing,
+        distance=config.lane_assist.line_detection.line_width * 4,
     )[0]
     widths, _, lefts, rights = scipy.signal.peak_widths(histogram, filter_peaks, rel_height=0.90)
     stop_lines_y = []
@@ -49,9 +50,9 @@ def window_search(
     # mask out these peaks if they are wider then a line
     for left, right in zip(lefts, rights):
         if (
-            right - left < (config.lane_detection["LINE_WIDTH"] * 2)
-            and left > config.lane_detection["LINE_WIDTH"] * 2.1
-            and right < img.shape[0] - config.lane_detection["LINE_WIDTH"] * 2.1
+            right - left < (config.lane_assist.line_detection.line_width * 2)
+            and left > config.lane_assist.line_detection.line_width * 2.1
+            and right < img.shape[0] - config.lane_assist.line_detection.line_width * 2.1
         ):
             stop_lines_y.append(int((left + right) / 2))
 
@@ -76,7 +77,7 @@ def window_search(
     histogram = np.sum(pixels, axis=0)
 
     merged_peaks = scipy.signal.find_peaks(
-        histogram, height=config.lane_detection["LINE_THRESHOLD"], distance=config.lane_detection["LINE_WIDTH"]
+        histogram, height=THRESHOLDS.line, distance=config.lane_assist.line_detection.line_width
     )[0]
 
     # create the windows
@@ -126,20 +127,18 @@ def window_search(
             win_x_high = window.x + window.margin
 
             # check how many white pixels are in the window
-            non_zero_count = np.count_nonzero(img[win_y_low:win_y_high, win_x_low:win_x_high])
-
+            non_zero_count = np.sum(img[win_y_low:win_y_high, win_x_low:win_x_high])
             # TODO: move the y axis into the direction of the line.
             #       this will allow us to better detect corners.
             #       will only be done if needed.
 
-            if non_zero_count > config.lane_detection["PIXELS_IN_WINDOW"]:
+            if non_zero_count > config.lane_assist.line_detection.pixels_in_window:
                 coords = np.nonzero(img[win_y_low:win_y_high, win_x_low:win_x_high])
                 # get the right most pixel. this is the new position of the window
                 window.move(int(np.mean(coords[1])) + win_x_low, win_y_low)
             else:
                 if window.found_in_previous:
                     # remove the last point
-                    window.points = window.points[:-1]
                     window.found_in_previous = False
 
                 window.move(window.x, win_y_low, False)
@@ -151,7 +150,7 @@ def window_search(
     # for 2 extra gaps jsut in case
     filtered_count = len(filter_peaks) - len(stop_lines_y)
     lines = [
-        Line(np.array(window.points), window_height, gaps_allowed=filtered_count + 2)
+        Line(np.array(window.points[:-1]), window_height, gaps_allowed=filtered_count + 2)
         for window in windows
         if len(window.points) > 5
     ]
@@ -186,7 +185,6 @@ def window_search(
 
     for angle in angles:
         # check if it is in the driving direction
-        print(angle)
         if abs(angle) < 1.2:
             return lines
 

@@ -3,9 +3,10 @@ from typing import Generator
 import airsim
 import cv2
 
-import config
+from config import config
 from driving.speed_controller import SpeedController, SpeedControllerState
 from lane_assist.lane_assist import LaneAssist, PathFollower
+from lane_assist.line_following.dynamic_speed import get_max_corner_speed
 from simulator.simulator_can_controller import SimCanController
 
 
@@ -36,7 +37,7 @@ def main() -> None:
     can_controller = SimCanController(client)
     speed_controller = SpeedController(can_controller)
     speed_controller.max_speed = 50
-    speed_controller.state = SpeedControllerState.WAITING_TO_STOP
+    speed_controller.state = SpeedControllerState.DRIVING
 
     path_follower = PathFollower(1, 0.01, 0.05, look_ahead_distance=10)
     path_follower.max_steering_range = 30.0
@@ -45,8 +46,14 @@ def main() -> None:
         get_sim_image_generator(),
         path_follower,
         speed_controller,
-        adjust_speed=lambda _: config.requested_speed,
+        adjust_speed=lambda path: 15,
     )
 
     lx.start(True)
     input("Press enter to stop")
+
+    # plot the errors
+    import matplotlib.pyplot as plt
+
+    plt.plot(path_follower.errors)
+    plt.show()

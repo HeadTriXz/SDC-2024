@@ -3,7 +3,7 @@ from enum import IntEnum
 
 import can
 
-import config
+from config import config
 from constants import CANFeedbackIdentifier, Gear
 from driving.can_controller import CANController
 
@@ -126,10 +126,10 @@ class SpeedController:
         if self.__target_speed == 0:
             return 0
 
-        if self.__target_speed >= config.speed:
+        if self.__target_speed >= config.speed_modes.selected:
             return 100
 
-        return int(self.__target_speed / config.speed * 100)
+        return int(self.__target_speed / config.speed_modes.selected * 100)
 
     def __update_speed(self, message: can.Message) -> None:
         """Update the speed of the go-kart."""

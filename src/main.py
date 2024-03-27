@@ -4,7 +4,7 @@ from os import system
 
 import can
 
-import config
+from config import config
 from constants import Gear
 from driving.can_controller import CANController
 from driving.speed_controller import SpeedController, SpeedControllerState
@@ -34,9 +34,9 @@ def get_can_real_or_virtual() -> can.Bus:
 def __kart_main() -> None:
     """Run the kart main."""
     # load cameras
-    cam1 = VideoStream(config.camera_ids["left"])
-    cam2 = VideoStream(config.camera_ids["center"])
-    cam3 = VideoStream(config.camera_ids["right"])
+    cam1 = VideoStream(config.camera_ids.left)
+    cam2 = VideoStream(config.camera_ids.center)
+    cam3 = VideoStream(config.camera_ids.right)
 
     cam1.start()
     cam2.start()
