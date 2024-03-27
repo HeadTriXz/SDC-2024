@@ -5,3 +5,20 @@ speed_modes:
     normal: 50
     fast: 75
     very_fast: 100
+
+object_detection:
+  model_path: ../../resources/models/best.pt
+  min_confidence: 0.5
+  image_size: 1280
+  class_to_speed:
+    5: 5
+    6: 10
+    7: 15
+    8: 20
+    9: 30
+    10: 40
+
+pedestrian_detection:
+  crosswalk_overlap_margin: 0.2
+  crosswalk_safe_zone_margin: 0.1
+  crosswalk_min_distance: 2

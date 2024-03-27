@@ -89,7 +89,7 @@ class ConfigLoader(metaclass=SingletonMeta):
         file_path = os.path.join(os.path.dirname(__file__), config_file_name)
 
         if backup:
-            backup_file_name = f"{self.__get_signature()}-{f"config.{self.__environment}.yaml"}"
+            backup_file_name = f"{self.__get_signature()}-config.{self.__environment}.yaml"
             backup_path = os.path.join(os.path.dirname(__file__), "backups", backup_file_name)
 
             if not os.path.exists(os.path.join(os.path.dirname(__file__), "backups")):
