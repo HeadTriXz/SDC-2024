@@ -1,13 +1,17 @@
+import can
 import sys
 import threading
 from os import system
 
-import can
-
 from config import config
 from constants import Gear
 from driving.can_controller import CANController
-from driving.speed_controller import SpeedController, SpeedControllerState
+from driving.speed_controller import SpeedController
+from object_recognition.handlers.pedestrian_handler import PedestrianHandler
+from object_recognition.handlers.speed_limit_handler import SpeedLimitHandler
+from object_recognition.handlers.traffic_light_handler import TrafficLightHandler
+from object_recognition.object_controller import ObjectController
+from object_recognition.object_detector import ObjectDetector
 from lane_assist.helpers import td_stitched_image_generator
 from lane_assist.lane_assist import LaneAssist
 from lane_assist.line_following.path_follower import PathFollower
@@ -29,7 +33,6 @@ def get_can_real_or_virtual() -> can.Bus:
         return initialize_can()
 
     return can.Bus(interface="virtual", channel="vcan0")
-
 
 def __kart_main() -> None:
     """Run the kart main."""
@@ -66,8 +69,20 @@ def __kart_main() -> None:
     )
     lynx.start()
 
-
 if __name__ == "__main__":
-    from simulator import main
+    can_bus = can.Bus(interface="virtual", channel="can0", bitrate=500000)
+    can_controller = CANController(can_bus)
+    speed_controller = SpeedController(can_controller)
 
-    main()
+    controller = ObjectController(speed_controller)
+    controller.add_handler(PedestrianHandler(controller))
+    controller.add_handler(SpeedLimitHandler(controller))
+    controller.add_handler(TrafficLightHandler(controller))
+
+    detector = ObjectDetector.from_model(config.object_detection.model_path, controller, 0)
+    can_controller.start()
+    speed_controller.start()
+    detector.start()
+
+    while True:
+        pass

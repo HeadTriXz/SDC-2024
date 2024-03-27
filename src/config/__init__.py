@@ -1,3 +1,3 @@
-from config.loader import ConfigLoader as __Loader
+from config.loader import ConfigLoader
 
-config = __Loader()
+config = ConfigLoader()

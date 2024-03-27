@@ -1,11 +1,10 @@
-import logging
-from enum import IntEnum
-
 import can
+import logging
 
 from config import config
 from constants import CANFeedbackIdentifier, Gear
 from driving.can_controller import CANController
+from enum import IntEnum
 
 
 class SpeedControllerState(IntEnum):
@@ -118,7 +117,7 @@ class SpeedController:
             self.__can.set_brake(100)  # TODO: brake at the threshold
             return
 
-        self.__can.set_throttle(self.__get_target_percentage(), self.__gear)
+        self.__can.set_throttle(self.__get_target_percentage(), gear=self.__gear)
         self.__can.set_brake(0 if self.current_speed <= self.__target_speed else 30)  # TODO: brake at threshold
 
     def __get_target_percentage(self) -> int:
@@ -129,7 +128,7 @@ class SpeedController:
         if self.__target_speed >= config.speed_modes.selected:
             return 100
 
-        return int(self.__target_speed / config.speed_modes.selected * 100)
+        return int((self.__target_speed / config.speed_modes.selected) * 100)
 
     def __update_speed(self, message: can.Message) -> None:
         """Update the speed of the go-kart."""
