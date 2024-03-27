@@ -57,3 +57,12 @@ def main() -> None:
 
     plt.plot(path_follower.errors)
     plt.show()
+
+
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    while True:
+        data = await websocket.receive_text()
+        if data == "toggle":
+            self.cam_on = not self.cam_on
+        await websocket.send_text(f"Message text was: {data}")
