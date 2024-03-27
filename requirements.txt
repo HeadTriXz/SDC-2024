@@ -1,3 +1,4 @@
+fastapi==0.110.0
 inputs==0.5
 matplotlib==3.8.3
 numpy==1.26.4
@@ -5,6 +6,7 @@ opencv-python==4.9.0.80
 openvino==2024.0.0
 packaging==23.2
 python-can==4.3.1
+python-multipart==0.0.9
 typing~=3.7.4.3
 matplotlib~=3.8.3
 scipy==1.12.0

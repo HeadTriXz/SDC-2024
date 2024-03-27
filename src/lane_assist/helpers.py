@@ -37,10 +37,10 @@ def td_stitched_image_generator(
             center_image = cv2.cvtColor(center_image, cv2.COLOR_BGR2GRAY)
             right_image = cv2.cvtColor(right_image, cv2.COLOR_BGR2GRAY)
 
-            if config.gamma.adjust:
-                left_image = adjust_gamma(left_image, config.gamma.left)
-                center_image = adjust_gamma(center_image, config.gamma.center)
-                right_image = adjust_gamma(right_image, config.gamma.right)
+            if config.image_manipulation.gamma.adjust:
+                left_image = adjust_gamma(left_image, config.image_manipulation.gamma.left)
+                center_image = adjust_gamma(center_image, config.image_manipulation.gamma.center)
+                right_image = adjust_gamma(right_image, config.image_manipulation.gamma.right)
 
             stitched_image = stitch_images(left_image, center_image, right_image)
             topdown_image = topdown(stitched_image)
