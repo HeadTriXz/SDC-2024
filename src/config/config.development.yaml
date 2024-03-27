@@ -1,0 +1,7 @@
+speed_modes:
+  selected: ${.options.slow}
+  options:
+    slow: 25
+    normal: 50
+    fast: 75
+    very_fast: 100
