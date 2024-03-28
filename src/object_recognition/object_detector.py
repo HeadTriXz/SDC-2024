@@ -51,6 +51,7 @@ class ObjectDetector:
                 imgsz=config.object_detection.image_size,
                 conf=config.object_detection.min_confidence,
                 persist=True,
+                verbose=False,
                 device="cpu",
             )
 

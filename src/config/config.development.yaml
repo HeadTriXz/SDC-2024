@@ -13,9 +13,9 @@ speed_modes:
 
 image_manipulation:
   gamma:
-    adjust: true
+    adjust: false
     left: 1.0
-    center: 1.0
+    center: 0.1
     right: 1.0
   white_threshold: 185
 

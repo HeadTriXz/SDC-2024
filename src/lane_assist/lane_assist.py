@@ -76,6 +76,8 @@ class LaneAssist:
         return self.__run()
 
     def __run(self) -> None:
+        start = time.perf_counter()
+        it = 0
         for gray_image in self.image_generator():
             lines = get_lines(gray_image)
             driving_lines = filter_lines(lines, gray_image.shape[1] // 2)
@@ -88,6 +90,10 @@ class LaneAssist:
             for line in lines:
                 for point in line.points:
                     cv2.circle(colour_image, point, 3, colours[line.line_type], -1)
+
+            it += 1
+            end = time.perf_counter()
+            print(f"fps: {it / (end - start)}")
 
             imshow_fps("image", colour_image)
             if len(driving_lines) < 2:
