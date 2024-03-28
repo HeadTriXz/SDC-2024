@@ -1,4 +1,4 @@
-import airsim
+from libs.external import airsim
 
 
 class SimCanController:

@@ -1,4 +1,5 @@
 import threading
+import time
 from collections.abc import Callable, Generator
 from threading import Thread
 
@@ -11,6 +12,7 @@ from lane_assist.line_detection.line import Line, LineType
 from lane_assist.line_detection.line_detector import filter_lines, get_lines
 from lane_assist.line_following.path_follower import PathFollower
 from lane_assist.line_following.path_generator import Path, generate_driving_path
+from utils.imshow_fps import imshow_fps
 
 colours = {
     LineType.SOLID: (0, 255, 0),
@@ -38,7 +40,7 @@ class LaneAssist:
 
     def __init__(
         self,
-        image_generation: Generator[np.ndarray, None, None],
+        image_generation: Callable[[], Generator[np.ndarray, None, None]],
         path_follower: PathFollower,
         speed_controller: SpeedController,
         adjust_speed: Callable[[Path], int] = lambda _: 1,
@@ -74,44 +76,29 @@ class LaneAssist:
         return self.__run()
 
     def __run(self) -> None:
-        for gray_image in self.image_generator:
-            # get the lines in the image and split them
-
+        for gray_image in self.image_generator():
             lines = get_lines(gray_image)
             driving_lines = filter_lines(lines, gray_image.shape[1] // 2)
             stop_lines = list(filter(lambda line: line.line_type == LineType.STOP, lines))
 
             # convert image to colour
             colour_image = cv2.cvtColor(gray_image, cv2.COLOR_GRAY2BGR)
-            white_img = cv2.inRange(gray_image, config.image_manipulation.white_threshold, 255)
-            cv2.imshow("white", white_img)
 
             # draw lines on the image
             for line in lines:
                 for point in line.points:
                     cv2.circle(colour_image, point, 3, colours[line.line_type], -1)
 
-            histogram = np.sum(white_img[:], axis=1)
-            # draw the histogram on the image. it should be on the left edge of the image
-
-            for i, value in enumerate(histogram):
-                cv2.circle(colour_image, (int(value / 100), i), 2, (255, 0, 255), -1)
-
+            imshow_fps("image", colour_image)
             if len(driving_lines) < 2:
                 continue
-
-            path = generate_driving_path(driving_lines, 0)
-            for point in path.points:
-                cv2.circle(colour_image, (int(point[0]), int(point[1])), 3, (255, 255, 255), -1)
-
-            cv2.imshow("image", colour_image)
-            cv2.waitKey(1)
 
             # act on the lines in the image
             self.__follow_path(
                 driving_lines, gray_image.shape[1] // 2, config.lane_assist.line_following.requested_lane
             )  # TODO: make requested lane dynamic
             self.__handle_stoplines(stop_lines)
+            time.sleep(0)
 
     def __handle_stoplines(self, stoplines: list[Line]) -> None:
         if not stoplines or len(stoplines) == 0:

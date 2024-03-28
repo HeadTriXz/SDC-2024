@@ -1,6 +1,8 @@
-import can
 import struct
 import threading
+import time
+
+import can
 
 from constants import CAN_SEND_PERIOD, CANControlIdentifier, CANFeedbackIdentifier, Gear
 
@@ -92,3 +94,5 @@ class CANController:
             if message.arbitration_id in self.__listeners:
                 for listener in self.__listeners[message.arbitration_id]:
                     listener(message.data)
+
+            time.sleep(0)

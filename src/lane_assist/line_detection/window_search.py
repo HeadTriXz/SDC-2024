@@ -66,7 +66,7 @@ def window_search(
         lowest_end_index = np.argmax(rights)
 
         if rights[lowest_end_index] > img.shape[0] - 10:
-            start_position = int(lefts[lowest_end_index])
+            start_position = int(lefts[lowest_end_index]) - 10
 
     # create a histogram of the image to find the lines.
     # we only use the bottom half because that should be where the lines are.
@@ -189,7 +189,15 @@ def window_search(
             return lines
 
     # get a close point
-    closest_points = [solid_lines[i].points[closest_index] for i, closest_index in enumerate(closest_indexes)]
+
+    if len(solid_lines) < len(closest_indexes):
+        return lines
+
+    closest_points = [
+        solid_lines[i].points[closest_index]
+        for i, closest_index in enumerate(closest_indexes)
+        if len(solid_lines[i].points) > 0
+    ]
     line = Line(np.array(closest_points), line_type=LineType.STOP)
     lines.append(line)
 

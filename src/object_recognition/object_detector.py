@@ -1,9 +1,12 @@
-from threading import Thread
+import time
 from pathlib import Path
+from threading import Thread
+
+from ultralytics import YOLO
+
 from config import config
 from object_recognition.object_controller import ObjectController
 from utils.video_stream import VideoStream
-from ultralytics import YOLO
 
 
 class ObjectDetector:
@@ -48,10 +51,11 @@ class ObjectDetector:
                 imgsz=config.object_detection.image_size,
                 conf=config.object_detection.min_confidence,
                 persist=True,
-                device="cpu"
+                device="cpu",
             )
 
             self.controller.handle(results[0].boxes)
+            time.sleep(0)
 
         self.stream.stop()
 

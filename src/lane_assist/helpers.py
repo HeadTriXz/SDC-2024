@@ -1,4 +1,4 @@
-from typing import Generator
+from typing import Callable, Generator
 
 import cv2
 import numpy as np
@@ -11,7 +11,7 @@ from utils.video_stream import VideoStream
 
 def td_stitched_image_generator(
     left_cam: VideoStream, center_cam: VideoStream, right_cam: VideoStream
-) -> Generator[np.ndarray, None, None]:
+) -> Callable[[], Generator[np.ndarray, None, None]]:
     """Generate a picture from the cameras.
 
     This function will take a picture from the cameras and return the topdown image.
@@ -47,4 +47,4 @@ def td_stitched_image_generator(
 
             yield topdown_image
 
-    return __generator()
+    return __generator

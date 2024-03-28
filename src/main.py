@@ -1,22 +1,21 @@
-import can
 import logging
 import sys
-import threading
-
 from os import system
+
+import can
+
 from config import config
 from constants import Gear
 from driving.can_controller import CANController
 from driving.speed_controller import SpeedController, SpeedControllerState
+from lane_assist.helpers import td_stitched_image_generator
+from lane_assist.lane_assist import LaneAssist
+from lane_assist.line_following.path_follower import PathFollower
 from object_recognition.handlers.pedestrian_handler import PedestrianHandler
 from object_recognition.handlers.speed_limit_handler import SpeedLimitHandler
 from object_recognition.handlers.traffic_light_handler import TrafficLightHandler
 from object_recognition.object_controller import ObjectController
 from object_recognition.object_detector import ObjectDetector
-from lane_assist.helpers import td_stitched_image_generator
-from lane_assist.lane_assist import LaneAssist
-from lane_assist.line_following.path_follower import PathFollower
-from telemetry import start_telemetry
 from utils.video_stream import VideoStream
 
 
@@ -58,12 +57,8 @@ def main() -> None:
     speed_controller.max_speed = 50
 
     # Initialize the path follower
-    path_follower = PathFollower(0.1, 0.01, 0.05, look_ahead_distance=10)
+    path_follower = PathFollower(1, 0.01, 0.05, look_ahead_distance=10)
     path_follower.max_steering_range = 30.0
-
-    # Start telemetry
-    telem_thread = threading.Thread(target=start_telemetry, args=(path_follower,), daemon=True)
-    telem_thread.start()
 
     # Initialize the object controller
     controller = ObjectController(speed_controller)
@@ -88,7 +83,13 @@ def main() -> None:
     detector.start()
     lane_assist.start()
 
+    input("Press Enter to stop...")
+
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
+    from simulator import main as smain
+
+    # smain()
     main()

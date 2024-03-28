@@ -1,19 +1,16 @@
 from typing import Generator
 
-import airsim
 import cv2
+import numpy as np
 
-from config import config
 from driving.speed_controller import SpeedController, SpeedControllerState
 from lane_assist.lane_assist import LaneAssist, PathFollower
-from lane_assist.line_following.dynamic_speed import get_max_corner_speed
+from libs.external import airsim
 from simulator.simulator_can_controller import SimCanController
 
 
 def main() -> None:
     """Run the simulator."""
-    import numpy as np
-
     # startup the client
     client = airsim.CarClient()
     client.confirmConnection()
@@ -43,7 +40,7 @@ def main() -> None:
     path_follower.max_steering_range = 30.0
 
     lx = LaneAssist(
-        get_sim_image_generator(),
+        get_sim_image_generator,
         path_follower,
         speed_controller,
         adjust_speed=lambda path: 15,
@@ -55,14 +52,13 @@ def main() -> None:
     # plot the errors
     import matplotlib.pyplot as plt
 
-    plt.plot(path_follower.errors)
+    plt.plot(path_follower.errors, label="Error", color="black")
+    # get the mean error
+    mean_error = np.mean(path_follower.errors)
+    plt.axhline(mean_error, color="r", linestyle="--")
+
+    std_deviation = np.std(path_follower.errors)
+    plt.axhline(mean_error + std_deviation, color="g", linestyle="--")
+    plt.axhline(mean_error - std_deviation, color="g", linestyle="--")
+
     plt.show()
-
-
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    while True:
-        data = await websocket.receive_text()
-        if data == "toggle":
-            self.cam_on = not self.cam_on
-        await websocket.send_text(f"Message text was: {data}")

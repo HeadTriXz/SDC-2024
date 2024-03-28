@@ -60,7 +60,7 @@ def get_ltbr(x: float, y: float, width: int, height: int) -> tuple[int, int, int
 
 def warp_image(image: np.ndarray, matrix: np.ndarray, width: int, height: int) -> np.ndarray:
     """Warp the image based on the transformation matrix."""
-    return cv2.warpPerspective(image, matrix, (width, height), flags=cv2.INTER_LINEAR)
+    return cv2.warpPerspective(image, matrix, (width, height), flags=cv2.INTER_NEAREST)
 
 
 def merge_image(base: np.ndarray, overlay: np.ndarray, x1: int, y1: int, x2: int, y2: int) -> np.ndarray:
@@ -71,10 +71,6 @@ def merge_image(base: np.ndarray, overlay: np.ndarray, x1: int, y1: int, x2: int
 
 def stitch_images(left: np.ndarray, center: np.ndarray, right: np.ndarray) -> np.ndarray:
     """Stitch the images together."""
-    center = cv2.resize(center, (MAX_WIDTH, MAX_HEIGHT))
-    left = cv2.resize(left, (MAX_WIDTH, MAX_HEIGHT))
-    right = cv2.resize(right, (MAX_WIDTH, MAX_HEIGHT))
-
     # Warp images
     left_res = warp_image(left, MATRIX_LEFT, LEFT_WIDTH, LEFT_HEIGHT)
     right_res = warp_image(right, MATRIX_RIGHT, RIGHT_WIDTH, RIGHT_HEIGHT)
