@@ -95,7 +95,6 @@ class LaneAssist:
             end = time.perf_counter()
             print(f"fps: {it / (end - start)}")
 
-            imshow_fps("image", colour_image)
             if len(driving_lines) < 2:
                 continue
 
