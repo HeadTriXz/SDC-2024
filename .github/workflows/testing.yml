@@ -35,9 +35,9 @@ jobs:
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: pip install -r requirements.txt
 
-#    set pythonpath
+#    set pythonpath without using set-env
       - name: Set PYTHONPATH
-        run: echo "::set-env name=PYTHONPATH::${GITHUB_WORKSPACE}/src"
+        run: echo "PYTHONPATH=${{ github.workspace }}/src" >> $GITHUB_ENV
 
       - name: Run tests
         run: python -m pytest tests
