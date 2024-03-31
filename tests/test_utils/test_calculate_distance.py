@@ -1,6 +1,6 @@
 import unittest
 
-from src.utils.calculate_distance import meters_to_y, y_to_meters
+from utils.calculate_distance import meters_to_y, y_to_meters
 
 
 class TestCalculateDistance(unittest.TestCase):

@@ -5,6 +5,7 @@ import time
 import can
 
 from constants import CAN_SEND_PERIOD, CANControlIdentifier, CANFeedbackIdentifier, Gear
+from driving.can_controller.can_controller_interface import ICANController
 
 
 def initialize_can_message(message_id: CANControlIdentifier) -> can.Message:
@@ -16,7 +17,7 @@ def initialize_can_message(message_id: CANControlIdentifier) -> can.Message:
     return can.Message(arbitration_id=message_id, data=[0, 0, 0, 0, 0, 0, 0, 0], is_extended_id=False)
 
 
-class CANController:
+class CANController(ICANController):
     """A controller for the CAN bus.
 
     Attributes

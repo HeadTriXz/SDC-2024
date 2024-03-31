@@ -1,4 +1,5 @@
-from driving.speed_controller import SpeedController, SpeedControllerState
+from driving.speed_controller import SpeedControllerState
+from driving.speed_controller.speed_controller_interface import ISpeedController
 
 
 class StoplineAssist:
@@ -15,10 +16,10 @@ class StoplineAssist:
     :param stop_lines_found: the amount of frames a stopline has been detected
     """
 
-    speed_controller: SpeedController
+    speed_controller: ISpeedController
     stop_lines_found: int
 
-    def __init__(self, speed_controller: SpeedController) -> None:
+    def __init__(self, speed_controller: ISpeedController) -> None:
         """Initialize the stopline assist.
 
         :param speed_controller: the speed controller to use for stopping at stoplines.

@@ -6,8 +6,8 @@ from threading import Thread
 import numpy as np
 
 from config import config
-from driving.can_controller import CANController
-from driving.speed_controller import SpeedController
+from driving.can_controller.can_controller_interface import ICANController
+from driving.speed_controller.speed_controller_interface import ISpeedController
 from lane_assist.line_detection.line import Line, LineType
 from lane_assist.line_detection.line_detector import filter_lines, get_lines
 from lane_assist.line_following.path_follower import PathFollower
@@ -42,17 +42,17 @@ class LaneAssist:
     path_follower: PathFollower
 
     stopline_assist: StoplineAssist
-    can_controller: CANController
-    speed_controller: SpeedController
+    can_controller: ICANController
+    speed_controller: ISpeedController
     adjust_speed: Callable[[Path], int]
     requested_lane: int
 
     def __init__(
-            self,
-            image_generation: Callable[[], Generator[np.ndarray, None, None]],
-            path_follower: PathFollower,
-            speed_controller: SpeedController,
-            adjust_speed: Callable[[Path], int] = lambda _: 1,
+        self,
+        image_generation: Callable[[], Generator[np.ndarray, None, None]],
+        path_follower: PathFollower,
+        speed_controller: ISpeedController,
+        adjust_speed: Callable[[Path], int] = lambda _: 1,
     ) -> None:
         """Initialize the lane assist.
 
@@ -87,16 +87,25 @@ class LaneAssist:
 
     def __run(self) -> None:
         for gray_image in self.image_generator():
-            lines, stop_lines = get_lines(gray_image)
-            driving_lines = filter_lines(lines, gray_image.shape[1] // 2)
-
-            if len(driving_lines) < 2:
-                continue
-
-            # act on the lines in the image
-            self.__follow_path(driving_lines, gray_image.shape[1] // 2, self.requested_lane)
-            self.stopline_assist.handle_stoplines(stop_lines)
+            self.lane_assist_loop(gray_image)
             time.sleep(0)
+
+    def lane_assist_loop(self, image: np.ndarray) -> None:
+        """Lane assist loop.
+
+        This function will take an image and follow the path in the image.
+
+        :param image: The image to follow the path in.
+        """
+        lines, stop_lines = get_lines(image)
+        driving_lines = filter_lines(lines, image.shape[1] // 2)
+
+        if len(driving_lines) < 2:
+            return
+
+        # act on the lines in the image
+        self.__follow_path(driving_lines, image.shape[1] // 2, self.requested_lane)
+        self.stopline_assist.handle_stoplines(stop_lines)
 
     def __follow_path(self, lines: list[Line], car_position: float, lane: int) -> None:
         """Follow the path.

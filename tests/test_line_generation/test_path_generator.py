@@ -13,8 +13,6 @@ from lane_assist.preprocessing.birdview import topdown
 
 from .test_data import CORNER, CROSSING_LANE_0, CROSSING_LANE_1, STOPLINE, STRAIGHT
 
-BENCHMARK_ITERATIONS = 10000
-
 
 def get_path(file: str) -> str:
     """Get the absolute path of the current file."""
@@ -38,7 +36,7 @@ class TestGenerateDrivingLine(unittest.TestCase):
 
     def test_line_generation_corner(self) -> None:
         """Test the line detection on the corner image."""
-        base_lines, stoplines = self.__get_lines("../line_detection/images/corner.jpg")
+        base_lines, stoplines = self.__get_lines("../test_line_detection/images/corner.jpg")
         filtered = filter_lines(base_lines, 400)
         self.assertEqual(len(filtered), 2)
 
@@ -47,7 +45,7 @@ class TestGenerateDrivingLine(unittest.TestCase):
 
     def test_line_generation_straight(self) -> None:
         """Test the line detection on the straight image."""
-        base_lines, stoplines = self.__get_lines("../line_detection/images/straight.jpg")
+        base_lines, stoplines = self.__get_lines("../test_line_detection/images/straight.jpg")
         filtered = filter_lines(base_lines, 400)
         self.assertEqual(len(filtered), 2)
 
@@ -56,7 +54,7 @@ class TestGenerateDrivingLine(unittest.TestCase):
 
     def test_line_generation_crossing(self) -> None:
         """Test the line detection on the crossing image."""
-        base_lines, stoplines = self.__get_lines("../line_detection/images/crossing.jpg")
+        base_lines, stoplines = self.__get_lines("../test_line_detection/images/crossing.jpg")
         filtered = filter_lines(base_lines, 400)
         self.assertEqual(len(filtered), 3)
 
@@ -70,7 +68,7 @@ class TestGenerateDrivingLine(unittest.TestCase):
 
     def test_line_generation_stopline(self) -> None:
         """Test the line detection on the stopline image."""
-        base_lines, stoplines = self.__get_lines("../line_detection/images/stopline.jpg")
+        base_lines, stoplines = self.__get_lines("../test_line_detection/images/stopline.jpg")
         filtered = filter_lines(base_lines, 400)
 
         driving_path = generate_driving_path(filtered, 0)

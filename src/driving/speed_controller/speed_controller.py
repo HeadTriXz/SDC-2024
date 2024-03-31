@@ -1,22 +1,15 @@
 import logging
-from enum import IntEnum
 
 import can
 
 from config import config
 from constants import CANFeedbackIdentifier, Gear
-from driving.can_controller import CANController
+from driving.can_controller.can_controller_interface import ICANController
+from driving.speed_controller.speed_controller_interface import ISpeedController
+from driving.speed_controller.speed_controller_state import SpeedControllerState
 
 
-class SpeedControllerState(IntEnum):
-    """The state of the speed controller."""
-
-    STOPPED = 0
-    WAITING_TO_STOP = 1
-    DRIVING = 2
-
-
-class SpeedController:
+class SpeedController(ISpeedController):
     """A controller for the speed of the go-kart.
 
     Attributes
@@ -31,13 +24,13 @@ class SpeedController:
 
     current_speed: float = 0
 
-    __can: CANController
     __gear: Gear = Gear.NEUTRAL
+    __can: ICANController
     __max_speed: int = 0
     __target_speed: int = 0
     __state: SpeedControllerState = SpeedControllerState.STOPPED
 
-    def __init__(self, can_bus: CANController) -> None:
+    def __init__(self, can_bus: ICANController) -> None:
         """Initialize the speed controller.
 
         :param can_bus: The CAN controller to use.
@@ -68,7 +61,7 @@ class SpeedController:
         self.__adjust_speed()
 
     @property
-    def can_controller(self) -> CANController:
+    def can_controller(self) -> ICANController:
         """The CAN controller."""
         return self.__can
 

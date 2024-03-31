@@ -1,13 +1,14 @@
 import os
+from typing import Generator
 
 import cv2
 import numpy as np
 import pytest
 
-import config
-from lane_assist.lane_assist import PathFollower, filter_lines, generate_driving_path, get_lines
+from lane_assist.lane_assist import LaneAssist, PathFollower
 from lane_assist.preprocessing.birdview import topdown
-from lane_assist.preprocessing.stitching import stitch_images
+
+from .mocks.mock_speed_controller import MockSpeedController
 
 
 def get_path(file: str) -> str:
@@ -18,47 +19,35 @@ def get_path(file: str) -> str:
 
 def get_image(file: str) -> np.ndarray:
     """Get the image from the given file."""
-    return cv2.imread(get_path(file))
+    return cv2.imread(get_path(file), cv2.IMREAD_GRAYSCALE)
 
 
-@pytest.mark.benchmark(group="line_detection", min_rounds=5, disable_gc=True)
+@pytest.mark.benchmark(group="test_line_assist", min_rounds=5, disable_gc=True)
 @pytest.mark.skipif("BENCHMARK" not in os.environ, reason="Skip benchmark if not set")
 def test_lane_assist_benchmark(benchmark: any) -> None:
     """Benchmark the line detection.
 
-    To make sure it is a realistic situation, all images in the test folder are used.
-    This benchmark will not include stitching the images.
+    This benchmark will test the lane assist loop with an image.
+    It will only benchmark the lane assist loop and not the image generation
+
+    :param benchmark: The benchmark fixture.
     """
-    center_img = get_image("../../resources/images/crossing/center.jpg")
-    left_img = get_image("../../resources/images/crossing/left.jpg")
-    right_img = get_image("../../resources/images/crossing/right.jpg")
+    img = get_image("../../resources/stitched_images/straight.jpg")
+    td = topdown(img)
 
-    assert center_img is not None
-    assert left_img is not None
-    assert right_img is not None
+    mock_speed_controller = MockSpeedController()
 
-    line_following = PathFollower(0, 0, 0)
+    def image_generation() -> Generator[np.ndarray | np.ndarray, None, None]:
+        """Generate the image."""
+        pass
 
-
-    def get_steering_angle() -> float:
-        """Get the steering angle."""
-        nonlocal center_img, left_img, right_img
-
-        # convert to grayscale
-        left = cv2.cvtColor(left_img, cv2.COLOR_RGB2GRAY)
-        right = cv2.cvtColor(right_img, cv2.COLOR_RGB2GRAY)
-        center = cv2.cvtColor(center_img, cv2.COLOR_RGB2GRAY)
-
-        # stitch the images together
-        stitched_image = stitch_images(left, center, right)
-        topdown_image = topdown(stitched_image)
-
-        # get the lines
-        lines = get_lines(topdown_image)
-        lines = filter_lines(lines, topdown_image.shape[1] // 2)
-
-        path = generate_driving_path(lines, config.requested_lane)
-        return line_following.get_steering_fraction(path, topdown_image.shape[1] // 2)
+    path_follower = PathFollower(0, 0, 0)
+    lane_assist = LaneAssist(
+        image_generation,
+        path_follower,
+        mock_speed_controller,
+        adjust_speed=lambda _: 1,
+    )
 
     # start the benchmark
-    benchmark(get_steering_angle)
+    benchmark(lane_assist.lane_assist_loop, td)

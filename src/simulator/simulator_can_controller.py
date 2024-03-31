@@ -4,7 +4,7 @@ from libs.external import airsim
 class SimCanController:
     """Simulate the can controller."""
 
-    def __init__(self, client: airsim.CarControls) -> None:
+    def __init__(self, client: airsim.CarClient) -> None:
         """Initialize the can controller."""
         self.client = client
         self.brake = 0

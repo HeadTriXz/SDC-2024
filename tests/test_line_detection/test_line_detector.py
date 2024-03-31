@@ -70,7 +70,7 @@ class TestDetectLines(unittest.TestCase):
     # run with cprofile when the argument --cprofile is given
 
 
-@pytest.mark.benchmark(group="line_detection", min_rounds=5, disable_gc=True)
+@pytest.mark.benchmark(group="test_line_detection", min_rounds=5, disable_gc=True)
 @pytest.mark.skipif("BENCHMARK" not in os.environ, reason="Skip benchmark if not set")
 def test_line_detection_benchmark(benchmark: any) -> None:
     """Benchmark the line detection.
