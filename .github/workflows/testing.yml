@@ -17,13 +17,6 @@ jobs:
           packages: libgl1-mesa-glx
           version: 1.0
 
-#      - name: Set up python ${{ matrix.python-version }}
-#        uses: actions/setup-python@v4
-#        with:
-#          python-version: ${{ matrix.python-version }}
-#          cache: 'pip'
-#      - run: pip install -r requirements.txt
-
       - name: Setup Python
         uses: actions/setup-python@v2
         with:
@@ -41,6 +34,10 @@ jobs:
       - name: Install dependencies
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: pip install -r requirements.txt
+
+#    set pythonpath
+      - name: Set PYTHONPATH
+        run: echo "::set-env name=PYTHONPATH::${GITHUB_WORKSPACE}/src"
 
       - name: Run tests
         run: python -m pytest tests
