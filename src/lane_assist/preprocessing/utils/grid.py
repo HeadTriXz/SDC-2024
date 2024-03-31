@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from lane_assist.image_manipulation.dynamic_calibrate.utils.other import get_board_shape
+from lane_assist.preprocessing.utils.other import get_board_shape
 
 
 def corners_to_grid(corners: np.ndarray, ids: np.ndarray, shape: tuple[int, int]) -> np.ndarray:

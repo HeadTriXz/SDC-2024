@@ -1,14 +1,14 @@
 import cv2
 import numpy as np
 
+from config import config
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
-from common.config import Calibration as Config
-from lane_assist.image_manipulation.dynamic_calibrate.utils.charuco import find_corners
-from lane_assist.image_manipulation.dynamic_calibrate.utils.corners import get_dst_corners, get_transformed_corners
-from lane_assist.image_manipulation.dynamic_calibrate.utils.grid import get_src_grid, get_dst_grid, crop_grid
-from lane_assist.image_manipulation.dynamic_calibrate.utils.other import (
+from lane_assist.preprocessing.utils.charuco import find_corners
+from lane_assist.preprocessing.utils.corners import get_dst_corners, get_transformed_corners
+from lane_assist.preprocessing.utils.grid import get_src_grid, get_dst_grid, crop_grid
+from lane_assist.preprocessing.utils.other import (
     get_charuco_detector,
     get_slope,
     get_scale_factor,
@@ -91,7 +91,12 @@ class CameraCalibrator:
         ref_matrix, _ = cv2.findHomography(ref_src_corners, ref_dst_corners)
 
         h, w = self.images[self.ref_idx].shape[:2]
-        scale_factor = get_scale_factor(ref_matrix, (h, w), Config.MAX_IMAGE_HEIGHT, Config.MAX_IMAGE_WIDTH)
+        scale_factor = get_scale_factor(
+            ref_matrix,
+            (h, w),
+            config.calibration.max_image_height,
+            config.calibration.max_image_width
+        )
 
         # Calculate the perspective matrices.
         self.matrices = np.zeros((len(self.images), 3, 3), dtype=np.float32)

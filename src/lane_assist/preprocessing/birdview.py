@@ -1,19 +1,26 @@
 import cv2
 import numpy as np
 
-SRC_PTS = np.array([[55, 900], [1841, 253], [2067, 253], [3861, 900]], dtype=np.float32)
-DST_PTS = np.array([[780, 450], [800, 1100], [600, 1100], [620, 450]], dtype=np.float32)
-MATRIX = cv2.getPerspectiveTransform(SRC_PTS, DST_PTS)
+from lane_assist.preprocessing.utils.corners import get_transformed_corners
 
 
-def cut_image(image: np.ndarray, x: int, y: int, width: int, height: int) -> np.ndarray:
-    """Cut image to specified width and height."""
-    return image[y: y + height, x: x + width]
+def warp_image(image: np.ndarray, matrix: np.ndarray, max_height: int = None) -> np.ndarray:
+    """Warp an image using a perspective matrix.
 
+    :param image: The image to warp.
+    :param matrix: The perspective matrix.
+    :param max_height: The maximum height of the new image.
+    :return: The warped image and the amount cropped from the top.
+    """
+    min_x, min_y, max_x, max_y = get_transformed_corners(matrix, (image.shape[0], image.shape[1]))
 
-def topdown(image: np.ndarray) -> np.ndarray:
-    """Transform stitched image to top-down view."""
-    img = cv2.warpPerspective(image, MATRIX, (image.shape[1], image.shape[0]), flags=cv2.INTER_LINEAR)
-    img = cut_image(img, 300, 450, 800, 900)
+    width = int(max_x - min_x)
+    height = int(max_y - min_y)
+    if max_height is not None and height > max_height:
+        height = max_height
+        min_y = max_y - height
 
-    return cv2.rotate(img, cv2.ROTATE_180)
+    adjusted_matrix = np.array([[1, 0, -min_x], [0, 1, -min_y], [0, 0, 1]])
+    adjusted_matrix = np.dot(adjusted_matrix, matrix)
+
+    return cv2.warpPerspective(image, adjusted_matrix, (width, height), flags=cv2.INTER_NEAREST)

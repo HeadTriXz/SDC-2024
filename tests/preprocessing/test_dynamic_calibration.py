@@ -4,9 +4,9 @@ import numpy as np
 import pytest
 
 from pytest_benchmark.fixture import BenchmarkFixture
-from src.lane_assist.image_manipulation.dynamic_calibrate.birdview import warp_image
-from src.lane_assist.image_manipulation.dynamic_calibrate.calibrate import CameraCalibrator
-from src.lane_assist.image_manipulation.dynamic_calibrate.stitch import stitch_images
+from lane_assist.preprocessing.birdview import warp_image
+from lane_assist.preprocessing.calibrate import CameraCalibrator
+from lane_assist.preprocessing.stitching import stitch_images
 
 BENCHMARK_ITERATIONS = 100
 ROI_CROP_TOP = 200
@@ -37,11 +37,11 @@ def get_stitched_image(calibrator: CameraCalibrator, images: list[np.ndarray]) -
     return stitch_images(stitched, warped_center, calibrator.offsets[1])
 
 
-@pytest.mark.benchmark(group="dynamic_calibration", min_rounds=5)
+@pytest.mark.benchmark(group="preprocessing", min_rounds=5)
 @pytest.mark.skipif("BENCHMARK" not in os.environ, reason="Skip benchmarks if not explicitly requested")
 def test_dynamic_calibration_benchmark(benchmark: BenchmarkFixture) -> None:
     """Run a benchmark of the complete dynamic calibration system."""
-    filenames = ["left.png", "center.png", "right.png"]
+    filenames = ["left.png", "left.png", "right.png"]
     images = [cv2.imread(get_path(f"images/{img}")) for img in filenames]
     images = [cv2.resize(img, (1280, 720))[ROI_CROP_TOP:] for img in images]
 

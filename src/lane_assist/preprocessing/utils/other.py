@@ -1,8 +1,8 @@
 import cv2
 import numpy as np
 
-from common.config import Calibration as Config
-from lane_assist.image_manipulation.dynamic_calibrate.utils.corners import get_transformed_corners
+from config import config
+from lane_assist.preprocessing.utils.corners import get_transformed_corners
 
 Coordinate = tuple[int, int] | np.ndarray
 
@@ -33,7 +33,7 @@ def get_board_shape() -> tuple[int, int]:
 
     :return: The shape of the ChArUco board.
     """
-    return Config.BOARD_WIDTH, Config.BOARD_HEIGHT
+    return config.calibration.board_width, config.calibration.board_height
 
 
 def get_charuco_detector() -> cv2.aruco.CharucoDetector:
@@ -41,12 +41,16 @@ def get_charuco_detector() -> cv2.aruco.CharucoDetector:
 
     :return: The ChArUco detector.
     """
-    dictionary = cv2.aruco.getPredefinedDictionary(Config.ARUCO_DICT)
+    dictionary = cv2.aruco.getPredefinedDictionary(config.calibration.aruco_dict)
     detector_params = cv2.aruco.DetectorParameters()
     charuco_params = cv2.aruco.CharucoParameters()
 
-    board_shape = get_board_shape()
-    board = cv2.aruco.CharucoBoard(board_shape, Config.SQUARE_LENGTH, Config.MARKER_LENGTH, dictionary)
+    board = cv2.aruco.CharucoBoard(
+        get_board_shape(),
+        config.calibration.square_length,
+        config.calibration.marker_length,
+        dictionary
+    )
 
     return cv2.aruco.CharucoDetector(board, charuco_params, detector_params)
 

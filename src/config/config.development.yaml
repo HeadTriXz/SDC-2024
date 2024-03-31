@@ -1,3 +1,12 @@
+calibration:
+  aruco_dict: 0  # DICT_4X4_50
+  board_height: 8
+  board_width: 6
+  max_image_height: 3240
+  max_image_width: 1920
+  marker_length: 0.070
+  square_length: 0.094
+
 speed_modes:
   selected: ${.options.slow}
   options:
