@@ -46,6 +46,7 @@ exclude = [
     "scripts/**",
     "src/driving/gamepad/driving_controller.py",
     "tests/**/test_data.py",
+    "src/libs/external/**",
 ]
 
 # Ignore unused imports in __init__.py files (would need __all__ otherwise)

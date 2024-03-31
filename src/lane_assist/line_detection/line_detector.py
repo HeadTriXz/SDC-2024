@@ -1,5 +1,8 @@
+from typing import Any
+
 import cv2
 import numpy as np
+from matplotlib import pyplot as plt
 
 from config import config
 from lane_assist.line_detection.line import Line, LineType
@@ -30,14 +33,14 @@ def filter_lines(lines: list[Line], starting_point: int, ret_stoplines: bool = F
     return solid_lines[j : i + 1]
 
 
-def get_lines(image: np.ndarray) -> list[Line]:
+def get_lines(image: np.ndarray) -> tuple[list[Line], list[Any]]:
     """Get the lines in the image.
 
     This function will take an image and return the lines in the image.
     the image should be stitched and not top down
     """
-    white = cv2.inRange(image, config.image_manipulation.white_threshold, 255)
-    return window_search(white, 110)
+    cv2.threshold(image, config.image_manipulation.white_threshold, 255, cv2.THRESH_BINARY, image)
+    return window_search(image, 110)
 
 
 def __generate_tests(filepath: str) -> None:
@@ -51,7 +54,7 @@ def __generate_tests(filepath: str) -> None:
     with open(filepath, "w") as f:
         f.write("import numpy as np\nfrom lane_assist.line_detection.line import Line, LineType\n\n")
         for image in images:
-            lines = get_lines(image)
+            lines, stoplines = get_lines(image)
 
             f.write(f"{images_names.pop(0)} = [\n")
             for line in lines:
@@ -59,6 +62,38 @@ def __generate_tests(filepath: str) -> None:
             f.write("]\n")
 
     return
+
+
+def __main() -> None:
+    image_names = ["straight", "corner", "crossing", "stopline"]
+    images = [cv2.imread(f"../../../resources/stitched_images/{image}.jpg") for image in image_names]
+
+    colours = {
+        LineType.SOLID: (0, 255, 0),
+        LineType.DASHED: (0, 0, 255),
+        LineType.STOP: (255, 0, 0),
+    }
+
+    final_images = []
+
+    for image in images:
+        td = topdown(image)
+        grayscale = cv2.cvtColor(td, cv2.COLOR_BGR2GRAY)
+        lines, stoplines = get_lines(grayscale)
+
+        # draw the lines
+        for line in lines:
+            for point in line.points:
+                cv2.circle(td, point, 4, colours[line.line_type], -1)
+
+        final_images.append(td)
+
+    # show all images in the same plot
+    for i, image in enumerate(final_images):
+        plt.subplot(2, 2, i + 1)
+        plt.imshow(image)
+
+    plt.show()
 
 
 if __name__ == "__main__":

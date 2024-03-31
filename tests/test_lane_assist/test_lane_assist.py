@@ -39,6 +39,7 @@ def test_lane_assist_benchmark(benchmark: any) -> None:
 
     line_following = PathFollower(0, 0, 0)
 
+
     def get_steering_angle() -> float:
         """Get the steering angle."""
         nonlocal center_img, left_img, right_img

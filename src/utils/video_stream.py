@@ -65,7 +65,7 @@ class VideoStream:
         self.__initialized = True
 
         self.id = camera_id
-        self.capture = cv2.VideoCapture(camera_id)
+        self.capture = cv2.VideoCapture(camera_id, cv2.CAP_DSHOW)
         self.capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*"MJPG"))
         self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, resolution[0])
         self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, resolution[1])

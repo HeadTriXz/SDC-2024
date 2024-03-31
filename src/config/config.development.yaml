@@ -17,12 +17,12 @@ image_manipulation:
     left: 1.0
     center: 0.1
     right: 1.0
-  white_threshold: 185
+  white_threshold: 220
 
 lane_assist:
   line_detection:
     line_width: 50
-    pixels_in_window: 1
+    pixels_in_window: 20
     thresholds:
       zebra_crossing: 20000
       line: 1000

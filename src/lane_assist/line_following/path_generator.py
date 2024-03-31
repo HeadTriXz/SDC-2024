@@ -97,18 +97,18 @@ def generate_tests(filename: str) -> None:
         f.write("import numpy as np\n\n")
 
         for i, image in enumerate(images):
-            lines = get_lines(image)
+            lines, stoplines = get_lines(image)
             filtered = filter_lines(lines, 400)
             if images_names[i] == "crossing":
                 path = generate_driving_path(filtered, 1)
-                f.write(f"{images_names[i].upper()}_LANE_1 = np.array({path.tolist()})\n")
+                f.write(f"{images_names[i].upper()}_LANE_1 = np.array({path.points.tolist()})\n")
 
                 path = generate_driving_path(filtered, 0)
-                f.write(f"{images_names[i].upper()}_LANE_0 = np.array({path.tolist()})\n")
+                f.write(f"{images_names[i].upper()}_LANE_0 = np.array({path.points.tolist()})\n")
 
             else:
                 path = generate_driving_path(filtered, 0)
-                f.write(f"{images_names[i].upper()} = np.array({path.tolist()})\n")
+                f.write(f"{images_names[i].upper()} = np.array({path.points.tolist()})\n")
 
 
 def main() -> None:
@@ -119,7 +119,7 @@ def main() -> None:
     grayscale = [cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) for image in images]
 
     for i, image in enumerate(grayscale):
-        lines = get_lines(image)
+        lines, stop_lines = get_lines(image)
         filtered = filter_lines(lines, 400)
         for line in filtered:
             for point in line.points:
@@ -128,7 +128,7 @@ def main() -> None:
         path = generate_driving_path(filtered, 0)
 
         # plot the centerline
-        plt.plot(path[:, 0], path[:, 1], "r")
+        plt.plot(path.points[:, 0], path.points[:, 1], "r")
 
         plt.imshow(images[i])
         plt.show()

@@ -1,4 +1,3 @@
-import time
 from typing import Callable, Generator
 
 import cv2
@@ -20,32 +19,17 @@ def td_stitched_image_generator(
     This is a generator function, so we can use it in a for loop.
     This will make it easier to use in the lane assist.
 
-    Parameters
-    ----------
     :param left_cam: The left camera.
     :param center_cam: The center camera.
     :param right_cam: The right camera.
-
     """
 
     def __generator() -> Generator[np.ndarray, None, None]:
         """Generate a topdown image from the cameras."""
-
-        fpssum = 0
-        its = 0
-
         while left_cam.has_next() and center_cam.has_next() and right_cam.has_next():
-            its += 1
-            start = time.perf_counter()
             left_image = left_cam.next()
             center_image = center_cam.next()
             right_image = right_cam.next()
-
-            end = time.perf_counter()
-            fpssum += end - start
-
-            print(f"img fps: {(its / fpssum):.2f}")
-
 
             left_image = cv2.cvtColor(left_image, cv2.COLOR_BGR2GRAY)
             center_image = cv2.cvtColor(center_image, cv2.COLOR_BGR2GRAY)
@@ -56,13 +40,28 @@ def td_stitched_image_generator(
                 center_image = adjust_gamma(center_image, config.image_manipulation.gamma.center)
                 right_image = adjust_gamma(right_image, config.image_manipulation.gamma.right)
 
-
-
             stitched_image = stitch_images(left_image, center_image, right_image)
             topdown_image = topdown(stitched_image)
 
-
-
             yield topdown_image
+
+    return __generator
+
+
+def singe_camera_generator(camera: VideoStream) -> Callable[[], Generator[np.ndarray, None, None]]:
+    """Generate a picture from the camera.
+
+    This function will return a generator that will generate a grayscale picture from the camera.
+    This is useful for testing the thresholds before having access to the kart.
+
+    :param camera: The camera to generate the image from.
+    """
+
+    def __generator() -> Generator[np.ndarray, None, None]:
+        """Generate a topdown image from the camera."""
+        while camera.has_next():
+            image = camera.next()
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            yield topdown(image)
 
     return __generator

@@ -60,7 +60,7 @@ def main() -> None:
     path_follower = PathFollower(1, 0.01, 0.05, look_ahead_distance=10)
     path_follower.max_steering_range = 30.0
 
-    # Initialize the object controller
+    # # Initialize the object controller
     controller = ObjectController(speed_controller)
     controller.add_handler(PedestrianHandler(controller))
     controller.add_handler(SpeedLimitHandler(controller))
@@ -86,10 +86,8 @@ def main() -> None:
     input("Press Enter to stop...")
 
 
-
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     from simulator import main as smain
 
-    # smain()
-    main()
+    smain()

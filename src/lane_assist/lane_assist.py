@@ -3,16 +3,16 @@ import time
 from collections.abc import Callable, Generator
 from threading import Thread
 
-import cv2
 import numpy as np
 
 from config import config
-from driving.speed_controller import SpeedController, SpeedControllerState
+from driving.can_controller import CANController
+from driving.speed_controller import SpeedController
 from lane_assist.line_detection.line import Line, LineType
 from lane_assist.line_detection.line_detector import filter_lines, get_lines
 from lane_assist.line_following.path_follower import PathFollower
 from lane_assist.line_following.path_generator import Path, generate_driving_path
-from utils.imshow_fps import imshow_fps
+from lane_assist.stopline_assist import StoplineAssist
 
 colours = {
     LineType.SOLID: (0, 255, 0),
@@ -29,98 +29,74 @@ class LaneAssist:
 
     The image should be in grayscale and topdown.
 
-    Attributes
-    ----------
     :param image_generation: A function that generates images.
     :param path_follower: The line follower class.
     :param speed_controller: The speed controller.
-    :param adjust_speed: A function that calculates the dynamic speed that can be driven on the generated path.
-
+    :param adjust_speed: A function that calculates the dynamic speed that can be driven on the generated path
+    :param requested_lane: The lane to follow.
+    :param stopline_assist: The stopline assist class.
+    :param can_controller: The can controller.
     """
 
+    image_generator: Callable[[], Generator[np.ndarray, None, None]]
+    path_follower: PathFollower
+
+    stopline_assist: StoplineAssist
+    can_controller: CANController
+    speed_controller: SpeedController
+    adjust_speed: Callable[[Path], int]
+    requested_lane: int
+
     def __init__(
-        self,
-        image_generation: Callable[[], Generator[np.ndarray, None, None]],
-        path_follower: PathFollower,
-        speed_controller: SpeedController,
-        adjust_speed: Callable[[Path], int] = lambda _: 1,
+            self,
+            image_generation: Callable[[], Generator[np.ndarray, None, None]],
+            path_follower: PathFollower,
+            speed_controller: SpeedController,
+            adjust_speed: Callable[[Path], int] = lambda _: 1,
     ) -> None:
-        """Initialize the lane assist."""
-        # functions
+        """Initialize the lane assist.
+
+        :param image_generation: A function that generates images.
+        :param path_follower: The line follower class.
+        :param speed_controller: The speed controller.
+        :param adjust_speed: A function that calculates the dynamic speed that can be driven on the generated path
+        """
         self.image_generator = image_generation
         self.adjust_speed = adjust_speed
+        self.stopline_assist = StoplineAssist(speed_controller)
 
-        # kart controllers
         self.can_controller = speed_controller.can_controller
         self.speed_controller = speed_controller
 
-        # remaining
         self.path_follower = path_follower
-        self.stop_lines_found = 0
+        self.requested_lane = config.lane_assist.line_following.requested_lane
 
     def start(self, multithreading: bool = False) -> None | Thread:
         """Start the lane assist.
 
         This function will start the lane assist. It will generate images and follow the path.
 
-        Parameters
-        ----------
-        :param multithreading: if the lane assist should run on a separate thread.
-
+        :param multithreading: If the lane assist should run on a separate thread.
         """
         if multithreading:  # TODO: investigate why multi threaded is extremely slow
             thread = threading.Thread(target=self.__run, daemon=True)
             thread.start()
             return thread
-        # if we want to run on the current thread, we can just call the run function
+
         return self.__run()
 
     def __run(self) -> None:
-        start = time.perf_counter()
-        it = 0
         for gray_image in self.image_generator():
-            lines = get_lines(gray_image)
+            lines, stop_lines = get_lines(gray_image)
             driving_lines = filter_lines(lines, gray_image.shape[1] // 2)
-            stop_lines = list(filter(lambda line: line.line_type == LineType.STOP, lines))
-
-            # convert image to colour
-            colour_image = cv2.cvtColor(gray_image, cv2.COLOR_GRAY2BGR)
-
-            # draw lines on the image
-            for line in lines:
-                for point in line.points:
-                    cv2.circle(colour_image, point, 3, colours[line.line_type], -1)
-
-            it += 1
-            end = time.perf_counter()
-            print(f"fps: {it / (end - start)}")
 
             if len(driving_lines) < 2:
                 continue
 
             # act on the lines in the image
-            self.__follow_path(
-                driving_lines, gray_image.shape[1] // 2, config.lane_assist.line_following.requested_lane
-            )  # TODO: make requested lane dynamic
-            self.__handle_stoplines(stop_lines)
+            self.__follow_path(driving_lines, gray_image.shape[1] // 2, self.requested_lane)
+            self.stopline_assist.handle_stoplines(stop_lines)
             time.sleep(0)
-
-    def __handle_stoplines(self, stoplines: list[Line]) -> None:
-        if not stoplines or len(stoplines) == 0:
-            self.stop_lines_found -= 1
-            self.stop_lines_found = max(0, self.stop_lines_found)
-            return
-
-        # if we see a stopline and the state is waiting to stop, set the state to stopped.
-        # this will cause the car to stop.
-        if self.stop_lines_found < 3:
-            self.stop_lines_found += 1
-            return
-
-        if self.speed_controller.state == SpeedControllerState.WAITING_TO_STOP:
-            # TODO: take the distance to the stopline and speed into account
-            self.speed_controller.state = SpeedControllerState.STOPPED
-            self.stop_lines_found = 0
 
     def __follow_path(self, lines: list[Line], car_position: float, lane: int) -> None:
         """Follow the path.
@@ -128,11 +104,8 @@ class LaneAssist:
         This function will follow the path based on the lines in the image.
         If the lane is not available, it will throw an error
 
-        Parameters
-        ----------
         :param lines: the lines in the image.
         :param lane: The lane to follow.
-
         """
         # if there are less than 2 lines, we can't create a path
         if len(lines) < 2:
@@ -140,7 +113,6 @@ class LaneAssist:
 
         # generate the driving path
         path = generate_driving_path(lines, lane)
-        # adjust the speed based on the path
         speed = self.adjust_speed(path)
         self.speed_controller.target_speed = speed
 

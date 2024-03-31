@@ -16,3 +16,4 @@ pytest-benchmark==4.0.0
 omegaconf==2.3.0
 ultralytics==8.1.30
 uvicorn==0.29.0
+msgpack-rpc-python==0.4.1

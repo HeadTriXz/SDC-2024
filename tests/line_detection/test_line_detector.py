@@ -4,9 +4,10 @@ import unittest
 import cv2
 import numpy as np
 import pytest
-from src.lane_assist.line_detection.line import Line
-from src.lane_assist.line_detection.line_detector import get_lines
-from src.lane_assist.preprocessing.birdview import topdown
+
+from lane_assist.line_detection.line import Line
+from lane_assist.line_detection.line_detector import get_lines
+from lane_assist.preprocessing.birdview import topdown
 
 from .test_data import corner, crossing, stopline, straight
 
@@ -51,7 +52,7 @@ class TestDetectLines(unittest.TestCase):
 
     def __test_line_detection(self, image: np.ndarray, expected_lines: list[Line]) -> None:
         """Test the line detection on the given image."""
-        lines = get_lines(topdown(image))
+        lines, stoplines = get_lines(topdown(image))
         with self.subTest("amount of lines detected"):
             self.assertEqual(len(lines), len(expected_lines), "Number of lines is not equal")
 
