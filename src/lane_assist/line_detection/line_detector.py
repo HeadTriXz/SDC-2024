@@ -62,7 +62,12 @@ def __generate_tests(filepath: str) -> None:
 
 
 def __main() -> None:
-    image_names = ["straight", "corner", "crossing", "stopline"]
+    image_names = [
+        "straight",
+        "corner",
+        "crossing",
+        "stopline",
+    ]
     images = [cv2.imread(f"../../../resources/stitched_images/{image}.jpg") for image in image_names]
 
     colours = {

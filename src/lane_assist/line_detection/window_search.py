@@ -39,6 +39,9 @@ def window_search(
     """
     # filter out the zebra crossing and stoplines from the image
     img, filtered_peaks = __filter_image(img)
+    # cv2.imshow("filtered", img)
+    # if cv2.waitKey(0) & 0xFF == ord("q"):
+    #     cv2.destroyAllWindows()
 
     # get the actual start position of the image.
     # this is different from the height of the image because we might have a zebra crossing
