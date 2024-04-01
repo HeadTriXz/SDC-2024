@@ -68,7 +68,7 @@ def window_search(
 
     lines = __window_search(img, window_count, windows)
     stoplines = [
-        peak.center for peak in filtered_peaks if peak.width > config.lane_assist.line_detection.line_width * 2
+        peak.center for peak in filtered_peaks if peak.width < config.lane_assist.line_detection.line_width * 2
     ]
 
     return lines, stoplines

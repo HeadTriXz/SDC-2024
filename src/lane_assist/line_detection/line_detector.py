@@ -86,6 +86,10 @@ def __main() -> None:
             for point in line.points:
                 cv2.circle(td, point, 4, colours[line.line_type], -1)
 
+        for y in stoplines:
+            # draw a red line at the y position of
+            cv2.line(td, (0, y), (td.shape[1], y), (255, 0, 0), 2)
+
         final_images.append(td)
 
     # show all images in the same plot
@@ -97,4 +101,5 @@ def __main() -> None:
 
 
 if __name__ == "__main__":
-    __generate_tests("../../../tests/line_detection/test_data.py")
+    # __generate_tests("../../../tests/line_detection/test_data.py")
+    __main()
