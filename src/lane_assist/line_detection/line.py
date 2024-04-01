@@ -8,7 +8,6 @@ class LineType(IntEnum):
 
     SOLID = 1
     DASHED = 2
-    STOP = 3
 
 
 class Line:
@@ -30,7 +29,7 @@ class Line:
         ----------
         :param points: the points of the line
         :param window_height: the height of a window. used to determine if it is a solid or dashed line
-        :param line_type: the type of line. this can be set if it is known, for example stop lines.
+        :param line_type: the type of line. this can be set if it is known, for example, stop lines.
 
         """
         self.points = points
@@ -41,12 +40,6 @@ class Line:
 
         if window_height is None:
             raise ValueError("window_height or line_type must be provided")
-
-        # check if there are regular intervals greater than the height of a window
-        # if so we have a dashed line. if there are no regular intervals we have a solid line
-        if len(points) < 2:
-            self.line_type = LineType.SOLID
-            return
 
         intervals = np.diff(points[:, 1])
         if len(np.where(abs(intervals) > window_height)[0]) > gaps_allowed * 1.5:
@@ -72,8 +65,6 @@ class Line:
                 type_str = "SOLID"
             case LineType.DASHED:
                 type_str = "DASHED"
-            case LineType.STOP:
-                type_str = "STOP"
             case _:
                 type_str = "UNKNOWN"
 

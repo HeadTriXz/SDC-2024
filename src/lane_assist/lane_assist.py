@@ -17,7 +17,6 @@ from lane_assist.stopline_assist import StoplineAssist
 colours = {
     LineType.SOLID: (0, 255, 0),
     LineType.DASHED: (0, 0, 255),
-    LineType.STOP: (255, 0, 0),
 }
 
 

@@ -10,14 +10,14 @@ from lane_assist.line_detection.window_search import window_search
 from lane_assist.preprocessing.birdview import topdown
 
 
-def filter_lines(lines: list[Line], starting_point: int, ret_stoplines: bool = False) -> list[Line]:
+def filter_lines(lines: list[Line], starting_point: int) -> list[Line]:
     """Get the lines between the solid lines closest to each side of the starting point."""
-    solid_lines = [line for line in lines if line.line_type != LineType.STOP]
     i = 0
     j = 0
-    while i < len(solid_lines):
+
+    while i < len(lines):
         # check if we are after the starting point
-        if solid_lines[i].points[0][0] >= starting_point and solid_lines[i].line_type == LineType.SOLID:
+        if lines[i].points[0][0] >= starting_point and lines[i].line_type == LineType.SOLID:
             # back up until we find a solid line
             j = i
             while j > 0:
@@ -27,10 +27,7 @@ def filter_lines(lines: list[Line], starting_point: int, ret_stoplines: bool = F
             break
         i += 1
 
-    if ret_stoplines:
-        return solid_lines[j : i + 1] + [line for line in lines if line.line_type == LineType.STOP]
-
-    return solid_lines[j : i + 1]
+    return lines[j : i + 1]
 
 
 def get_lines(image: np.ndarray) -> tuple[list[Line], list[Any]]:
@@ -71,7 +68,6 @@ def __main() -> None:
     colours = {
         LineType.SOLID: (0, 255, 0),
         LineType.DASHED: (0, 0, 255),
-        LineType.STOP: (255, 0, 0),
     }
 
     final_images = []
