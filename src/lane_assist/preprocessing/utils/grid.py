@@ -24,25 +24,11 @@ def corners_to_grid(corners: np.ndarray, ids: np.ndarray, shape: tuple[int, int]
     return grid
 
 
-def get_src_grid(detector: cv2.aruco.CharucoDetector, image: np.ndarray) -> np.ndarray:
-    """Get the source grid for the image.
-
-    :param detector: The ChArUco detector.
-    :param image: The image to get the grid for.
-    :return: The source grid for the image.
-    """
-    charuco_corners, charuco_ids, _, _ = detector.detectBoard(image)
-    if charuco_corners is None or len(charuco_corners) < 4:
-        raise ValueError("The ChArUco board was not detected")
-
-    return corners_to_grid(charuco_corners, charuco_ids, get_board_shape())
-
-
-def get_dst_grid(h_change: float, v_change: float) -> np.ndarray:
+def get_dst_grid(length: float, angle: float) -> np.ndarray:
     """Calculate the destination grid for the image.
 
-    :param h_change: The horizontal change per square.
-    :param v_change: The vertical change per square.
+    :param length: The length of a single square.
+    :param angle: The angle of the board in radians.
     :return: The destination grid for the image.
     """
     w, h = np.subtract(get_board_shape(), 1)
@@ -50,8 +36,8 @@ def get_dst_grid(h_change: float, v_change: float) -> np.ndarray:
 
     for i in range(h):
         for j in range(w):
-            x = j * v_change + i * h_change
-            y = (w - j) * h_change + i * v_change
+            x = j * length * np.cos(angle) - i * length * np.sin(angle)
+            y = j * length * np.sin(angle) + i * length * np.cos(angle)
 
             dst_grid[i, j] = [x, y]
 

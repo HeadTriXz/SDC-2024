@@ -7,18 +7,29 @@ from pathlib import Path
 from typing import Optional
 from lane_assist.preprocessing.utils.charuco import find_corners
 from lane_assist.preprocessing.utils.corners import get_dst_corners, get_transformed_corners
-from lane_assist.preprocessing.utils.grid import get_src_grid, get_dst_grid, crop_grid
+from lane_assist.preprocessing.utils.grid import get_dst_grid, crop_grid, corners_to_grid
 from lane_assist.preprocessing.utils.other import (
     get_charuco_detector,
-    get_slope,
     get_scale_factor,
     get_transformed_shape,
-    find_offsets
+    find_offsets, euclidean_distance, get_board_shape
 )
 
 
 class CameraCalibrator:
-    """A class for calibrating multiple cameras."""
+    """A class for calibrating multiple cameras.
+
+    Attributes
+    ----------
+        images: The images to calibrate.
+        ref_idx: The index of the reference image.
+        camera_matrix: The camera matrix.
+        dist_coeffs: The distortion coefficients.
+        matrices: The perspective matrices.
+        offsets: The offsets.
+        output_shape: The shape of the output images.
+
+    """
 
     images: Optional[list[np.ndarray]]
     ref_idx: int
@@ -27,18 +38,25 @@ class CameraCalibrator:
     dist_coeffs: Optional[np.ndarray]
     matrices: Optional[np.ndarray]
     offsets: Optional[np.ndarray]
-    shape: tuple[int, int]
+    output_shape: tuple[int, int]
 
+    _angle: float = 0.0
     _grids: np.ndarray
+    _input_shape: tuple[int, int]
 
-    def __init__(self, images: list[np.ndarray] = None, ref_idx: int = 1) -> None:
+    def __init__(self, images: list[np.ndarray] = None, ref_idx: int = 1, input_shape: tuple[int, int] = None) -> None:
         """Initialize the camera calibrator.
 
         :param images: The images to calibrate.
         :param ref_idx: The index of the reference image.
+        :param input_shape: The shape of the input images.
         """
         self.images = images
         self.ref_idx = ref_idx
+
+        self._input_shape = input_shape
+        if input_shape is None and images is not None:
+            self._input_shape = (images[ref_idx].shape[1], images[ref_idx].shape[0])
 
     def calibrate(self) -> None:
         """Calibrate the cameras."""
@@ -62,11 +80,14 @@ class CameraCalibrator:
             if charuco_corners is None or len(charuco_corners) < 4:
                 raise ValueError("The ChArUco board was not detected")
 
+            scale = self._get_scale(image)
+            charuco_corners *= scale
+
             obj_points, img_points = board.matchImagePoints(charuco_corners, charuco_ids)
             all_obj_points.append(obj_points)
             all_img_points.append(img_points)
 
-        ref_shape = self.images[self.ref_idx].shape[:2]
+        ref_shape = self._input_shape[::-1]
         retval, self.camera_matrix, self.dist_coeffs, _, _ = cv2.calibrateCamera(
             all_obj_points, all_img_points, ref_shape, None, None
         )
@@ -76,15 +97,18 @@ class CameraCalibrator:
         if self.images is None:
             raise ValueError("No images to calibrate")
 
+        if self.camera_matrix is None or self.dist_coeffs is None:
+            raise ValueError("The cameras have not been calibrated")
+
         detector = get_charuco_detector()
-        src_grids = [get_src_grid(detector, image) for image in self.images]
+        src_grids = self._get_src_grids(detector)
         all_src_corners, all_shapes = zip(*[find_corners(grid) for grid in src_grids])
 
         # Calculate the scale factor
         ref_src_corners = all_src_corners[self.ref_idx]
-        h_change, v_change = get_slope(ref_src_corners[0], ref_src_corners[3], all_shapes[self.ref_idx][1])
+        max_dist = euclidean_distance(ref_src_corners[0], ref_src_corners[3]) / all_shapes[self.ref_idx][1]
 
-        ref_dst_grid = get_dst_grid(h_change, v_change)
+        ref_dst_grid = get_dst_grid(max_dist, self._angle)
         ref_dst_grid[np.all(src_grids[self.ref_idx] == 0, axis=2)] = 0
 
         ref_dst_corners, _ = find_corners(ref_dst_grid)
@@ -101,7 +125,7 @@ class CameraCalibrator:
         # Calculate the perspective matrices.
         self.matrices = np.zeros((len(self.images), 3, 3), dtype=np.float32)
         for i, (src_corners, shape) in enumerate(zip(all_src_corners, all_shapes)):
-            dst_corners = get_dst_corners(src_corners, h_change, v_change, shape, scale_factor)
+            dst_corners = get_dst_corners(max_dist, self._angle, shape, scale_factor)
             self.matrices[i] = cv2.findHomography(src_corners, dst_corners)[0]
 
         # Calculate the destination points of the ChArUco board.
@@ -137,7 +161,7 @@ class CameraCalibrator:
             self._grids[i] = crop_grid(self._grids[i], cropped)
 
         self.offsets, width, height = find_offsets(self._grids, shapes, self.ref_idx)
-        self.shape = (height, width)
+        self.output_shape = (height, width)
 
     def save(self, save_dir: Path | str) -> None:
         """Save the calibration data to a file.
@@ -160,11 +184,52 @@ class CameraCalibrator:
             dist_coeffs=self.dist_coeffs,
             matrices=self.matrices,
             offsets=self.offsets,
-            shape=self.shape
+            shape=self.output_shape
         )
 
         np.savez(history_file, **arrays)
         np.savez(latest_file, **arrays)
+
+    def _get_scale(self, image: np.ndarray) -> float:
+        """Get the scale factor for the image.
+
+        :param image: The image to get the scale factor for.
+        :return: The scale factor for the image.
+        """
+        return max(self._input_shape[1] / image.shape[0], self._input_shape[0] / image.shape[1])
+
+    def _get_src_grids(self, detector: cv2.aruco.CharucoDetector) -> list[np.ndarray]:
+        """Get the source grids for the images.
+
+        :param detector: The ChArUco detector.
+        :return: The source grids for the images.
+        """
+        board = detector.getBoard()
+        grids = []
+
+        for i, image in enumerate(self.images):
+            scale = self._get_scale(image)
+
+            charuco_corners, charuco_ids, _, _ = detector.detectBoard(image)
+            if charuco_corners is None or len(charuco_corners) < 4:
+                raise ValueError("The ChArUco board was not detected")
+
+            charuco_corners *= scale
+            grid = corners_to_grid(charuco_corners, charuco_ids, get_board_shape())
+            grids.append(grid)
+
+            self.images[i] = cv2.resize(image, self._input_shape)
+            if i == self.ref_idx:
+                obj_points, img_points = board.matchImagePoints(charuco_corners, charuco_ids)
+                retval, rvec, tvec = cv2.solvePnP(obj_points, img_points, self.camera_matrix, self.dist_coeffs)
+
+                rmat, _ = cv2.Rodrigues(rvec)
+                pmat = np.dot(self.camera_matrix, np.hstack((rmat, tvec)))
+
+                rz = cv2.decomposeProjectionMatrix(pmat)[-1][2][0]
+                self._angle = np.radians(rz)
+
+        return grids
 
     @staticmethod
     def load(path: Path | str) -> "CameraCalibrator":
@@ -180,6 +245,6 @@ class CameraCalibrator:
         calibrator.dist_coeffs = data["dist_coeffs"]
         calibrator.matrices = data["matrices"]
         calibrator.offsets = data["offsets"]
-        calibrator.shape = data["shape"]
+        calibrator.output_shape = data["shape"]
 
         return calibrator

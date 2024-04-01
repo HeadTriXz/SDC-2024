@@ -58,30 +58,22 @@ def get_transformed_corners(matrix: np.ndarray, shape: tuple[int, int]) -> tuple
 
 
 def get_dst_corners(
-        src_corners: np.ndarray,
-        h_change: float,
-        v_change: float,
+        length: float,
+        angle: float,
         shape: tuple[int, int],
         scale_factor: float = 1.0
 ) -> np.ndarray:
     """Calculate the destination corners of the ChArUco board.
 
-    :param src_corners: The original points of the ChArUco board.
-    :param h_change: The horizontal change per square.
-    :param v_change: The vertical change per square.
+    :param length: The length of a single square.
+    :param angle: The angle of the board in radians.
     :param shape: The shape of the rectangle.
     :param scale_factor: The scale factor for the perspective matrix.
     :return: The destination corners of the ChArUco board.
     """
     w, h = shape
-    cx, cy = np.mean(src_corners, axis=0)
+    corners = np.array([[0, 0], [w, 0], [w, h], [0, h]], dtype=np.float32)
+    rmat = np.array([[np.cos(angle), -np.sin(angle)],
+                     [np.sin(angle), np.cos(angle)]])
 
-    new_w = int(w * h_change * scale_factor)
-    new_h = int(h * (h_change + v_change) * scale_factor)
-
-    return np.array([
-        [cx - new_h / 2, cy + new_w / 2],
-        [cx - new_h / 2, cy - new_w / 2],
-        [cx + new_h / 2, cy - new_w / 2],
-        [cx + new_h / 2, cy + new_w / 2]
-    ])
+    return scale_factor * np.dot(corners * length, rmat.T)

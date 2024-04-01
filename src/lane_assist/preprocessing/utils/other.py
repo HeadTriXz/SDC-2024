@@ -17,17 +17,6 @@ def euclidean_distance(p1: np.ndarray | Coordinate, p2: np.ndarray | Coordinate)
     return np.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
 
 
-def get_slope(p1: Coordinate, p2: Coordinate, width: int) -> np.ndarray:
-    """Get the slope of a line.
-
-    :param p1: The first point.
-    :param p2: The second point.
-    :param width: The width of the image.
-    :return: The horizontal and vertical change of the line.
-    """
-    return np.array([p2[0] - p1[0], p2[1] - p1[1]]) / width
-
-
 def get_board_shape() -> tuple[int, int]:
     """Get the shape of the ChArUco board.
 

@@ -28,10 +28,10 @@ def get_stitched_image(calibrator: CameraCalibrator, images: list[np.ndarray]) -
     images = [cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) for image in images]
 
     warped_center = warp_image(images[1], calibrator.matrices[1])
-    warped_left = warp_image(images[0], calibrator.matrices[0], warped_center.shape[0])
-    warped_right = warp_image(images[2], calibrator.matrices[2], warped_center.shape[0])
+    warped_left = warp_image(images[0], calibrator.matrices[0], warped_center.output_shape[0])
+    warped_right = warp_image(images[2], calibrator.matrices[2], warped_center.output_shape[0])
 
-    stitched = np.zeros(calibrator.shape, dtype=np.uint8)
+    stitched = np.zeros(calibrator.output_shape, dtype=np.uint8)
     stitched = stitch_images(stitched, warped_left, calibrator.offsets[0])
     stitched = stitch_images(stitched, warped_right, calibrator.offsets[2])
     return stitch_images(stitched, warped_center, calibrator.offsets[1])
