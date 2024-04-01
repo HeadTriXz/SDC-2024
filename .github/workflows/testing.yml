@@ -2,7 +2,12 @@ name: Unit tests
 
 on:
   push:
-
+    paths:
+      - 'requirements.txt'
+      - '.github/workflows/testing.yml'
+      - 'src/**'
+      - 'tests/**'
+      -
 jobs:
   test:
     runs-on: ubuntu-latest
