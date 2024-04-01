@@ -34,7 +34,7 @@ def main() -> None:
     can_controller = SimCanController(client)
     speed_controller = SpeedController(can_controller)
     speed_controller.max_speed = 50
-    speed_controller.state = SpeedControllerState.WAITING_TO_STOP
+    speed_controller.state = SpeedControllerState.DRIVING
 
     path_follower = PathFollower(1, 0.01, 0.05, look_ahead_distance=10)
     path_follower.max_steering_range = 30.0
