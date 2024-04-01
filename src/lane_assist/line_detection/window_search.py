@@ -114,7 +114,9 @@ def __filter_image(img: np.ndarray) -> (np.ndarray, list[HistogramPeak]):
         height=THRESHOLDS.zebra_crossing / 3,
         distance=config.lane_assist.line_detection.line_width * 4,
     )[0]
-    widths, _, lefts, rights = scipy.signal.peak_widths(histogram, filter_peaks, rel_height=0.98)
+    widths, _, lefts, rights = scipy.signal.peak_widths(
+        histogram, filter_peaks, rel_height=config.lane_assist.line_detection.filtering.rel_height
+    )
 
     peaks = [
         HistogramPeak(center, width, left, right)

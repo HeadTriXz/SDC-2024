@@ -44,6 +44,6 @@ class StoplineAssist:
             return
 
         # TODO: take the distance to the stopline and speed into account
-        if self.speed_controller.state == SpeedControllerState.WAITING_TO_STOP and stoplines[0] < 500:
+        if self.speed_controller.state == SpeedControllerState.WAITING_TO_STOP and 200 < stoplines[0] < 700:
             self.speed_controller.state = SpeedControllerState.STOPPED
             self.stop_lines_found = 0

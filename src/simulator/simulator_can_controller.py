@@ -1,7 +1,8 @@
+from driving.can_controller.can_controller_interface import ICANController
 from libs.external import airsim
 
 
-class SimCanController:
+class SimCanController(ICANController):
     """Simulate the can controller."""
 
     def __init__(self, client: airsim.CarClient) -> None:

@@ -1,12 +1,9 @@
 import logging
-import sys
-from os import system
-
-import can
 
 from config import config
 from constants import Gear
 from driving.can_controller import CANController
+from driving.can_controller.can_bus import get_can_interface
 from driving.speed_controller import SpeedController, SpeedControllerState
 from lane_assist.helpers import td_stitched_image_generator
 from lane_assist.lane_assist import LaneAssist
@@ -17,22 +14,6 @@ from object_recognition.handlers.traffic_light_handler import TrafficLightHandle
 from object_recognition.object_controller import ObjectController
 from object_recognition.object_detector import ObjectDetector
 from utils.video_stream import VideoStream
-
-
-def initialize_can() -> can.Bus:
-    """Initialize the can bus."""
-    system("ip link set can0 type can bitrate 500000")
-    system("ip link set can0 up")
-
-    return can.Bus(interface="socketcan", channel="can0", bitrate=500000)
-
-
-def get_can_real_or_virtual() -> can.Bus:
-    """Get the can bus."""
-    if sys.platform == "linux":
-        return initialize_can()
-
-    return can.Bus(interface="virtual", channel="vcan0")
 
 
 def main() -> None:
@@ -47,7 +28,7 @@ def main() -> None:
     cam_right.start()
 
     # Connect to CAN bus
-    bus = get_can_real_or_virtual()
+    bus = get_can_interface()
     can_controller = CANController(bus)
     speed_controller = SpeedController(can_controller)
 

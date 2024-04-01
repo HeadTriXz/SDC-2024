@@ -53,7 +53,11 @@ class ConfigLoader(metaclass=SingletonMeta):
         if not os.path.exists(path):
             raise FileNotFoundError(f"Configuration file not found at {path}")
 
-        self.__loaded_config = OmegaConf.load(path)
+        defaults = OmegaConf.load(os.path.join(os.path.dirname(__file__), "config.defaults.yaml"))
+        environment_config = OmegaConf.load(path)
+        merged_config = OmegaConf.merge(defaults, environment_config)
+        self.__loaded_config = merged_config
+
 
     def __getattr__(self, item: str) -> str | DictConfig | ListConfig:
         """Get the attribute.

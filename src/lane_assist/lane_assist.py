@@ -115,10 +115,6 @@ class LaneAssist:
         :param lines: the lines in the image.
         :param lane: The lane to follow.
         """
-        # if there are less than 2 lines, we can't create a path
-        if len(lines) < 2:
-            return
-
         # generate the driving path
         path = generate_driving_path(lines, lane)
         speed = self.adjust_speed(path)
