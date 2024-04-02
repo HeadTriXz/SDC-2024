@@ -42,7 +42,7 @@ class WebsocketTextComponent extends HTMLElement {
             console.log(event.data)
             const text_elem = document.createElement('p');
             text_elem.textContent = event.data;
-            if(this.getAttribute('append') == 'true'){
+            if(this.getAttribute('append') === 'true'){
                 // prepend child
                 this.text.prepend(text_elem);
             } else {

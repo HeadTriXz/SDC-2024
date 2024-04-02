@@ -7,6 +7,7 @@ from utils.video_stream import VideoStream
 
 
 def send_images(cam_left: VideoStream, telem_server: TelemetryServer) -> None:
+    """Send images/text to the telemetry server."""
     counter = 0
     while cam_left.has_next():
         telem_server.websocket_handler.send_text("counter", f"Frame: {counter}")
@@ -31,7 +32,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    # from simulator import main as smain
-    #
-    # smain()
     main()
