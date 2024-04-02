@@ -1,0 +1,10 @@
+image_manipulation:
+  white_threshold: 185
+
+lane_assist:
+  line_detection:
+    thresholds:
+      zebra_crossing: 10000
+
+  line_following:
+    initial_speed: 15

@@ -84,3 +84,5 @@ venv.bak/
 
 # Compiled object detection model
 *_openvino_model/
+
+pytest.ini

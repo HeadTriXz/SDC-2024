@@ -7,13 +7,12 @@ MATRIX = cv2.getPerspectiveTransform(SRC_PTS, DST_PTS)
 
 
 def cut_image(image: np.ndarray, x: int, y: int, width: int, height: int) -> np.ndarray:
-    """Cut image to specified width and height."""
-    return image[y: y + height, x: x + width]
+    """Cut the image to specified width and height."""
+    return image[y : y + height, x : x + width]
 
 
 def topdown(image: np.ndarray) -> np.ndarray:
     """Transform stitched image to top-down view."""
-    img = cv2.warpPerspective(image, MATRIX, (image.shape[1], image.shape[0]), flags=cv2.INTER_LINEAR)
+    img = cv2.warpPerspective(image, MATRIX, (1200, 1250), flags=cv2.INTER_NEAREST)
     img = cut_image(img, 300, 450, 800, 900)
-
     return cv2.rotate(img, cv2.ROTATE_180)

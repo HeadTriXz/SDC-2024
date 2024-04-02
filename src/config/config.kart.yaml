@@ -1,0 +1,23 @@
+camera_ids:
+  left: 2
+  center: 4
+  right: 0
+
+speed_modes:
+  selected: ${.options.slow}
+  options:
+    slow: 25
+    normal: 50
+    fast: 75
+    very_fast: 100
+
+image_manipulation:
+  white_threshold: 200
+
+lane_assist:
+  line_detection:
+    line_width: 50
+    pixels_in_window: 1
+    thresholds:
+      zebra_crossing: 25000
+      line: 1000

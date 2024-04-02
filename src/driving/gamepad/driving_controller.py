@@ -1,12 +1,12 @@
 import logging
 
 from constants import Gear
-from driving.can_controller import CANController
+from driving.can_controller.can_controller_interface import ICANController
 from driving.gamepad.gamepad import (
+    EventType,
     Gamepad,
     GamepadAxis,
     GamepadButton,
-    EventType,
 )
 
 
@@ -20,11 +20,12 @@ class BasicControllerDriving:
         gear (Gear): The current gear of the vehicle.
 
     """
-    can_controller: CANController
+
+    can_controller: ICANController
     gamepad: Gamepad
     gear = Gear.NEUTRAL
 
-    def __init__(self, gamepad: Gamepad, can_controller: CANController) -> None:
+    def __init__(self, gamepad: Gamepad, can_controller: ICANController) -> None:
         """Initialize the driving controller.
 
         :param gamepad: The gamepad to use.
