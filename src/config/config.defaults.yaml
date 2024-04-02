@@ -49,3 +49,8 @@ pedestrian_detection:
   crosswalk_overlap_margin: 0.2
   crosswalk_safe_zone_margin: 0.1
   crosswalk_min_distance: 2
+
+telemetry:
+  server:
+    port: 8000
+    host: 0.0.0.0
