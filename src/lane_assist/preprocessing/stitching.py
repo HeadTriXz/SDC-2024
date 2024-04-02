@@ -51,10 +51,10 @@ def relative_to_absolute(x: float, y: float, width: float, height: float) -> tup
 def get_ltbr(x: float, y: float, width: int, height: int) -> tuple[int, int, int, int]:
     """Get the left, top, right, and bottom coordinates of the image based on xywh."""
     return (
-        int(round(x - (width / 2))),
-        int(round(y - (height / 2))),
-        int(round(x + (width / 2))),
-        int(round(y + (height / 2))),
+        round(x - (width / 2)),
+        round(y - (height / 2)),
+        round(x + (width / 2)),
+        round(y + (height / 2)),
     )
 
 
@@ -69,28 +69,29 @@ def merge_image(base: np.ndarray, overlay: np.ndarray, x1: int, y1: int, x2: int
     return base
 
 
+result_width = int(math.ceil(LEFT_WIDTH / 2 / LEFT_X))
+result_height = int(math.ceil(MAX_HEIGHT / 2 / CENTER_Y))
+result = np.zeros((result_height, result_width), dtype=np.uint8)
+
+# Calculate the position of the images
+lxc, lyc = relative_to_absolute(LEFT_X, LEFT_Y, result_width, result_height)
+lx1, ly1, lx2, ly2 = get_ltbr(lxc, lyc, LEFT_WIDTH, LEFT_HEIGHT)
+
+rxc, ryc = relative_to_absolute(RIGHT_X, RIGHT_Y, result_width, result_height)
+rx1, ry1, rx2, ry2 = get_ltbr(rxc, ryc, RIGHT_WIDTH, RIGHT_HEIGHT)
+
+cxc, cyc = relative_to_absolute(CENTER_X, CENTER_Y, result_width, result_height)
+cx1, cy1, cx2, cy2 = get_ltbr(cxc, cyc, MAX_WIDTH, MAX_HEIGHT)
+
+
 def stitch_images(left: np.ndarray, center: np.ndarray, right: np.ndarray) -> np.ndarray:
     """Stitch the images together."""
+    global result
     # Warp images
     left_res = warp_image(left, MATRIX_LEFT, LEFT_WIDTH, LEFT_HEIGHT)
     right_res = warp_image(right, MATRIX_RIGHT, RIGHT_WIDTH, RIGHT_HEIGHT)
 
-    # Calculate result image size
-    result_width = int(math.ceil(LEFT_WIDTH / 2 / LEFT_X))
-    result_height = int(math.ceil(MAX_HEIGHT / 2 / CENTER_Y))
-
-    # Calculate the position of the images
-    lxc, lyc = relative_to_absolute(LEFT_X, LEFT_Y, result_width, result_height)
-    lx1, ly1, lx2, ly2 = get_ltbr(lxc, lyc, LEFT_WIDTH, LEFT_HEIGHT)
-
-    rxc, ryc = relative_to_absolute(RIGHT_X, RIGHT_Y, result_width, result_height)
-    rx1, ry1, rx2, ry2 = get_ltbr(rxc, ryc, RIGHT_WIDTH, RIGHT_HEIGHT)
-
-    cxc, cyc = relative_to_absolute(CENTER_X, CENTER_Y, result_width, result_height)
-    cx1, cy1, cx2, cy2 = get_ltbr(cxc, cyc, MAX_WIDTH, MAX_HEIGHT)
-
     # Create result image
-    result = np.zeros((result_height, result_width), dtype=np.uint8)
     result = merge_image(result, left_res, lx1, ly1, lx2, ly2)
     result = merge_image(result, right_res, rx1, ry1, rx2, ry2)
     return merge_image(result, center, cx1, cy1, cx2, cy2)

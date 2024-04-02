@@ -46,22 +46,3 @@ def td_stitched_image_generator(
             yield topdown_image
 
     return __generator
-
-
-def singe_camera_generator(camera: VideoStream) -> Callable[[], Generator[np.ndarray, None, None]]:
-    """Generate a picture from the camera.
-
-    This function will return a generator that will generate a grayscale picture from the camera.
-    This is useful for testing the thresholds before having access to the kart.
-
-    :param camera: The camera to generate the image from.
-    """
-
-    def __generator() -> Generator[np.ndarray, None, None]:
-        """Generate a topdown image from the camera."""
-        while camera.has_next():
-            image = camera.next()
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            yield topdown(image)
-
-    return __generator
