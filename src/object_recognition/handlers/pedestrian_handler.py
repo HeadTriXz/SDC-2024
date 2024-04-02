@@ -17,6 +17,7 @@ class PedestrianHandler(BaseObjectHandler):
 
     """
 
+    stopped: bool = False
     track_history: dict[int, np.ndarray]
 
     def __init__(self, controller: ObjectController) -> None:
@@ -32,44 +33,16 @@ class PedestrianHandler(BaseObjectHandler):
 
         :param predictions: The detected pedestrians (.data: x1, y1, x2, y2, track_id, conf, cls).
         """
-        if not predictions.is_track:
+        if self.controller.has_stopped() and not self.stopped:
             return
 
-        crosswalks = predictions.data[predictions.cls == Label.CROSSWALK]
-        pedestrians = predictions.data[predictions.cls == Label.PERSON]
-
-        if len(crosswalks) == 0 or len(pedestrians) == 0:
-            return
-
-        should_wait = False
-        for crosswalk in crosswalks:
-            if should_wait:
-                break
-
-            if not self.__should_brake(crosswalk):
-                continue
-
-            for pedestrian in pedestrians:
-                if not self.__overlaps(crosswalk, pedestrian):
-                    continue
-
-                centroid = self.__xyxy_to_centroid(pedestrian[:4])
-
-                p_id = int(pedestrian[4])
-                if p_id not in self.track_history:
-                    self.track_history[p_id] = np.array([centroid])
-                else:
-                    self.track_history[p_id] = np.append(self.track_history[p_id], [centroid], axis=0)
-                    if self.__reached_safe_zone(crosswalk, self.track_history[p_id]):
-                        continue
-
-                should_wait = True
-                break
-
-        if should_wait:
-            self.controller.set_state(SpeedControllerState.STOPPED)
-        else:
+        should_stop = self.__should_stop(predictions)
+        if self.stopped and not should_stop:
             self.controller.set_state(SpeedControllerState.DRIVING)
+            self.stopped = False
+        elif not self.stopped and should_stop:
+            self.controller.set_state(SpeedControllerState.STOPPED)
+            self.stopped = True
 
     def __get_direction(self, history: np.ndarray) -> int:
         """Calculates the direction of the pedestrian.
@@ -82,62 +55,76 @@ class PedestrianHandler(BaseObjectHandler):
 
         return np.sign(history[-1][0] - average)
 
-    def __get_initial_side(self, crosswalk: np.ndarray, history: np.ndarray) -> int:
-        """Calculates the initial side the pedestrian started from.
+    def __get_most_recent_side(self, history: np.ndarray) -> int:
+        """Calculates the most recent side the pedestrian was on.
 
-        :param crosswalk: The bounding box of the crosswalk.
         :param history: The pedestrian's previous positions.
-        :return: The initial side the pedestrian started from. -1 if left, 1 if right.
+        :return: The most recent side the pedestrian was on. -1 if left, 1 if right, 0 if in the middle.
         """
-        margin_x = (crosswalk[2] - crosswalk[0]) * config.pedestrian_detection.crosswalk_safe_zone_margin
+        margin = config.pedestrian_detection.crosswalk_safe_zone_margin
+        known_sides = []
 
-        if history[0][0] < crosswalk[0] - margin_x:
-            return -1
+        for position in history[::-1]:
+            if len(known_sides) == 2:
+                return known_sides[1]
 
-        if history[0][0] > crosswalk[2] + margin_x:
-            return 1
+            if position[0] < margin:
+                known_sides.append(-1)
+
+            if position[0] > 1 - margin:
+                known_sides.append(1)
 
         return 0
 
-    def __overlaps(self, crosswalk: np.ndarray, pedestrian: np.ndarray) -> bool:
-        """Checks if the bounding boxes overlap.
+    def __get_relative_position(self, crosswalk: np.ndarray, pedestrian: np.ndarray) -> np.ndarray:
+        """Calculates the relative position of the pedestrian to the crosswalk.
 
         :param crosswalk: The bounding box of the crosswalk.
         :param pedestrian: The bounding box of the pedestrian.
-        :return: True if the bounding boxes overlap, False otherwise.
+        :return: The relative position of the pedestrian (x1, y1, x2, y2).
         """
-        margin_x = (crosswalk[2] - crosswalk[0]) * config.pedestrian_detection.crosswalk_overlap_margin
-        margin_y = (crosswalk[3] - crosswalk[1]) * config.pedestrian_detection.crosswalk_overlap_margin
+        width = crosswalk[2] - crosswalk[0]
+        height = crosswalk[3] - crosswalk[1]
 
-        min_x_crosswalk = crosswalk[0] - margin_x
-        max_x_crosswalk = crosswalk[2] + margin_x
-        min_y_crosswalk = crosswalk[1] - margin_y
-        max_y_crosswalk = crosswalk[3] + margin_y
+        return np.array([
+            (pedestrian[0] - crosswalk[0]) / width,
+            (pedestrian[1] - crosswalk[1]) / height,
+            (pedestrian[2] - crosswalk[0]) / width,
+            (pedestrian[3] - crosswalk[1]) / height
+        ])
 
-        return (min_y_crosswalk <= pedestrian[3] <= max_y_crosswalk and
-                (min_x_crosswalk <= pedestrian[0] <= max_x_crosswalk or
-                 min_x_crosswalk <= pedestrian[2] <= max_x_crosswalk))
+    def __overlaps(self, pedestrian: np.ndarray) -> bool:
+        """Checks if the bounding boxes overlap.
 
-    def __reached_safe_zone(self, crosswalk: np.ndarray, history: np.ndarray) -> bool:
+        :param pedestrian: The relative coordinates of the pedestrian.
+        :return: Whether the bounding boxes overlap.
+        """
+        min_margin = -config.pedestrian_detection.crosswalk_overlap_margin
+        max_margin = 1 - min_margin
+
+        return (min_margin <= pedestrian[3] <= max_margin and
+                (min_margin <= pedestrian[0] <= max_margin or
+                 min_margin <= pedestrian[2] <= max_margin))
+
+    def __reached_safe_zone(self, history: np.ndarray) -> bool:
         """Checks if the pedestrian has reached the safe zone.
 
-        :param crosswalk: The bounding box of the crosswalk.
         :param history: The pedestrian's previous positions.
         :return: Whether the pedestrian has reached the safe zone.
         """
         if len(history) < 2:
             return False
 
-        side = self.__get_initial_side(crosswalk, history)
+        side = self.__get_most_recent_side(history)
         direction = self.__get_direction(history)
         if direction == side:
             return False
 
-        margin_x = (crosswalk[2] - crosswalk[0]) * config.pedestrian_detection.crosswalk_safe_zone_margin
+        margin = config.pedestrian_detection.crosswalk_safe_zone_margin
         if direction == -1:
-            return history[-1][0] < crosswalk[0] + margin_x
+            return history[-1][0] < margin
 
-        return history[-1][0] > crosswalk[2] - margin_x
+        return history[-1][0] > 1 - margin
 
     def __should_brake(self, crosswalk: np.ndarray) -> bool:
         """Checks if the crosswalk is close enough to stop.
@@ -145,7 +132,45 @@ class PedestrianHandler(BaseObjectHandler):
         :param crosswalk: The bounding box of the crosswalk.
         :return: Whether the crosswalk is close enough to stop.
         """
-        return crosswalk[3] > 270  # TODO: Dynamically calculate the distance
+        return crosswalk[3] > 330  # TODO: Dynamically calculate the distance
+
+    def __should_stop(self, predictions: Boxes) -> bool:
+        """Checks if the go-kart should stop.
+
+        :param predictions: The detected pedestrians.
+        :return: Whether the go-kart should stop.
+        """
+        if not predictions.is_track:
+            return False
+
+        crosswalks = predictions.data[predictions.cls == Label.CROSSWALK]
+        pedestrians = predictions.data[predictions.cls == Label.PERSON]
+
+        if len(crosswalks) == 0 or len(pedestrians) == 0:
+            return False
+
+        for crosswalk in crosswalks:
+            if not self.__should_brake(crosswalk):
+                continue
+
+            for pedestrian in pedestrians:
+                relative_position = self.__get_relative_position(crosswalk, pedestrian)
+                if not self.__overlaps(relative_position):
+                    continue
+
+                centroid = self.__xyxy_to_centroid(relative_position[:4])
+
+                p_id = int(pedestrian[4])
+                if p_id not in self.track_history:
+                    self.track_history[p_id] = np.array([centroid])
+                else:
+                    self.track_history[p_id] = np.append(self.track_history[p_id], [centroid], axis=0)
+                    if self.__reached_safe_zone(self.track_history[p_id]):
+                        continue
+
+                return True
+
+        return False
 
     def __xyxy_to_centroid(self, xyxy: np.ndarray) -> np.ndarray:
         """Converts the bounding box from (x1, y1, x2, y2) to (x, y).
@@ -153,4 +178,4 @@ class PedestrianHandler(BaseObjectHandler):
         :param xyxy: The bounding box.
         :return: The centroid of the bounding box.
         """
-        return np.array([(xyxy[0] + xyxy[2]) // 2, (xyxy[1] + xyxy[3]) // 2])
+        return np.array([(xyxy[0] + xyxy[2]) / 2, xyxy[3]])

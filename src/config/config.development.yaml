@@ -7,8 +7,8 @@ speed_modes:
     very_fast: 100
 
 object_detection:
-  model_path: "../../resources/models/best.pt"
-  min_confidence: 0.5
+  model_path: "../resources/models/best.pt"
+  min_confidence: 0.6
   image_size: 1280
   class_to_speed:
     5: 5
