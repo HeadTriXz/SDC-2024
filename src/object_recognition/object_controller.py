@@ -45,6 +45,13 @@ class ObjectController:
 
             handler.handle(filtered_predictions)
 
+    def has_stopped(self) -> bool:
+        """Checks if the go-kart has stopped.
+
+        :return: Whether the go-kart has stopped.
+        """
+        return self.speed_controller.state == SpeedControllerState.STOPPED
+
     def set_max_speed(self, speed: int) -> None:
         """Sets the maximum speed of the go-kart.
 
