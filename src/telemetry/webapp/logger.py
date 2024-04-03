@@ -1,13 +1,14 @@
 import sys
-import os
-class Loggneer:
-    def __init__(self, telem_server):
+
+
+class Loghandler:
+    def __init__(self, telemetry_server):
         self.stdout = sys.stdout
-        self.telem_server = telem_server
+        self.telemetry_server = telemetry_server
 
     def write(self, message):
         if message != '\n':
-            self.telem_server.websocket_handler.send_text("logs", message)
+            self.telemetry_server.websocket_handler.send_text("logs", message)
         self.stdout.write(message)
 
     def flush(self):

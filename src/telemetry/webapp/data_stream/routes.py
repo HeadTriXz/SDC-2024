@@ -1,5 +1,4 @@
 from fastapi import APIRouter, WebSocket
-
 from telemetry.webapp.data_stream.websocket_handler import WebsocketHandler
 
 

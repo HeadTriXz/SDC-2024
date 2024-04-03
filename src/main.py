@@ -5,18 +5,18 @@ from config import config
 from telemetry.webapp.telemetry_server import TelemetryServer
 from utils.video_stream import VideoStream
 import sys
-from telemetry.webapp.logger import Loggneer
+from telemetry.webapp.logger import Loghandler
 from subprocess import Popen, PIPE
-
 
 
 def send_images(cam_left: VideoStream, telem_server: TelemetryServer) -> None:
     """Send images/text to the telemetry server."""
     counter = 0
     while cam_left.has_next():
-        telem_server.websocket_handler.send_text("counter", f"Frame: {counter}")
-        counter += 1
+        #telem_server.websocket_handler.send_text("counter", f"Frame: {counter}")
+        #counter += 1
         time.sleep(0.1)
+        telem_server.websocket_handler.send_image("left",cam_left)
 
 def pyton_turorial():
     count = 0
@@ -30,7 +30,7 @@ def main() -> None:
     cam_left = VideoStream(config.camera_ids.left)
     cam_left.start()
     server = TelemetryServer()
-    logger = Loggneer(server)
+    logger = Loghandler(server)
     sys.stdout = logger
 
     logging.basicConfig(level=logging.INFO, stream=logger)
