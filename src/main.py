@@ -4,6 +4,10 @@ import time
 from config import config
 from telemetry.webapp.telemetry_server import TelemetryServer
 from utils.video_stream import VideoStream
+import sys
+from telemetry.webapp.logger import Loggneer
+from subprocess import Popen, PIPE
+
 
 
 def send_images(cam_left: VideoStream, telem_server: TelemetryServer) -> None:
@@ -14,22 +18,29 @@ def send_images(cam_left: VideoStream, telem_server: TelemetryServer) -> None:
         counter += 1
         time.sleep(0.1)
 
+def pyton_turorial():
+    count = 0
+    while True:
+        logging.info(f"Count: {count}")
+        count += 1
+        time.sleep(0.1)
 
 def main() -> None:
     """Start the main loop."""
-    # Load cameras
     cam_left = VideoStream(config.camera_ids.left)
     cam_left.start()
-
-    # load the telemetry server
     server = TelemetryServer()
-    thread = threading.Thread(target=send_images, args=(cam_left, server), daemon=True)
+    logger = Loggneer(server)
+    sys.stdout = logger
 
-    server.start()
+    logging.basicConfig(level=logging.INFO, stream=logger)
+
+    thread = threading.Thread(target=send_images, args=(cam_left, server), daemon=True)
     thread.start()
+    siepels = threading.Thread(target=pyton_turorial, daemon=True)
+    siepels.start()
+    server.start()
     input("Press Enter to exit...")
 
-
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
     main()
