@@ -1,9 +1,9 @@
 import os
 import threading
-
+import logging
 from starlette.responses import HTMLResponse
 from starlette.staticfiles import StaticFiles
-
+import sys
 from config import config
 
 import fastapi
@@ -11,7 +11,7 @@ import uvicorn
 
 from telemetry.webapp.data_stream.routes import create_router
 from telemetry.webapp.data_stream.websocket_handler import WebsocketHandler
-
+from telemetry.webapp.logger import Loghandler
 
 def get_path(rel_path: str) -> str:
     """Get the absolute path of the current file."""
@@ -28,6 +28,10 @@ class TelemetryServer:
         self.thread = threading.Thread(target=self.__start, daemon=True)
         self.__app = fastapi.FastAPI()
 
+        logger = Loghandler(self)
+        sys.stdout = logger
+        logging.basicConfig(level=logging.INFO, stream=logger)
+
         self.websocket_handler = WebsocketHandler()
         self.__app.include_router(create_router(self.websocket_handler))
 
@@ -40,9 +44,11 @@ class TelemetryServer:
         self.thread.start()
 
     def __start(self) -> None:
+        """Start the telemetry server."""
         uvicorn.run(self.__app, host=self.__host, port=self.__port)
 
     @staticmethod
     def __index_route() -> HTMLResponse:
+        """The index route."""
         with open(get_path("../../../resources/webcontent/index.html")) as f:
             return HTMLResponse(content=f.read())

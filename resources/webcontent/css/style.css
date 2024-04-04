@@ -1,32 +1,31 @@
 body {
     font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
+    margin: 2em 5em;
 }
-
 h1 {
     color: #333;
     font-size: 28px;
-    margin: 10px;
-    padding: 20px;
 }
-
 #cameraContainer {
+    gap: 1em;
     display: flex;
-    justify-content: space-around;
+    flex-wrap: wrap;
+    justify-content: space-between;
 }
-
 .camera {
     width: 45%;
     height: auto;
 }
-.websocket-text, .websocket-image {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin: 10px;
+img{
+    display:block;
+    max-width:500px;
 }
-
+button {
+    margin: 1em 0;
+    padding: 0.6em 1.2em;
+    font-size: 16px;
+    cursor: pointer;
+}
 .websocket-text button, .websocket-image button {
     margin-top: 10px;
     padding: 10px 20px;
@@ -40,7 +39,6 @@ h1 {
 .websocket-text button:hover, .websocket-image button:hover {
     background-color: #555;
 }
-
 .text_field {
     max-height: 400px;
     overflow-y: scroll;
