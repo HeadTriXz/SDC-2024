@@ -55,13 +55,13 @@ def main() -> None:
 
     # Initialize the object detector
     detector = ObjectDetector.from_model(config.object_detection.model_path, controller, 0)
-
+    telemetryserver = TelemetryServer()
     # Start the system
     can_controller.start()
     speed_controller.start()
     detector.start()
-    server = TelemetryServer()
-    server.start()
+
+    telemetryserver.start()
     lane_assist.start()
 
 
@@ -70,6 +70,6 @@ def main() -> None:
 
 if __name__ == "__main__":
     """The main function."""
-    from simulator import main as smain
-
-    smain()
+    #from simulator import main as smain
+    main()
+    #smain()
