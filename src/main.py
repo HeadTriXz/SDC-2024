@@ -56,13 +56,13 @@ def main() -> None:
     # Initialize the object detector
     detector = ObjectDetector.from_model(config.object_detection.model_path, controller, 0)
     telemetry_server = TelemetryServer()
+
     # Start the system
     can_controller.start()
     speed_controller.start()
     detector.start()
     telemetry_server.start()
     lane_assist.start()
-
 
     input("Press Enter to stop...")
 
