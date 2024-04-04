@@ -16,8 +16,6 @@ def get_path(file: str) -> str:
 def get_image(file: str) -> np.ndarray:
     """Get the image from the given file."""
     filepath = get_path(file)
-    if not os.path.exists(filepath):
-        print(f"File {filepath} not found")
     return cv2.imread(filepath, cv2.IMREAD_GRAYSCALE)
 
 
@@ -39,7 +37,5 @@ def test_lane_assist_benchmark(benchmark: any) -> None:
     center = cv2.resize(center, (1280, 720))
     left = cv2.resize(left, (1280, 720))
     right = cv2.resize(right, (1280, 720))
-
-    print(center.shape)
 
     benchmark(stitch_images, center, left, right)

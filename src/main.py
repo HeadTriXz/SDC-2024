@@ -1,5 +1,3 @@
-import logging
-
 from config import config
 from constants import Gear
 from driving.can_controller import CANController
@@ -14,11 +12,11 @@ from object_recognition.handlers.traffic_light_handler import TrafficLightHandle
 from object_recognition.object_controller import ObjectController
 from object_recognition.object_detector import ObjectDetector
 from utils.video_stream import VideoStream
+from telemetry.webapp.telemetry_server import TelemetryServer
 
 
 def main() -> None:
     """Start the main loop."""
-    # Load cameras
     cam_left = VideoStream(config.camera_ids.left)
     cam_center = VideoStream(config.camera_ids.center)
     cam_right = VideoStream(config.camera_ids.right)
@@ -57,18 +55,18 @@ def main() -> None:
 
     # Initialize the object detector
     detector = ObjectDetector.from_model(config.object_detection.model_path, controller, 0)
+    telemetry_server = TelemetryServer()
 
     # Start the system
     can_controller.start()
     speed_controller.start()
     detector.start()
+    telemetry_server.start()
     lane_assist.start()
 
     input("Press Enter to stop...")
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    from simulator import main as smain
+    main()
 
-    smain()
