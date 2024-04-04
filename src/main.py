@@ -1,4 +1,3 @@
-
 from config import config
 from constants import Gear
 from driving.can_controller import CANController

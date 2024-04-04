@@ -1,14 +1,19 @@
 /**
  * WebsocketImageComponent is a custom HTML element that displays an image received from a websocket server.
- * It also includes a button to toggle the websocket connection.
+ * It also includes a button to toggle sending of te images.
  */
 class WebsocketImageComponent extends HTMLElement {
+    /**
+     * Constructor of the WebsocketImageComponent.
+     * Calls the render method to create the component's UI and establishes a websocket connection.
+     */
     constructor() {
         super();
 
         this.render();
         this.connectWS();
     }
+
     /**
      * Render the component by creating an image tag and a button.
      * The button is used to toggle the websocket connection.
@@ -30,6 +35,7 @@ class WebsocketImageComponent extends HTMLElement {
         this.appendChild(button);
         this.appendChild(this.img);
     }
+
     /**
      * Send a 'toggle' message to the server to toggle the websocket connection.
      */
@@ -37,6 +43,7 @@ class WebsocketImageComponent extends HTMLElement {
         // send a toggle message to the server
         this.ws.send('toggle');
     }
+
     /**
      * Establish a new websocket connection.
      * When a new message is received, update the image.
@@ -60,5 +67,6 @@ class WebsocketImageComponent extends HTMLElement {
         }
     }
 }
+
 // define the custom element
 customElements.define('websocket-image', WebsocketImageComponent);

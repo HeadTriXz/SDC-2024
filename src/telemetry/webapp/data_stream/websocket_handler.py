@@ -11,10 +11,7 @@ class WebsocketDataStream:
     def __init__(self, ws: WebSocket) -> None:
         """Initialize the websocket data stream.
 
-        Args:
-        ----
-            ws (WebSocket): The websocket instance.
-
+        :param ws: The websocket instance.
         """
         self.ws = ws
         self.sending = True
@@ -22,14 +19,8 @@ class WebsocketDataStream:
     async def send_image(self, image: np.ndarray) -> bool | None:
         """Send image to the websocket.
 
-        Args:
-        ----
-            image (np.ndarray): The image to be sent.
-
-        Returns:
-        -------
-            bool | None: True if the image was sent successfully.
-
+        :param image: The image to be sent.
+        :return: True if the image was sent successfully.
         """
         if not self.sending:
             return None
@@ -43,14 +34,8 @@ class WebsocketDataStream:
     async def send_text(self, text: str) -> bool | None:
         """Send text to the websocket.
 
-        Args:
-        ----
-            text (str): The text to be sent.
-
-        Returns:
-        -------
-            bool | None: True if the text was sent successfully.
-
+        :param text: The text to be sent.
+        :return: True if the text was sent successfully.
         """
         if not self.sending:
             return None
@@ -62,13 +47,8 @@ class WebsocketDataStream:
             return False
 
     async def rec_messages(self) -> None:
-        """Receive messages from the websocket.
+        """Receive messages from the websocket."""
 
-        Returns
-        -------
-            None
-
-        """
         while True:
             data = await self.ws.receive_text()
             if data == "toggle":
@@ -88,16 +68,11 @@ class WebsocketHandler:
     def add_socket(self, name: str, websocket: WebSocket) -> WebsocketDataStream:
         """Add a websocket client to the list of clients.
 
-        Args:
-        ----
-            name (str): The name of the websocket.
-            websocket (WebSocket): The websocket instance.
-
-        Returns:
-        -------
-            WebsocketDataStream: The added websocket data stream.
-
+        :param name: The name of the websocket.
+        :param websocket: The websocket instance.
+        :return: The websocket data stream.
         """
+
         if name not in self.websocket_clients:
             self.websocket_clients[name] = []
 
@@ -107,15 +82,8 @@ class WebsocketHandler:
     def send_image(self, name: str, image: np.ndarray) -> None:
         """Send image on channel with the given name.
 
-        Args:
-        ----
-            name (str): The name of the channel.
-            image (np.ndarray): The image to be sent.
-
-        Returns:
-        -------
-            None
-
+        :param name: The name of the channel.
+        :param image: The image to be sent.
         """
         if name in self.websocket_clients:
             try:
@@ -132,15 +100,8 @@ class WebsocketHandler:
     def send_text(self, name: str, text: str) -> None:
         """Send text on channel with the given name.
 
-        Args:
-        ----
-            name (str): The name of the channel.
-            text (str): The text to be sent.
-
-        Returns:
-        -------
-            None
-
+        :param name: The name of the channel.
+        :param text: The text to be sent.
         """
         if name in self.websocket_clients:
             try:
@@ -155,13 +116,6 @@ class WebsocketHandler:
     def remove_socket(self, name: str) -> None:
         """Remove a websocket client from the list of clients.
 
-        Args:
-        ----
-            name (str): The name of the websocket to be removed.
-
-        Returns:
-        -------
-            None
-
+        :param name: The name of the websocket.
         """
         del self.websocket_clients[name]
