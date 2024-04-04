@@ -53,7 +53,7 @@ class WebsocketTextComponent extends HTMLElement {
         this.ws.onerror = (event) => {
             console.error('Websocket error:', event);
         }
-        // when a new message is received, update the image. the image is send as base64 encoded jpeg
+        // when a new message is received, update the image. the image is sent as base64 encoded jpeg
         this.ws.onmessage = (event) => {
             // convert to text
             console.log(event.data)

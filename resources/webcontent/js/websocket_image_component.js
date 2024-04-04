@@ -1,6 +1,6 @@
 /**
  * WebsocketImageComponent is a custom HTML element that displays an image received from a websocket server.
- * It also includes a button to toggle sending of te images.
+ * It also includes a button to toggle sending of the images.
  */
 class WebsocketImageComponent extends HTMLElement {
     /**

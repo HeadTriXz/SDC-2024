@@ -13,6 +13,7 @@ from .data_stream.routes import create_router
 from .data_stream.websocket_handler import WebsocketHandler
 from .logger import Loghandler
 
+
 def get_path(rel_path: str) -> str:
     """Get the absolute path of the current file.
 
