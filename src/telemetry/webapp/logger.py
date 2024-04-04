@@ -1,12 +1,14 @@
 import sys
 
-from telemetry.webapp.telemetry_server import TelemetryServer
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from telemetry.webapp.telemetry_server import TelemetryServer
 
 
 class Loghandler:
     """A class to represent a log handler."""
 
-    def __init__(self, telemetry_server: TelemetryServer) -> None:
+    def __init__(self, telemetry_server: "TelemetryServer") -> None:
         """Initialize the log handler.
 
         :param telemetry_server: The telemetry server.
