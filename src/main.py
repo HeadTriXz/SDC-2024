@@ -70,6 +70,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     """The main function."""
-    #from simulator import main as smain
     main()
-    #smain()
+
