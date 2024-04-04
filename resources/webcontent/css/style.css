@@ -3,11 +3,6 @@ body {
     margin: 2em 5em;
 }
 
-h1 {
-    color: #333;
-    font-size: 28px;
-}
-
 #cameraContainer {
     gap: 1em;
     display: flex;
@@ -15,12 +10,7 @@ h1 {
     justify-content: space-between;
 }
 
-.camera {
-    width: 45%;
-    height: auto;
-}
-
-img{
+#cameraContainer img {
     display:block;
     max-width:500px;
 }
@@ -32,25 +22,10 @@ button {
     cursor: pointer;
 }
 
-.websocket-text button, .websocket-image button {
-    margin-top: 10px;
-    padding: 10px 20px;
-    font-size: 16px;
-    border: none;
-    background-color: #333;
-    color: #000000;
-    cursor: pointer;
-}
-
-.websocket-text button:hover, .websocket-image button:hover {
-    background-color: #555;
-}
-
 .text_field {
     max-height: 400px;
     overflow-y: scroll;
     width: 100%;
     border: 1px solid #333;
-    padding: 10px;
-    margin-top: 10px;
+    padding: 2ch;
 }
