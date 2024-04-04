@@ -48,7 +48,6 @@ class WebsocketDataStream:
 
     async def rec_messages(self) -> None:
         """Receive messages from the websocket."""
-
         while True:
             data = await self.ws.receive_text()
             if data == "toggle":
@@ -72,7 +71,6 @@ class WebsocketHandler:
         :param websocket: The websocket instance.
         :return: The websocket data stream.
         """
-
         if name not in self.websocket_clients:
             self.websocket_clients[name] = []
 
