@@ -60,7 +60,6 @@ def main() -> None:
     can_controller.start()
     speed_controller.start()
     detector.start()
-
     telemetryserver.start()
     lane_assist.start()
 
