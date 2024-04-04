@@ -3,10 +3,10 @@ import time
 
 from omegaconf import DictConfig, ListConfig, OmegaConf
 
-from utils.singleton_meta import SingletonMeta
+# from utils.singleton_meta import SingletonMeta
 
 
-class ConfigLoader(metaclass=SingletonMeta):
+class ConfigLoader:
     """The configuration loader.
 
     This class will load the configuration file.

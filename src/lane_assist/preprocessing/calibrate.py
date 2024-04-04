@@ -5,6 +5,8 @@ from config import config
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+
+from lane_assist.preprocessing.birdview import warp_image
 from lane_assist.preprocessing.utils.charuco import find_corners
 from lane_assist.preprocessing.utils.corners import get_dst_corners, get_transformed_corners
 from lane_assist.preprocessing.utils.grid import get_dst_grid, crop_grid, corners_to_grid
@@ -14,6 +16,39 @@ from lane_assist.preprocessing.utils.other import (
     get_transformed_shape,
     find_offsets, euclidean_distance, get_board_shape
 )
+
+
+def make_rotation_matrix(abg, radians=False):
+    ABG = np.zeros(3)
+    ABG[:len(abg)] = abg
+    abg = ABG
+    if not radians:
+        abg = np.radians(abg)
+
+    alpha, beta, gamma = abg
+    cos1 = np.cos(alpha)
+    cos2 = np.cos(beta)
+    cos3 = np.cos(gamma)
+    sin1 = np.sin(alpha)
+    sin2 = np.sin(beta)
+    sin3 = np.sin(gamma)
+    Rx = np.asarray([
+        [1,    0,  0   ],  # NOQA
+        [0, cos1, -sin1],
+        [0, sin1,  cos1]
+    ])
+    Ry = np.asarray([
+        [cos2,  0, sin2],
+        [    0, 1,    0],  # NOQA
+        [-sin2, 0, cos2],
+    ])
+    Rz = np.asarray([
+        [cos3, -sin3, 0],
+        [sin3,  cos3, 0],
+        [0,        0, 1],
+    ])
+    m = Rz@Ry@Rx
+    return m
 
 
 class CameraCalibrator:
@@ -157,8 +192,7 @@ class CameraCalibrator:
                 shapes[i] = ref_shape
                 continue
 
-            shapes[i], cropped = get_transformed_shape(matrix, image.shape[:2], ref_shape[0])
-            self._grids[i] = crop_grid(self._grids[i], cropped)
+            shapes[i], _ = get_transformed_shape(matrix, image.shape[:2])
 
         self.offsets, width, height = find_offsets(self._grids, shapes, self.ref_idx)
         self.output_shape = (height, width)
@@ -222,12 +256,10 @@ class CameraCalibrator:
             if i == self.ref_idx:
                 obj_points, img_points = board.matchImagePoints(charuco_corners, charuco_ids)
                 retval, rvec, tvec = cv2.solvePnP(obj_points, img_points, self.camera_matrix, self.dist_coeffs)
-
                 rmat, _ = cv2.Rodrigues(rvec)
-                pmat = np.dot(self.camera_matrix, np.hstack((rmat, tvec)))
 
-                rz = cv2.decomposeProjectionMatrix(pmat)[-1][2][0]
-                self._angle = np.radians(rz)
+                angle = cv2.RQDecomp3x3(rmat)[0][2]
+                self._angle = np.radians(-131)  # TODO: Fix angle
 
         return grids
 

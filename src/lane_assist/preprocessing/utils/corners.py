@@ -74,6 +74,6 @@ def get_dst_corners(
     w, h = shape
     corners = np.array([[0, 0], [w, 0], [w, h], [0, h]], dtype=np.float32)
     rmat = np.array([[np.cos(angle), -np.sin(angle)],
-                     [np.sin(angle), np.cos(angle)]])
+                     [np.sin(angle), np.cos(angle)]], dtype=np.float32)
 
     return scale_factor * np.dot(corners * length, rmat.T)
