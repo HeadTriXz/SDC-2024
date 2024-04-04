@@ -54,7 +54,7 @@ def main() -> None:
     )
 
     # Initialize the object detector
-    detector = ObjectDetector.from_model(config.object_detection.model_path, controller, 0)
+    detector = ObjectDetector.from_model(config.object_detection.model_path, controller, config.camera_ids.center)
     telemetry_server = TelemetryServer()
 
     # Start the system
