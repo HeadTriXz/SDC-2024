@@ -1,12 +1,18 @@
+/**
+ * WebsocketTextComponent is a custom HTML element that displays text received from a websocket server.
+ * It also includes a button to toggle the websocket connection.
+ */
 class WebsocketTextComponent extends HTMLElement {
-
     constructor() {
         super();
 
         this.render();
         this.connectWS();
     }
-
+    /**
+     * Render the component by creating a text div and a button.
+     * The button is used to toggle the websocket connection.
+     */
     render() {
         // create an image tag
         const header = document.createElement('h4')
@@ -14,6 +20,7 @@ class WebsocketTextComponent extends HTMLElement {
 
         this.text = document.createElement('div');
         this.text.classList.add('text_field');
+
         const button = document.createElement('button');
         button.textContent = 'Toggle';
         button.onclick = () => this.toggleWS();
@@ -23,13 +30,16 @@ class WebsocketTextComponent extends HTMLElement {
         this.appendChild(button);
         this.appendChild(this.text);
     }
-
+    /**
+     * Send a 'toggle' message to the server to toggle the websocket connection.
+     */
     toggleWS() {
-        // send a toggle message to the server
-        console.log('toggle')
         this.ws.send('toggle');
     }
-
+    /**
+     * Establish a new websocket connection.
+     * When a new message is received, update the text.
+     */
     connectWS() {
         // create a new websocket connection
         this.ws = new WebSocket(`ws://localhost:8000/ws/${this.getAttribute('id')}`);
@@ -52,6 +62,5 @@ class WebsocketTextComponent extends HTMLElement {
         }
     }
 }
-
 // define the custom element
 customElements.define('websocket-text', WebsocketTextComponent);
