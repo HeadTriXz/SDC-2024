@@ -1,4 +1,3 @@
-import logging
 
 from config import config
 from constants import Gear

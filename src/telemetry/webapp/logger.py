@@ -7,43 +7,48 @@ class Loghandler:
     """A class to represent a log handler."""
 
     def __init__(self, telemetry_server: TelemetryServer) -> None:
-        """
-        Initialize the log handler.
+        """Initialize the log handler.
 
         Args:
+        ----
             telemetry_server (TelemetryServer): The telemetry server instance.
+
         """
         self.stdout = sys.stdout
         self.telemetry_server = telemetry_server
 
     def write(self, message: str) -> None:
-        """
-        Write the message to the log.
+        """Write the message to the log.
 
         Args:
+        ----
             message (str): The message to be written to the log.
 
         Returns:
+        -------
             None
+
         """
         if message != "\n":
             self.telemetry_server.websocket_handler.send_text("logs", message)
         self.stdout.write(message)
 
     def flush(self) -> None:
-        """
-        Flush the log.
+        """Flush the log.
 
-        Returns:
+        Returns
+        -------
             None
+
         """
         self.stdout.flush()
 
     def isatty(self) -> bool:
-        """
-        Check if the log is a tty.
+        """Check if the log is a tty.
 
-        Returns:
+        Returns
+        -------
             bool: False, as the log is not a tty.
+
         """
         return False

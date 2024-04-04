@@ -14,14 +14,16 @@ from .data_stream.websocket_handler import WebsocketHandler
 from .logger import Loghandler
 
 def get_path(rel_path: str) -> str:
-    """
-    Get the absolute path of the current file.
+    """Get the absolute path of the current file.
 
     Args:
+    ----
         rel_path (str): The relative path to the file.
 
     Returns:
+    -------
         str: The absolute path to the file.
+
     """
     return os.path.join(os.path.dirname(__file__), rel_path)
 
@@ -48,30 +50,33 @@ class TelemetryServer:
         self.__app.mount("/css", StaticFiles(directory=get_path("../../../resources/webcontent/css")), name="static")
 
     def start(self) -> None:
-        """
-        Start the telemetry server.
+        """Start the telemetry server.
 
-        Returns:
+        Returns
+        -------
             None
+
         """
         self.thread.start()
 
     def __start(self) -> None:
-        """
-        Start the telemetry server.
+        """Start the telemetry server.
 
-        Returns:
+        Returns
+        -------
             None
+
         """
         uvicorn.run(self.__app, host=self.__host, port=self.__port)
 
     @staticmethod
     def __index_route() -> HTMLResponse:
-        """
-        The index route.
+        """The index route.
 
-        Returns:
+        Returns
+        -------
             HTMLResponse: The HTML response for the index route.
+
         """
         with open(get_path("../../../resources/webcontent/index.html")) as f:
             return HTMLResponse(content=f.read())
