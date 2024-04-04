@@ -60,10 +60,11 @@ def main() -> None:
     can_controller.start()
     speed_controller.start()
     detector.start()
-    lane_assist.start()
-
     server = TelemetryServer()
     server.start()
+    lane_assist.start()
+
+
     input("Press Enter to stop...")
 
 
