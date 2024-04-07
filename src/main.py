@@ -6,6 +6,7 @@ from driving.speed_controller import SpeedController, SpeedControllerState
 from lane_assist.helpers import td_stitched_image_generator
 from lane_assist.lane_assist import LaneAssist
 from lane_assist.line_following.path_follower import PathFollower
+from lane_assist.preprocessing.calibrate import CameraCalibrator
 from object_recognition.handlers.pedestrian_handler import PedestrianHandler
 from object_recognition.handlers.speed_limit_handler import SpeedLimitHandler
 from object_recognition.handlers.traffic_light_handler import TrafficLightHandler
@@ -45,9 +46,12 @@ def main() -> None:
     controller.add_handler(SpeedLimitHandler(controller))
     controller.add_handler(TrafficLightHandler(controller))
 
+    # Load the calibration data
+    calibrator = CameraCalibrator.load(config.calibration.calibration_file)
+
     # Initialize the lane assist
     lane_assist = LaneAssist(
-        td_stitched_image_generator(cam_left, cam_center, cam_right),
+        td_stitched_image_generator(calibrator, cam_left, cam_center, cam_right),
         path_follower,
         speed_controller,
         adjust_speed=lambda _: 1,

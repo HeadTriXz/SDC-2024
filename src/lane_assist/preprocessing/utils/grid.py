@@ -44,24 +44,6 @@ def get_dst_points(length: float, angle: float, scale_factor: float = 1.0) -> np
     return points
 
 
-def crop_grid(grid: np.ndarray, amount: int) -> np.ndarray:
-    """Crop a grid by a certain amount.
-
-    :param grid: The grid to crop.
-    :param amount: The amount to crop the grid by.
-    :return: The cropped grid.
-    """
-    new_grid = np.zeros_like(grid)
-    for row in range(grid.shape[0]):
-        for col in range(grid.shape[1]):
-            if not np.any(grid[row, col]):
-                continue
-
-            new_grid[row, col] = grid[row, col] - [0, amount]
-
-    return new_grid
-
-
 def merge_grids(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """Combine two grids.
 

@@ -5,7 +5,6 @@ from scipy.signal import savgol_filter
 
 from lane_assist.line_detection.line import Line
 from lane_assist.line_detection.line_detector import filter_lines, get_lines
-from lane_assist.preprocessing.birdview import topdown
 
 
 class Path:
@@ -83,57 +82,3 @@ def interpolate_line(line: Line, points: int) -> tuple[np.ndarray, np.ndarray]:
     new_x = np.interp(new_y, line.points[::-1, 1], line.points[::-1, 0])
 
     return new_x, new_y
-
-
-def generate_tests(filename: str) -> None:
-    """Generate the tests for the line generation."""
-    images_names = ["straight", "corner", "crossing", "stopline"]
-    images = [
-        cv2.imread(f"../../../resources/stitched_images/{image}.jpg", cv2.IMREAD_GRAYSCALE) for image in images_names
-    ]
-    images = [topdown(image) for image in images]
-
-    with open(filename, "w") as f:
-        f.write("import numpy as np\n\n")
-
-        for i, image in enumerate(images):
-            lines, stoplines = get_lines(image)
-            filtered = filter_lines(lines, 400)
-            if images_names[i] == "crossing":
-                path = generate_driving_path(filtered, 1)
-                f.write(f"{images_names[i].upper()}_LANE_1 = np.array({path.points.tolist()})\n")
-
-                path = generate_driving_path(filtered, 0)
-                f.write(f"{images_names[i].upper()}_LANE_0 = np.array({path.points.tolist()})\n")
-
-            else:
-                path = generate_driving_path(filtered, 0)
-                f.write(f"{images_names[i].upper()} = np.array({path.points.tolist()})\n")
-
-
-def main() -> None:
-    """Line detection example."""
-    images_names = ["straight", "corner", "crossing", "stopline"]
-    images = [cv2.imread(f"../../../resources/stitched_images/{image}.jpg") for image in images_names]
-    images = [topdown(image) for image in images]
-    grayscale = [cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) for image in images]
-
-    for i, image in enumerate(grayscale):
-        lines, stop_lines = get_lines(image)
-        filtered = filter_lines(lines, 400)
-        for line in filtered:
-            for point in line.points:
-                cv2.circle(images[i], (point[0], point[1]), 5, (0, 255, 0), -1)
-
-        path = generate_driving_path(filtered, 0)
-
-        # plot the centerline
-        plt.plot(path.points[:, 0], path.points[:, 1], "r")
-
-        plt.imshow(images[i])
-        plt.show()
-
-
-if __name__ == "__main__":
-    generate_tests("../../../tests/line_generation/test_data.py")
-    main()

@@ -89,22 +89,6 @@ class CameraCalibrator:
         self.calibrate_topdown_matrix()
         self.calibrate_region_of_interest()
 
-    def detect_boards(self) -> None:
-        """Detect the ChArUco boards."""
-        if self.images is None:
-            raise ValueError("No images to calibrate")
-
-        for i, image in enumerate(self.images):
-            charuco_corners, charuco_ids, _, _ = self.detector.detectBoard(image)
-            if charuco_corners is None or len(charuco_corners) < 4:
-                raise ValueError("The ChArUco board was not detected")
-
-            charuco_corners *= self._get_scale(image)
-
-            self._charuco_corners.append(charuco_corners)
-            self._charuco_ids.append(charuco_ids)
-            self._src_grids[i] = corners_to_grid(charuco_corners, charuco_ids, get_board_shape())
-
     def calibrate_cameras(self) -> None:
         """Calibrate the cameras."""
         if self.images is None:
@@ -124,6 +108,25 @@ class CameraCalibrator:
         retval, self.camera_matrix, self.dist_coeffs, _, _ = cv2.calibrateCamera(
             all_obj_points, all_img_points, self._input_shape, None, None
         )
+
+    def calibrate_offsets(self) -> None:
+        """Calibrate the offsets."""
+        if self.images is None:
+            raise ValueError("No images to calibrate")
+
+        if self.matrices is None or self._dst_grids is None:
+            raise ValueError("The cameras have not been calibrated")
+
+        input_shape = self._input_shape[::-1]
+        shapes = np.zeros((len(self.images), 2), dtype=np.int32)
+        for i in range(len(self.images)):
+            if i == self.ref_idx:
+                shapes[i] = input_shape
+                continue
+
+            shapes[i] = get_transformed_shape(self.matrices[i], input_shape)
+
+        self.offsets = find_offsets(self._dst_grids, shapes, self.ref_idx) - [0, self._vanishing_line]
 
     def calibrate_perspective_matrices(self) -> None:
         """Calibrate the matrices."""
@@ -155,44 +158,6 @@ class CameraCalibrator:
         self._calculate_dst_grids()
         self._calculate_vanishing_line()
         self._calculate_angle()
-
-    def calibrate_topdown_matrix(self) -> None:
-        """Calibrate the top-down matrix."""
-        if self.images is None:
-            raise ValueError("No images to calibrate")
-
-        if self.offsets is None:
-            raise ValueError("The offsets have not been calibrated")
-
-        corners, shape = find_corners(self._combined_grid)
-        length = euclidean_distance(corners[0], corners[3]) / shape[1]
-
-        flat_grid = self._combined_grid.reshape(-1, 2)
-
-        dst_points = get_dst_points(length, self._angle)
-        dst_points = dst_points[np.any(flat_grid, axis=1)]
-        src_points = flat_grid[np.any(flat_grid, axis=1)] + self.offsets[self.ref_idx]
-
-        self.topdown_matrix = cv2.findHomography(src_points, dst_points)[0]
-
-    def calibrate_offsets(self) -> None:
-        """Calibrate the offsets."""
-        if self.images is None:
-            raise ValueError("No images to calibrate")
-
-        if self.matrices is None or self._dst_grids is None:
-            raise ValueError("The cameras have not been calibrated")
-
-        input_shape = self._input_shape[::-1]
-        shapes = np.zeros((len(self.images), 2), dtype=np.int32)
-        for i in range(len(self.images)):
-            if i == self.ref_idx:
-                shapes[i] = input_shape
-                continue
-
-            shapes[i] = get_transformed_shape(self.matrices[i], input_shape)
-
-        self.offsets = find_offsets(self._dst_grids, shapes, self.ref_idx) - [0, self._vanishing_line]
 
     def calibrate_region_of_interest(self) -> None:
         """Calibrate the region of interest."""
@@ -242,6 +207,41 @@ class CameraCalibrator:
         # Adjust the top-down matrix
         adjusted_matrix = np.array([[scale_factor, 0, -min_x], [0, scale_factor, -min_y], [0, 0, 1]])
         self.topdown_matrix = np.dot(adjusted_matrix, self.topdown_matrix)
+
+    def calibrate_topdown_matrix(self) -> None:
+        """Calibrate the top-down matrix."""
+        if self.images is None:
+            raise ValueError("No images to calibrate")
+
+        if self.offsets is None:
+            raise ValueError("The offsets have not been calibrated")
+
+        corners, shape = find_corners(self._combined_grid)
+        length = euclidean_distance(corners[0], corners[3]) / shape[1]
+
+        flat_grid = self._combined_grid.reshape(-1, 2)
+
+        dst_points = get_dst_points(length, self._angle)
+        dst_points = dst_points[np.any(flat_grid, axis=1)]
+        src_points = flat_grid[np.any(flat_grid, axis=1)] + self.offsets[self.ref_idx]
+
+        self.topdown_matrix = cv2.findHomography(src_points, dst_points)[0]
+
+    def detect_boards(self) -> None:
+        """Detect the ChArUco boards."""
+        if self.images is None:
+            raise ValueError("No images to calibrate")
+
+        for i, image in enumerate(self.images):
+            charuco_corners, charuco_ids, _, _ = self.detector.detectBoard(image)
+            if charuco_corners is None or len(charuco_corners) < 4:
+                raise ValueError("The ChArUco board was not detected")
+
+            charuco_corners *= self._get_scale(image)
+
+            self._charuco_corners.append(charuco_corners)
+            self._charuco_ids.append(charuco_ids)
+            self._src_grids[i] = corners_to_grid(charuco_corners, charuco_ids, get_board_shape())
 
     def save(self, save_dir: Path | str) -> None:
         """Save the calibration data to a file.

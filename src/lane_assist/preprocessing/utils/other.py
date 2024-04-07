@@ -60,19 +60,6 @@ def get_transformed_shape(matrix: np.ndarray, shape: tuple[int, int]) -> tuple[i
     return height, width
 
 
-def get_scale_factor(matrix: np.ndarray, shape: tuple[int, int], max_height: int, max_width: int) -> float:
-    """Get the scale factor for the perspective matrix.
-
-    :param matrix: The perspective matrix.
-    :param shape: The shape of the image.
-    :param max_height: The maximum height of the new image.
-    :param max_width: The maximum width of the new image.
-    :return: The scale factor for the perspective matrix.
-    """
-    new_h, new_w = get_transformed_shape(matrix, shape)
-    return min(max_width / new_w, max_height / new_h)
-
-
 def find_intersection(
         line1: tuple[Coordinate, Coordinate],
         line2: tuple[Coordinate, Coordinate]
@@ -86,7 +73,7 @@ def find_intersection(
     xdiff = (line1[0][0] - line1[1][0], line2[0][0] - line2[1][0])
     ydiff = (line1[0][1] - line1[1][1], line2[0][1] - line2[1][1])
 
-    def det(a, b):
+    def det(a: tuple[int, int], b: tuple[int, int]) -> int:
         return a[0] * b[1] - a[1] * b[0]
 
     div = det(xdiff, ydiff)
@@ -94,8 +81,8 @@ def find_intersection(
         return None
 
     d = (det(*line1), det(*line2))
-    x = det(d, xdiff) / div
-    y = det(d, ydiff) / div
+    x = det(d, xdiff) // div
+    y = det(d, ydiff) // div
 
     return x, y
 
@@ -129,19 +116,3 @@ def find_offsets(grids: np.ndarray, shapes: np.ndarray, ref_idx: int) -> np.ndar
     offsets[:, 1] -= ref_y
 
     return offsets
-
-
-def calculate_output_shape(offsets: np.ndarray, shapes: np.ndarray) -> tuple[int, int]:
-    """Calculate the output shape for the stitched image.
-
-    :param offsets: The offsets for the images.
-    :param shapes: The shapes of the images.
-    :return: The output shape for the stitched image (width, height).
-    """
-    width_max = max(shape[0] + offset[0] for shape, offset in zip(shapes, offsets))
-    width_min = min(0, min(offset[0] for offset in offsets))
-    width = int(width_max - width_min)
-
-    height = max(shape[1] + offset[1] for shape, offset in zip(shapes, offsets))
-
-    return width, height
