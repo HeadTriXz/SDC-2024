@@ -1,18 +1,21 @@
+import dataclasses
+import itertools
+from typing import Any
+
 import numpy as np
 import scipy
 
-from lane_assist.line_detection.line import Line, LineType
+from config import config
+from lane_assist.line_detection.line import Line
 from lane_assist.line_detection.window import Window
 
-LINE_WIDTH = 50
-ZEBRA_CROSSING_THRESHOLD = 20000
-FILTER_WIDTH = LINE_WIDTH * 4
-
-LINE_THRESHOLD = 5000
-LINE_DECAY = 1
+# REPLACED WITH THE VALUES IN GLOBALS
+THRESHOLDS = config.lane_assist.line_detection.thresholds
 
 
-def window_search(img: np.ndarray, window_count: int, pixels_per_window: int = 1, window_width: int = 60) -> list[Line]:
+def window_search(
+    img: np.ndarray, window_count: int, _pixels_per_window: int = 1, window_width: int = 30
+) -> tuple[list[Line], list[Any]]:
     """Get the lines in the image using the sliding window algorithm.
 
     first we take a histogram of the x axis. this is done to filter pout the zebra crossings.
@@ -34,119 +37,129 @@ def window_search(img: np.ndarray, window_count: int, pixels_per_window: int = 1
     :parameter window_count: the amount of windows to check in the image
 
     """
-    # take a histogram over the horizontal pixels.
-    # this is used to filter out the zebra crossing.
-    histogram = np.sum(img[:], axis=1)
-    filter_peaks = scipy.signal.find_peaks(histogram, height=ZEBRA_CROSSING_THRESHOLD, distance=FILTER_WIDTH)[0]
-    widths, _, lefts, rights = scipy.signal.peak_widths(histogram, filter_peaks, rel_height=0.98)
-    stop_lines_y = []
+    # filter out the zebra crossing and stoplines from the image
+    img, filtered_peaks = __filter_image(img)
 
-    # mask out these peaks if they are wider then a line
-    for peak, width, left, right in zip(filter_peaks, widths, lefts, rights):
-        if width > LINE_WIDTH:
-            img[int(left) : int(right)] = 0
-        else:
-            stop_lines_y.append(int(peak))
+    # get the actual start position of the image.
+    # this is different from the height of the image because we might have a zebra crossing
+    # or a stopline in the image. in that case, we want to start above the zebra crossing or stopline
+    start_position = img.shape[0] - 1
+    if len(filtered_peaks) > 0:  # check if we have any peaks
+        lowest_end_index = np.argmax([peak.right for peak in filtered_peaks])
+
+        if filtered_peaks[lowest_end_index].right > img.shape[0] - 10:
+            start_position = int(filtered_peaks[lowest_end_index].center) - 10
 
     # create a histogram of the image to find the lines.
     # we only use the bottom half because that should be where the lines are.
     # to get the lines we will detect and get the peaks
-    histogram = np.sum(img[img.shape[0] // 2 :], axis=0)
-    merged_peaks = scipy.signal.find_peaks(histogram, height=LINE_THRESHOLD, distance=LINE_WIDTH)[0]
 
-    # create the windows
-    window_height = img.shape[0] // window_count  # get the height of the windows based on the amount we want.
-    windows = [Window(center, img.shape[0], window_width // 2) for center in merged_peaks]
+    #  get the actual height of what the histogram should be taken of
+    weights = np.linspace(0.5, 1, img.shape[0] // 2)
+    pixels = img[img.shape[0] // 2 :, :]
+    pixels = np.multiply(pixels, weights[:, np.newaxis])
+    histogram = np.sum(pixels, axis=0)
 
-    for _ in range(window_count):
-        # check which windows overlap
-        # time the window search
-        for window in windows:
-            if window.collided:
-                continue
-            for other_window in windows:
-                if window == other_window:
-                    continue
-                if (
-                    window.x - window.margin < other_window.x + other_window.margin
-                    and window.x + window.margin > other_window.x - other_window.margin
-                ):
-                    if window.found_in_previous and other_window.found_in_previous:
-                        window.collided = True
-                        other_window.collided = True
-                    elif window.found_in_previous:
-                        other_window.collided = True
-                    elif other_window.found_in_previous:
-                        window.collided = True
+    merged_peaks = scipy.signal.find_peaks(histogram, distance=config.lane_assist.line_detection.line_width * 2)[0]
 
-        # check if any of the collided windows have found a line in the previous section
-        # if they have not, we can assume that the line has finished
+    window_height = img.shape[0] // window_count
+    window_count = start_position // window_height
+    windows = [Window(center, start_position, window_width // 2, window_count) for center in merged_peaks]
 
-        for window in windows:
-            if window.collided:
-                continue
-
-            # set the current position of the window
-            win_y_low = window.y - window_height
-            win_y_high = window.y
-            win_x_low = window.x - window.margin
-            win_x_high = window.x + window.margin
-
-            # check how many white pixels are in the window
-            non_zero_count = np.count_nonzero(img[win_y_low:win_y_high, win_x_low:win_x_high])
-
-            # TODO: move the y axis into the direction of the line.
-            # this will allow us to better detect corners
-
-            # If you found > minpix pixels, recenter next window on the top nonzero pixels position
-            if non_zero_count > pixels_per_window:
-                coords = np.nonzero(img[win_y_low:win_y_high, win_x_low:win_x_high])
-                window.move(int(np.mean(coords[1])) + win_x_low, win_y_low)
-            else:
-                if window.found_in_previous:
-                    # remove the last point
-                    window.points = window.points[:-1]
-                    window.found_in_previous = False
-
-                window.move(window.x, win_y_low, False)
-
-    # remove all none values
-
-    # create the lines. we first calculate how many gaps we have filtered out.
-    # this is used to determine if the line is solid or dashed. we also allow
-    # for 2 extra gaps jsut in case
-    filtered_count = len(filter_peaks) - len(stop_lines_y)
-    lines = [
-        Line(np.array(window.points), window_height, gaps_allowed=filtered_count + 2)
-        for window in windows
-        if len(window.points) > 5
+    lines = __window_search(img, window_count, windows)
+    stoplines = [
+        peak.center for peak in filtered_peaks if peak.width < config.lane_assist.line_detection.line_width * 2
     ]
 
-    if len(stop_lines_y) == 0:
-        return lines
+    return lines, stoplines
 
-    # get the y position of the stop lines
-    # get the solid lines in the image
-    solid_lines = [line for line in lines if line.line_type == LineType.SOLID]
 
-    # get the closest point for each solid line at the y of the stop lines
-    closest_points = []
-    for line in solid_lines:
-        if line.points.shape[0] == 0 or len(stop_lines_y) > 1:
-            continue
-        closest_point = line.points[np.argmin(np.abs(line.points[:, 1] - stop_lines_y))]
-        closest_points.append(closest_point)
+def __kill_windows(window: Window, other_window: Window, img_center: int) -> None:
+    """Kill the window that is furthest from the center of the image."""
+    if (
+        window.x - window.margin < other_window.x + other_window.margin
+        and window.x + window.margin > other_window.x - other_window.margin
+    ):
+        if window.found_in_previous and other_window.found_in_previous:
+            # kill the one furthest from the center
+            if abs(window.x - img_center) < abs(other_window.x - img_center):
+                other_window.collided = True
+            else:
+                window.collided = True
 
-    if len(closest_points) == 0:
-        return lines
+        elif window.found_in_previous:
+            other_window.collided = True
+        elif other_window.found_in_previous:
+            window.collided = True
 
-    # get the distance between the closest points and the stop lines
-    distances = closest_points[-1][0] - closest_points[0][0]
 
-    # generate points in between them with a gap of window height
-    points = np.array(
-        [(closest_points[0][0] + i, stop_lines_y[0]) for i in range(0, distances, window_height)]
-        + [(closest_points[-1][0], stop_lines_y[0])]
+@dataclasses.dataclass
+class HistogramPeak:
+    """A class to represent a peak in the histogram."""
+
+    center: int
+    width: int
+    left: int
+    right: int
+
+
+def __filter_image(img: np.ndarray) -> (np.ndarray, list[HistogramPeak]):
+    """Filter the image based on the axis."""
+    # only take the center 2/3 of the image
+    pixels = img[:, img.shape[0] // 3 : img.shape[0] // 3 * 2]
+    histogram = np.sum(pixels, axis=1)
+
+    filter_peaks = scipy.signal.find_peaks(
+        histogram,
+        height=THRESHOLDS.zebra_crossing / 3,
+        distance=config.lane_assist.line_detection.line_width * 4,
+    )[0]
+    widths, _, lefts, rights = scipy.signal.peak_widths(
+        histogram, filter_peaks, rel_height=config.lane_assist.line_detection.filtering.rel_height
     )
-    lines.append(Line(points, window_height, LineType.STOP))
-    return lines
+
+    peaks = [
+        HistogramPeak(center, width, left, right)
+        for center, width, left, right in zip(filter_peaks, widths, lefts, rights)
+    ]
+
+    for peak in peaks:
+        img[int(peak.left) : int(peak.right)] = 0
+
+    return img, peaks
+
+
+def __window_search(filtered_img: np.ndarray, window_count: int, windows: list[Window]) -> list[Line]:
+    window_height = filtered_img.shape[0] // window_count  # get the height of the windows based on the amount we want.
+
+    for _ in range(window_count):
+        running_windows = [window for window in windows if not window.collided]
+
+        for window_0, window_1 in list(itertools.combinations(running_windows, 2)):
+            if window_0.collides(window_1):
+                __kill_windows(window_0, window_1, filtered_img.shape[1] // 2)
+
+        # do the window search
+        for window in running_windows:
+            # get the new sides of the window.
+            top = window.y - window_height
+            bottom = window.y
+            left = window.x - int(window.margin)
+            right = window.x + int(window.margin)
+
+            non_zero_count = np.sum(filtered_img[top:bottom, left:right])
+            if non_zero_count < config.lane_assist.line_detection.pixels_in_window:
+                window.move(window.x, top, False)
+                continue
+
+            center_masses = scipy.ndimage.center_of_mass(filtered_img[top:bottom, left:right])
+            if center_masses[0] != center_masses[0]:
+                continue
+
+            if isinstance(center_masses, list):
+                center_masses = center_masses[-1]
+
+            # draw the window
+            window.move(int(center_masses[1]) + left, top)
+
+    return [Line(np.array(window.points[:-3]), window_height) for window in windows if len(window.points) > 5]

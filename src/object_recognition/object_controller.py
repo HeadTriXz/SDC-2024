@@ -1,6 +1,8 @@
-from driving.speed_controller import SpeedController, SpeedControllerState
-from object_recognition.handlers.base_handler import BaseObjectHandler
 from ultralytics.engine.results import Boxes
+
+from driving.speed_controller import SpeedControllerState
+from driving.speed_controller.speed_controller_interface import ISpeedController
+from object_recognition.handlers.base_handler import BaseObjectHandler
 
 
 class ObjectController:
@@ -14,9 +16,9 @@ class ObjectController:
     """
 
     handlers: list[BaseObjectHandler]
-    speed_controller: SpeedController
+    speed_controller: ISpeedController
 
-    def __init__(self, speed_controller: SpeedController) -> None:
+    def __init__(self, speed_controller: ISpeedController) -> None:
         """Initializes the object controller.
 
         :param speed_controller: The speed controller.
@@ -42,6 +44,13 @@ class ObjectController:
                 continue
 
             handler.handle(filtered_predictions)
+
+    def has_stopped(self) -> bool:
+        """Checks if the go-kart has stopped.
+
+        :return: Whether the go-kart has stopped.
+        """
+        return self.speed_controller.state == SpeedControllerState.STOPPED
 
     def set_max_speed(self, speed: int) -> None:
         """Sets the maximum speed of the go-kart.

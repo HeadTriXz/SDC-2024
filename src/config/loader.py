@@ -3,10 +3,10 @@ import time
 
 from omegaconf import DictConfig, ListConfig, OmegaConf
 
-# from utils.singleton_meta import SingletonMeta
+from utils.singleton_meta import SingletonMeta
 
 
-class ConfigLoader:
+class ConfigLoader(metaclass=SingletonMeta):
     """The configuration loader.
 
     This class will load the configuration file.
@@ -53,7 +53,11 @@ class ConfigLoader:
         if not os.path.exists(path):
             raise FileNotFoundError(f"Configuration file not found at {path}")
 
-        self.__loaded_config = OmegaConf.load(path)
+        defaults = OmegaConf.load(os.path.join(os.path.dirname(__file__), "config.defaults.yaml"))
+        environment_config = OmegaConf.load(path)
+        merged_config = OmegaConf.merge(defaults, environment_config)
+        self.__loaded_config = merged_config
+
 
     def __getattr__(self, item: str) -> str | DictConfig | ListConfig:
         """Get the attribute.

@@ -1,8 +1,9 @@
+from threading import Thread
+
 import cv2
 import numpy as np
 
 from constants import CameraFramerate, CameraResolution
-from threading import Thread
 
 
 class VideoStream:
@@ -28,12 +29,12 @@ class VideoStream:
     __thread: Thread
 
     def __new__(
-            cls,
-            camera_id: int,
-            resolution: CameraResolution = CameraResolution.HD,   # noqa: ARG003
-            frame_rate: CameraFramerate = CameraFramerate.FPS_60  # noqa: ARG003
+        cls,
+        camera_id: int,
+        resolution: CameraResolution = CameraResolution.HD,  # noqa: ARG003
+        frame_rate: CameraFramerate = CameraFramerate.FPS_60,  # noqa: ARG003
     ) -> "VideoStream":
-        """Creates a new instance of the video stream.
+        """Create a new instance of the video stream.
 
         :param camera_id: The camera ID.
         :param resolution: The resolution of the video stream (default is 720p).
@@ -47,10 +48,10 @@ class VideoStream:
         return cls.__instances[camera_id]
 
     def __init__(
-            self,
-            camera_id: int,
-            resolution: CameraResolution = CameraResolution.HD,
-            frame_rate: CameraFramerate = CameraFramerate.FPS_60
+        self,
+        camera_id: int,
+        resolution: CameraResolution = CameraResolution.HD,
+        frame_rate: CameraFramerate = CameraFramerate.FPS_60,
     ) -> None:
         """Initializes the video stream.
 
@@ -64,7 +65,7 @@ class VideoStream:
         self.__initialized = True
 
         self.id = camera_id
-        self.capture = cv2.VideoCapture(camera_id)
+        self.capture = cv2.VideoCapture(camera_id, cv2.CAP_DSHOW)
         self.capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*"MJPG"))
         self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, resolution[0])
         self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, resolution[1])
