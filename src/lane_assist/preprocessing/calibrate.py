@@ -11,7 +11,7 @@ from lane_assist.preprocessing.utils.grid import get_dst_points, corners_to_grid
 from lane_assist.preprocessing.utils.other import (
     get_charuco_detector,
     get_transformed_shape,
-    find_offsets, euclidean_distance, get_board_shape, find_intersection
+    find_offsets, euclidean_distance, get_board_shape, find_intersection, calculate_stitched_shape
 )
 
 
@@ -30,6 +30,7 @@ class CameraCalibrator:
         output_shape: The shape of the output images.
         ref_idx: The index of the reference image.
         shapes: The shapes of the perspective-transformed images.
+        stitched_shape: The shape of the stitched image.
         topdown_matrix: The top-down matrix.
 
     """
@@ -44,6 +45,7 @@ class CameraCalibrator:
     output_shape: Optional[tuple[int, int]]
     ref_idx: int
     shapes: Optional[np.ndarray]
+    stitched_shape: Optional[tuple[int, int]]
     topdown_matrix: Optional[np.ndarray]
 
     _angle: float = 0.0
@@ -67,16 +69,11 @@ class CameraCalibrator:
 
         self.images = images
         self.ref_idx = ref_idx
-        self.shapes = np.zeros((len(images), 2), dtype=np.int32)
 
         self._input_shape = input_shape
         if input_shape is None and images is not None:
             self._input_shape = (images[ref_idx].shape[1], images[ref_idx].shape[0])
 
-        w, h = np.subtract(get_board_shape(), 1)
-        self._combined_grid = np.zeros((h, w, 2), dtype=np.float32)
-        self._dst_grids = np.zeros((len(images), h, w, 2), dtype=np.float32)
-        self._src_grids = np.zeros((len(images), h, w, 2), dtype=np.float32)
         self._charuco_corners = []
         self._charuco_ids = []
 
@@ -127,6 +124,7 @@ class CameraCalibrator:
             shapes[i] = get_transformed_shape(self.matrices[i], input_shape)
 
         self.offsets = find_offsets(self._dst_grids, shapes, self.ref_idx) - [0, self._vanishing_line]
+        self.stitched_shape = calculate_stitched_shape(self.offsets, shapes)
 
     def calibrate_perspective_matrices(self) -> None:
         """Calibrate the matrices."""
@@ -167,6 +165,7 @@ class CameraCalibrator:
         if self.topdown_matrix is None:
             raise ValueError("The top down matrix has not been calibrated")
 
+        self.shapes = np.zeros((len(self.images), 2), dtype=np.int32)
         w, h = self._input_shape
 
         # Find the corners of the stitched image
@@ -232,6 +231,9 @@ class CameraCalibrator:
         if self.images is None:
             raise ValueError("No images to calibrate")
 
+        w, h = np.subtract(get_board_shape(), 1)
+        self._src_grids = np.zeros((len(self.images), h, w, 2), dtype=np.float32)
+
         for i, image in enumerate(self.images):
             charuco_corners, charuco_ids, _, _ = self.detector.detectBoard(image)
             if charuco_corners is None or len(charuco_corners) < 4:
@@ -266,6 +268,7 @@ class CameraCalibrator:
             offsets=self.offsets,
             output_shape=self.output_shape,
             shapes=self.shapes,
+            stitched_shape=self.stitched_shape,
             topdown_matrix=self.topdown_matrix
         )
 
@@ -298,6 +301,9 @@ class CameraCalibrator:
 
         if self.matrices is None:
             raise ValueError("The cameras have not been calibrated")
+
+        self._combined_grid = np.zeros(self._src_grids.shape[1:], dtype=np.float32)
+        self._dst_grids = np.zeros_like(self._src_grids, dtype=np.float32)
 
         for i, (image, matrix, grid) in enumerate(zip(self.images, self.matrices, self._src_grids)):
             if i == self.ref_idx:
@@ -364,6 +370,7 @@ class CameraCalibrator:
         calibrator.offsets = data["offsets"]
         calibrator.output_shape = tuple(data["output_shape"])
         calibrator.shapes = data["shapes"]
+        calibrator.stitched_shape = tuple(data["stitched_shape"])
         calibrator.topdown_matrix = data["topdown_matrix"]
 
         return calibrator

@@ -1,5 +1,5 @@
 from config import config
-from constants import Gear
+from constants import Gear, CameraResolution
 from driving.can_controller import CANController
 from driving.can_controller.can_bus import get_can_interface
 from driving.speed_controller import SpeedController, SpeedControllerState
@@ -12,8 +12,35 @@ from object_recognition.handlers.speed_limit_handler import SpeedLimitHandler
 from object_recognition.handlers.traffic_light_handler import TrafficLightHandler
 from object_recognition.object_controller import ObjectController
 from object_recognition.object_detector import ObjectDetector
+from pathlib import Path
 from utils.video_stream import VideoStream
 from telemetry.webapp.telemetry_server import TelemetryServer
+
+
+def calibrate_cameras():
+    """Example script to calibrate the cameras."""
+    cam_left = VideoStream(config.camera_ids.left, resolution=CameraResolution.FHD)
+    cam_center = VideoStream(config.camera_ids.center, resolution=CameraResolution.FHD)
+    cam_right = VideoStream(config.camera_ids.right, resolution=CameraResolution.FHD)
+
+    cam_left.start()
+    cam_center.start()
+    cam_right.start()
+
+    if not cam_left.has_next() or not cam_center.has_next() or not cam_right.has_next():
+        raise ValueError("Could not capture images from cameras")
+
+    left_image = cam_left.next()
+    center_image = cam_center.next()
+    right_image = cam_right.next()
+
+    calibrator = CameraCalibrator([left_image, center_image, right_image], input_shape=(1280, 720))
+    calibrator.calibrate()
+    calibrator.save(config.calibration.save_dir)
+
+    cam_left.stop()
+    cam_center.stop()
+    cam_right.stop()
 
 
 def main() -> None:
@@ -47,6 +74,10 @@ def main() -> None:
     controller.add_handler(TrafficLightHandler(controller))
 
     # Load the calibration data
+    calibration_file = Path(config.calibration.calibration_file)
+    if not calibration_file.exists():
+        raise FileNotFoundError(f"Calibration file not found: {config.calibration.calibration_file}")
+
     calibrator = CameraCalibrator.load(config.calibration.calibration_file)
 
     # Initialize the lane assist

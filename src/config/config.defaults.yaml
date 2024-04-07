@@ -1,13 +1,13 @@
 camera_ids:
-  left: 0
-  center: 0
-  right: 0
+  left: 1
+  center: 1
+  right: 1
 
 calibration:
   aruco_dict: 0  # DICT_4X4_50
   board_height: 8
   board_width: 6
-  calibration_file: "${.calibration.save_dir}/latest.npz"
+  calibration_file: "${.save_dir}/latest.npz"
   max_image_height: 1600
   max_image_width: 800
   marker_length: 0.070

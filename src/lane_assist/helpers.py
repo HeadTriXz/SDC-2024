@@ -49,7 +49,7 @@ def td_stitched_image_generator(
             warped_left = warp_image(calibrator, left_image, idx=0)
             warped_right = warp_image(calibrator, right_image, idx=2)
 
-            stitched = np.zeros(calibrator.output_shape[::-1], dtype=np.uint8)
+            stitched = np.zeros(calibrator.stitched_shape[::-1], dtype=np.uint8)
             stitched = stitch_images(stitched, warped_right, calibrator.offsets[2])
             stitched = stitch_images(stitched, warped_left, calibrator.offsets[0])
             stitched = stitch_images(stitched, center_image, calibrator.offsets[1])

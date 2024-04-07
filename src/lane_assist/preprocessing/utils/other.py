@@ -8,6 +8,21 @@ from typing import Optional
 Coordinate = tuple[int, int] | np.ndarray
 
 
+def calculate_stitched_shape(offsets: np.ndarray, shapes: np.ndarray) -> tuple[int, int]:
+    """Calculate the output shape for the stitched image.
+    :param offsets: The offsets for the images.
+    :param shapes: The shapes of the images.
+    :return: The output shape for the stitched image (width, height).
+    """
+    width_max = max(shape[0] + offset[0] for shape, offset in zip(shapes, offsets))
+    width_min = min(0, min(offset[0] for offset in offsets))
+    width = int(width_max - width_min)
+
+    height = max(shape[1] + offset[1] for shape, offset in zip(shapes, offsets))
+
+    return width, height
+
+
 def euclidean_distance(p1: np.ndarray | Coordinate, p2: np.ndarray | Coordinate) -> float:
     """Calculate the Euclidean distance between two points.
 
