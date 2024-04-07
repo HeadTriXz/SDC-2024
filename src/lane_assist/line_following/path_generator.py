@@ -1,10 +1,7 @@
-import cv2
-import matplotlib.pyplot as plt
 import numpy as np
-from scipy.signal import savgol_filter
 
 from lane_assist.line_detection.line import Line
-from lane_assist.line_detection.line_detector import filter_lines, get_lines
+from scipy.signal import savgol_filter
 
 
 class Path:
