@@ -39,6 +39,20 @@ def find_largest_rectangle(matrix: np.ndarray) -> Optional[np.ndarray]:
     return np.array([top_left, top_right, bottom_right, bottom_left])
 
 
+def get_border_of_points(points: np.ndarray) -> tuple[int, int, int, int]:
+    """Get the border of the points.
+
+    :param points: The points.
+    :return: The border of the points.
+    """
+    min_x = np.amin(points[:, 0])
+    min_y = np.amin(points[:, 1])
+    max_x = np.amax(points[:, 0])
+    max_y = np.amax(points[:, 1])
+
+    return int(min_x), int(min_y), int(max_x), int(max_y)
+
+
 def get_transformed_corners(matrix: np.ndarray, shape: tuple[int, int]) -> tuple[int, int, int, int]:
     """Get the transformed corners of the image.
 
@@ -50,11 +64,7 @@ def get_transformed_corners(matrix: np.ndarray, shape: tuple[int, int]) -> tuple
     src_points = np.array([[[0, 0]], [[w, 0]], [[w, h]], [[0, h]]], dtype=np.float32)
     dst_points = cv2.perspectiveTransform(src_points, matrix)
 
-    min_x = np.amin(dst_points[:, 0, 0])
-    min_y = np.amin(dst_points[:, 0, 1])
-    max_x = np.amax(dst_points[:, 0, 0])
-    max_y = np.amax(dst_points[:, 0, 1])
-    return int(min_x), int(min_y), int(max_x), int(max_y)
+    return get_border_of_points(dst_points[:, 0])
 
 
 def get_dst_corners(
@@ -74,6 +84,6 @@ def get_dst_corners(
     w, h = shape
     corners = np.array([[0, 0], [w, 0], [w, h], [0, h]], dtype=np.float32)
     rmat = np.array([[np.cos(angle), -np.sin(angle)],
-                     [np.sin(angle), np.cos(angle)]], dtype=np.float32)
+                     [np.sin(angle), np.cos(angle)]])
 
     return scale_factor * np.dot(corners * length, rmat.T)

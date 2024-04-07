@@ -30,7 +30,5 @@ def stitch_images(base_image: np.ndarray, new_image: np.ndarray, offset: np.ndar
     image_mask = image != 0
 
     # Merge the images
-    merged_image = np.copy(base_image)
-    merged_image[roi_top:roi_bottom, roi_left:roi_right][image_mask] = image[image_mask]
-
-    return merged_image
+    base_image[roi_top:roi_bottom, roi_left:roi_right][image_mask] = image[image_mask]
+    return base_image

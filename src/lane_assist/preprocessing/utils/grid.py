@@ -1,4 +1,3 @@
-import cv2
 import numpy as np
 
 from lane_assist.preprocessing.utils.other import get_board_shape
@@ -24,24 +23,25 @@ def corners_to_grid(corners: np.ndarray, ids: np.ndarray, shape: tuple[int, int]
     return grid
 
 
-def get_dst_grid(length: float, angle: float) -> np.ndarray:
-    """Calculate the destination grid for the image.
+def get_dst_points(length: float, angle: float, scale_factor: float = 1.0) -> np.ndarray:
+    """Calculate the destination points for the image.
 
     :param length: The length of a single square.
     :param angle: The angle of the board in radians.
-    :return: The destination grid for the image.
+    :param scale_factor: The scale factor for the perspective matrix.
+    :return: The destination points for the image.
     """
     w, h = np.subtract(get_board_shape(), 1)
-    dst_grid = np.zeros((h, w, 2), dtype=np.float32)
+    points = np.zeros((h * w, 2), dtype=np.float32)
 
     for i in range(h):
         for j in range(w):
-            x = j * length * np.cos(angle) - i * length * np.sin(angle)
-            y = j * length * np.sin(angle) + i * length * np.cos(angle)
+            x = scale_factor * (j * length * np.cos(angle) - i * length * np.sin(angle))
+            y = scale_factor * (j * length * np.sin(angle) + i * length * np.cos(angle))
 
-            dst_grid[i, j] = [x, y]
+            points[i * w + j] = [x, y]
 
-    return dst_grid
+    return points
 
 
 def crop_grid(grid: np.ndarray, amount: int) -> np.ndarray:
@@ -60,3 +60,20 @@ def crop_grid(grid: np.ndarray, amount: int) -> np.ndarray:
             new_grid[row, col] = grid[row, col] - [0, amount]
 
     return new_grid
+
+
+def merge_grids(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+    """Combine two grids.
+
+    :param a: The first grid.
+    :param b: The second grid.
+    :return: The combined grid.
+    """
+    for row in range(b.shape[0]):
+        for col in range(b.shape[1]):
+            if not np.any(b[row, col]):
+                continue
+
+            a[row, col] = b[row, col]
+
+    return a
