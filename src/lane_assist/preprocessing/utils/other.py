@@ -10,6 +10,7 @@ Coordinate = tuple[int, int] | np.ndarray
 
 def calculate_stitched_shape(offsets: np.ndarray, shapes: np.ndarray) -> tuple[int, int]:
     """Calculate the output shape for the stitched image.
+
     :param offsets: The offsets for the images.
     :param shapes: The shapes of the images.
     :return: The output shape for the stitched image (width, height).

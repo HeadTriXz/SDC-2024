@@ -17,7 +17,7 @@ from utils.video_stream import VideoStream
 from telemetry.webapp.telemetry_server import TelemetryServer
 
 
-def calibrate_cameras():
+def calibrate_cameras() -> None:
     """Example script to calibrate the cameras."""
     cam_left = VideoStream(config.camera_ids.left, resolution=CameraResolution.FHD)
     cam_center = VideoStream(config.camera_ids.center, resolution=CameraResolution.FHD)
@@ -78,7 +78,7 @@ def main() -> None:
     if not calibration_file.exists():
         raise FileNotFoundError(f"Calibration file not found: {config.calibration.calibration_file}")
 
-    calibrator = CameraCalibrator.load(config.calibration.calibration_file)
+    calibrator = CameraCalibrator.load(calibration_file)
 
     # Initialize the lane assist
     lane_assist = LaneAssist(
