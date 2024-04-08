@@ -23,12 +23,10 @@ def corners_to_grid(corners: np.ndarray, ids: np.ndarray, shape: tuple[int, int]
     return grid
 
 
-def get_dst_points(length: float, angle: float, scale_factor: float = 1.0) -> np.ndarray:
+def get_dst_points(length: float) -> np.ndarray:
     """Calculate the destination points for the image.
 
     :param length: The length of a single square.
-    :param angle: The angle of the board in radians.
-    :param scale_factor: The scale factor for the perspective matrix.
     :return: The destination points for the image.
     """
     w, h = np.subtract(get_board_shape(), 1)
@@ -36,8 +34,8 @@ def get_dst_points(length: float, angle: float, scale_factor: float = 1.0) -> np
 
     for i in range(h):
         for j in range(w):
-            x = scale_factor * (j * length * np.cos(angle) - i * length * np.sin(angle))
-            y = scale_factor * (j * length * np.sin(angle) + i * length * np.cos(angle))
+            x = j * length
+            y = i * length
 
             points[i * w + j] = [x, y]
 

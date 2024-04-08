@@ -52,7 +52,6 @@ class CameraCalibrator:
     stitched_shape: Optional[tuple[int, int]]
     topdown_matrix: Optional[np.ndarray]
 
-    _angle: float = 0.0
     _charuco_corners: list[np.ndarray]
     _charuco_ids: list[np.ndarray]
     _combined_grid: np.ndarray
@@ -88,6 +87,7 @@ class CameraCalibrator:
         self.calibrate_perspective_matrices()
         self.calibrate_offsets()
         self.calibrate_topdown_matrix()
+        self.calibrate_angle()
         self.calibrate_region_of_interest()
 
     def calibrate_cameras(self) -> None:
@@ -163,7 +163,51 @@ class CameraCalibrator:
 
         self._calculate_dst_grids()
         self._calculate_vanishing_line()
-        self._calculate_angle()
+
+    def calibrate_angle(self) -> None:
+        """Calibrate the angle of the top-down matrix."""
+        if self.images is None:
+            raise ValueError("No images to calibrate")
+
+        if self.topdown_matrix is None:
+            raise ValueError("The top-down matrix has not been calibrated")
+
+        w, h = self._input_shape
+
+        # Find the corners of the stitched image
+        src_corners = np.zeros((4 * len(self.images), 1, 2), dtype=np.float32)
+        for i in range(len(self.images)):
+            dst_points = np.array([[[0, 0]], [[w, 0]], [[w, h]], [[0, h]]], dtype=np.float32)
+            if i != self.ref_idx:
+                dst_points = cv2.perspectiveTransform(dst_points, self.matrices[i])
+
+            src_corners[i * 4:i * 4 + 4] = dst_points + self.offsets[i]
+
+        # Find the new location of the corners
+        dst_corners = cv2.perspectiveTransform(src_corners, self.topdown_matrix)
+
+        src_corners = src_corners.reshape(-1, 2)
+        dst_corners = dst_corners.reshape(-1, 2)
+
+        # Find the angle of the top-down matrix
+        src_centroid = np.mean(src_corners, axis=0)
+        dst_centroid = np.mean(dst_corners, axis=0)
+
+        src_centered = src_corners - src_centroid
+        dst_centered = dst_corners - dst_centroid
+
+        cov_matrix = np.dot(src_centered.T, dst_centered)
+        u, s, vh = np.linalg.svd(cov_matrix)
+
+        rmat = np.dot(vh.T, u.T)
+        angle = -np.arctan2(rmat[1, 0], rmat[0, 0])
+
+        # Adjust the top-down matrix
+        rotation_matrix = np.array([[np.cos(angle), -np.sin(angle), 0],
+                                    [np.sin(angle), np.cos(angle), 0],
+                                    [0, 0, 1]])
+
+        self.topdown_matrix = np.dot(rotation_matrix, self.topdown_matrix)
 
     def calibrate_region_of_interest(self) -> None:
         """Calibrate the region of interest."""
@@ -171,7 +215,7 @@ class CameraCalibrator:
             raise ValueError("No images to calibrate")
 
         if self.topdown_matrix is None:
-            raise ValueError("The top down matrix has not been calibrated")
+            raise ValueError("The top-down matrix has not been calibrated")
 
         self.shapes = np.zeros((len(self.images), 2), dtype=np.int32)
         w, h = self._input_shape
@@ -251,7 +295,7 @@ class CameraCalibrator:
 
         flat_grid = self._combined_grid.reshape(-1, 2)
 
-        dst_points = get_dst_points(length, self._angle)
+        dst_points = get_dst_points(length)
         dst_points = dst_points[np.any(flat_grid, axis=1)]
         src_points = flat_grid[np.any(flat_grid, axis=1)] + self.offsets[self.ref_idx]
 
@@ -305,25 +349,6 @@ class CameraCalibrator:
 
         np.savez(history_file, **arrays)
         np.savez(latest_file, **arrays)
-
-    def _calculate_angle(self) -> None:
-        """Calculate the angle of the board."""
-        if self.images is None:
-            raise ValueError("No images to calibrate")
-
-        if self.camera_matrix is None or self.dist_coeffs is None:
-            raise ValueError("The cameras have not been calibrated")
-
-        obj_points, img_points = self.board.matchImagePoints(
-            self._charuco_corners[self.ref_idx],
-            self._charuco_ids[self.ref_idx]
-        )
-
-        retval, rvec, tvec = cv2.solvePnP(obj_points, img_points, self.camera_matrix, self.dist_coeffs)
-        rmat, _ = cv2.Rodrigues(rvec)
-
-        angles = cv2.RQDecomp3x3(rmat)[0]
-        self._angle = np.radians(angles[2])
 
     def _calculate_dst_grids(self) -> None:
         """Calculate the destination grids."""
