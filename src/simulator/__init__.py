@@ -1,16 +1,21 @@
+import logging
 from typing import Generator
 
 import cv2
 import numpy as np
 
+from config import config
 from driving.speed_controller import SpeedController, SpeedControllerState
 from lane_assist.lane_assist import LaneAssist, PathFollower
 from libs.external import airsim
 from simulator.simulator_can_controller import SimCanController
+from telemetry.webapp.telemetry_server import TelemetryServer
 
 
 def main() -> None:
     """Run the simulator."""
+    telemetry = TelemetryServer()
+
     # startup the client
     client = airsim.CarClient()
     client.confirmConnection()
@@ -29,7 +34,13 @@ def main() -> None:
                 continue
             img_rotated = img_rotated[:-20, :]
 
-            yield cv2.cvtColor(img_rotated, cv2.COLOR_BGR2GRAY)
+            grayscale = cv2.cvtColor(img_rotated, cv2.COLOR_BGR2GRAY)
+
+            if config.telemetry.enabled:
+                telemetry.websocket_handler.send_image("topdown", grayscale)
+                logging.info
+
+            yield grayscale
 
     can_controller = SimCanController(client)
     speed_controller = SpeedController(can_controller)
@@ -44,9 +55,11 @@ def main() -> None:
         path_follower,
         speed_controller,
         adjust_speed=lambda _path: 15,
+        telemetry=telemetry,
     )
 
     lx.start(True)
+    telemetry.start()
     input("Press enter to stop")
 
     # plot the errors

@@ -13,6 +13,7 @@ from object_recognition.object_controller import ObjectController
 from object_recognition.object_detector import ObjectDetector
 from utils.video_stream import VideoStream
 from telemetry.webapp.telemetry_server import TelemetryServer
+import os
 
 
 def main() -> None:
@@ -25,7 +26,7 @@ def main() -> None:
     cam_center.start()
     cam_right.start()
 
-    #FIXME: remove telemetry
+    # FIXME: remove telemetry
     telemetry_server = TelemetryServer()
 
     # Connect to CAN bus
@@ -71,5 +72,9 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    # if run in the simulator, import the simulator and run it
+    if "ENVIRONMENT" in os.environ and os.environ["ENVIRONMENT"] == "simulator":
+        from simulator import main
+
     main()
 

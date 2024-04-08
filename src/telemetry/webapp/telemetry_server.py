@@ -11,6 +11,7 @@ from starlette.staticfiles import StaticFiles
 from config import config
 from telemetry.webapp.data_stream.routes import create_router
 from telemetry.webapp.data_stream.websocket_handler import WebsocketHandler
+from telemetry.webapp.logging_handler import LoggingHandler
 from telemetry.webapp.stdout_wrapper import StdoutWrapper
 
 
@@ -33,8 +34,10 @@ class TelemetryServer:
         self.thread = threading.Thread(target=self.__start, daemon=True)
         self.__app = fastapi.FastAPI()
 
-        logger = StdoutWrapper(self)
-        sys.stdout = logger
+        std_wrapper = StdoutWrapper(self)
+        sys.stdout = std_wrapper
+
+        logging.basicConfig(level=logging.INFO, handlers=[LoggingHandler()])
 
         self.websocket_handler = WebsocketHandler()
         self.__app.include_router(create_router(self.websocket_handler))

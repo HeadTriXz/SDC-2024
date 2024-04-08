@@ -8,3 +8,6 @@ lane_assist:
 
   line_following:
     initial_speed: 15
+
+telemetry:
+  enabled: true
