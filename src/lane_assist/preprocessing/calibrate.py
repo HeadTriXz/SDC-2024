@@ -9,9 +9,13 @@ from lane_assist.preprocessing.utils.charuco import find_corners
 from lane_assist.preprocessing.utils.corners import get_transformed_corners, get_border_of_points
 from lane_assist.preprocessing.utils.grid import get_dst_points, corners_to_grid, merge_grids
 from lane_assist.preprocessing.utils.other import (
+    calculate_stitched_shape,
+    euclidean_distance,
+    find_intersection,
+    find_offsets,
+    get_board_shape,
     get_charuco_detector,
-    get_transformed_shape,
-    find_offsets, euclidean_distance, get_board_shape, find_intersection, calculate_stitched_shape
+    get_transformed_shape
 )
 
 
@@ -126,6 +130,10 @@ class CameraCalibrator:
         self.offsets = find_offsets(self._dst_grids, shapes, self.ref_idx) - [0, self._vanishing_line]
         self.stitched_shape = calculate_stitched_shape(self.offsets, shapes)
 
+        min_x = np.min(self.offsets[:, 0])
+        if min_x > 0:
+            self.stitched_shape = (self.stitched_shape[0] - min_x, self.stitched_shape[1])
+
     def calibrate_perspective_matrices(self) -> None:
         """Calibrate the matrices."""
         if self.images is None:
@@ -190,6 +198,29 @@ class CameraCalibrator:
         dst_corners = cv2.perspectiveTransform(src_corners, self.topdown_matrix)
         min_x, min_y, max_x, max_y = get_border_of_points(dst_corners[:, 0])
 
+        # Find the new center of the image
+        src_center = np.array([[[w // 2, h]]], dtype=np.float32) + self.offsets[self.ref_idx]
+        dst_center = cv2.perspectiveTransform(src_center, self.topdown_matrix)[0][0]
+
+        dist_to_left = dst_center[0] - min_x
+        dist_to_right = max_x - dst_center[0]
+        diff = dist_to_left - dist_to_right
+
+        min_x = max(min_x, min_x + diff)
+        max_x = min(max_x, max_x + diff)
+
+        # Find the new top of the image
+        lines = [dst_corners[i * 4:i * 4 + 2, 0] for i in range(len(self.images))]
+        min_x_line = np.array([(min_x, min_y), (min_x, max_y)])
+        max_x_line = np.array([(max_x, min_y), (max_x, max_y)])
+
+        intersections = [find_intersection(lines[i], min_x_line) for i in range(len(lines))]
+        intersections += [find_intersection(lines[i], max_x_line) for i in range(len(lines))]
+        intersections = [point for point in intersections if point is not None]
+
+        if len(intersections) > 0:
+            min_y = min([point[1] for point in intersections])
+
         # Calculate the new shape of the image
         width = int(max_x - min_x)
         height = int(max_y - min_y)
@@ -199,8 +230,8 @@ class CameraCalibrator:
             config.calibration.max_image_height / height
         )
 
-        min_y *= scale_factor
         min_x *= scale_factor
+        min_y *= scale_factor
         self.output_shape = int(width * scale_factor), int(height * scale_factor)
 
         # Adjust the top-down matrix
@@ -334,7 +365,7 @@ class CameraCalibrator:
         lines = [[point for point in row if np.any(point)] for row in self._combined_grid]
         lines = [(line[0], line[-1]) for line in lines if len(line) > 1]
 
-        intersections = [find_intersection(lines[i], lines[j])
+        intersections = [find_intersection(lines[i], lines[j], False)
                          for i in range(len(lines) - 1)
                          for j in range(i + 1, len(lines))]
         intersections = [point for point in intersections if point is not None]
