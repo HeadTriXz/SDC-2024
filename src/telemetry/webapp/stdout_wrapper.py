@@ -5,7 +5,7 @@ if TYPE_CHECKING:
     from telemetry.webapp.telemetry_server import TelemetryServer
 
 
-class Loghandler:
+class StdoutWrapper:
     """A class to represent a log handler."""
 
     def __init__(self, telemetry_server: "TelemetryServer") -> None:
@@ -30,8 +30,13 @@ class Loghandler:
         self.stdout.flush()
 
     def isatty(self) -> bool:
-        """Check if the log is a tty.
-
-        :return: False.
-        """
+        """Check if the log is a tty."""
         return False
+
+    def __getattr__(self, attr: str):
+        """Get an attribute.
+
+        :param attr: The attribute to get.
+        :return: The attribute.
+        """
+        return getattr(self.stdout, attr)

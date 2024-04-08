@@ -36,6 +36,7 @@ lane_assist:
 object_detection:
   model_path: "../resources/models/best.pt"
   min_confidence: 0.5
+  verbose: false
   image_size: 1280
   class_to_speed:
     5: 5
@@ -51,6 +52,7 @@ pedestrian_detection:
   crosswalk_min_distance: 2
 
 telemetry:
+  enabled: false
   server:
     port: 8000
     host: 0.0.0.0

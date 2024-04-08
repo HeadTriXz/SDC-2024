@@ -11,6 +11,9 @@ speed_modes:
     fast: 75
     very_fast: 100
 
+object_detection:
+  verbose: true
+
 image_manipulation:
   white_threshold: 200
 

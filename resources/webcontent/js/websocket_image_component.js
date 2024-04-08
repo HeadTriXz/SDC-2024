@@ -60,9 +60,6 @@ class WebsocketImageComponent extends HTMLElement {
         this.ws.onmessage = (event) => {
             const img_src = "data:image/jpeg;base64," + event.data;
             // check if it is the same as the current image
-            if (this.img.src === img_src) {
-                return console.log("same img")
-            }
             this.img.src = img_src;
         }
     }

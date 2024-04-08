@@ -6,11 +6,12 @@ import numpy as np
 from config import config
 from lane_assist.preprocessing.birdview import topdown
 from lane_assist.preprocessing.stitching import adjust_gamma, stitch_images
+from telemetry.webapp.telemetry_server import TelemetryServer
 from utils.video_stream import VideoStream
 
 
 def td_stitched_image_generator(
-    left_cam: VideoStream, center_cam: VideoStream, right_cam: VideoStream
+    left_cam: VideoStream, center_cam: VideoStream, right_cam: VideoStream, telemetry: TelemetryServer
 ) -> Callable[[], Generator[np.ndarray, None, None]]:
     """Generate a picture from the cameras.
 
@@ -31,6 +32,12 @@ def td_stitched_image_generator(
             center_image = center_cam.next()
             right_image = right_cam.next()
 
+            # FIXME: remove telemetry
+            if config.telemetry.enabled:
+                telemetry.websocket_handler.send_image("left", left_image)
+                telemetry.websocket_handler.send_image("center", center_image)
+                telemetry.websocket_handler.send_image("right", right_image)
+
             left_image = cv2.cvtColor(left_image, cv2.COLOR_BGR2GRAY)
             center_image = cv2.cvtColor(center_image, cv2.COLOR_BGR2GRAY)
             right_image = cv2.cvtColor(right_image, cv2.COLOR_BGR2GRAY)
@@ -42,6 +49,10 @@ def td_stitched_image_generator(
 
             stitched_image = stitch_images(left_image, center_image, right_image)
             topdown_image = topdown(stitched_image)
+
+            # FIXME: remove telemetry
+            if config.telemetry.enabled:
+                telemetry.websocket_handler.send_image("topdown", topdown_image)
 
             yield topdown_image
 

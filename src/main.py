@@ -25,6 +25,9 @@ def main() -> None:
     cam_center.start()
     cam_right.start()
 
+    #FIXME: remove telemetry
+    telemetry_server = TelemetryServer()
+
     # Connect to CAN bus
     bus = get_can_interface()
     can_controller = CANController(bus)
@@ -47,15 +50,15 @@ def main() -> None:
 
     # Initialize the lane assist
     lane_assist = LaneAssist(
-        td_stitched_image_generator(cam_left, cam_center, cam_right),
+        td_stitched_image_generator(cam_left, cam_center, cam_right, telemetry_server),
         path_follower,
         speed_controller,
         adjust_speed=lambda _: 1,
+        telemetry=telemetry_server,
     )
 
     # Initialize the object detector
     detector = ObjectDetector.from_model(config.object_detection.model_path, controller, config.camera_ids.center)
-    telemetry_server = TelemetryServer()
 
     # Start the system
     can_controller.start()
