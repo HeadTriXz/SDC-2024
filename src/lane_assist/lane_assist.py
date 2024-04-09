@@ -3,6 +3,7 @@ import time
 from collections.abc import Callable, Generator
 from threading import Thread
 
+import cv2
 import numpy as np
 
 from config import config
@@ -13,6 +14,7 @@ from lane_assist.line_detection.line_detector import filter_lines, get_lines
 from lane_assist.line_following.path_follower import PathFollower
 from lane_assist.line_following.path_generator import Path, generate_driving_path
 from lane_assist.stopline_assist import StoplineAssist
+from telemetry.webapp.telemetry_server import TelemetryServer
 
 colours = {
     LineType.SOLID: (0, 255, 0),
@@ -51,7 +53,8 @@ class LaneAssist:
         image_generation: Callable[[], Generator[np.ndarray, None, None]],
         path_follower: PathFollower,
         speed_controller: ISpeedController,
-        adjust_speed: Callable[[Path], int] = lambda _: 1,
+        adjust_speed: Callable[[Path], int],
+        telemetry: TelemetryServer,
     ) -> None:
         """Initialize the lane assist.
 
@@ -69,6 +72,9 @@ class LaneAssist:
 
         self.path_follower = path_follower
         self.requested_lane = config.lane_assist.line_following.requested_lane
+
+        self.telemetry = telemetry
+
 
     def start(self, multithreading: bool = False) -> None | Thread:
         """Start the lane assist.
@@ -98,6 +104,16 @@ class LaneAssist:
         """
         lines, stop_lines = get_lines(image)
         driving_lines = filter_lines(lines, image.shape[1] // 2)
+
+        if config.telemetry.enabled:
+            rgb = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+
+            # draw the lines on the image
+            for line in driving_lines:
+                for point in line.points:
+                    cv2.circle(rgb, (point[0], point[1]), 3, colours[line.line_type], -1)
+
+            self.telemetry.websocket_handler.send_image("laneassist", rgb)
 
         if len(driving_lines) < 2:
             return

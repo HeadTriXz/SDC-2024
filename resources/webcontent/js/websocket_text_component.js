@@ -56,7 +56,6 @@ class WebsocketTextComponent extends HTMLElement {
         // when a new message is received, update the image. the image is sent as base64 encoded jpeg
         this.ws.onmessage = (event) => {
             // convert to text
-            console.log(event.data)
             const text_elem = document.createElement('p');
             text_elem.textContent = event.data;
             if(this.getAttribute('append') === 'true'){

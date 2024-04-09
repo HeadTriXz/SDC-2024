@@ -35,11 +35,18 @@ lane_assist:
   line_detection:
     line_width: 50
     pixels_in_window: 1
+
     thresholds:
       zebra_crossing: 20000
       line: 1000
+
     filtering:
       rel_height: 0.9
+
+    pid:
+      kp: 1
+      ki: 0.1
+      kd: 0.05
 
   line_following:
     requested_lane: 0
@@ -48,6 +55,7 @@ lane_assist:
 object_detection:
   model_path: "../resources/models/best.pt"
   min_confidence: 0.5
+  verbose: false
   image_size: 1280
   class_to_speed:
     5: 5
@@ -63,6 +71,7 @@ pedestrian_detection:
   crosswalk_min_distance: 2
 
 telemetry:
+  enabled: false
   server:
     port: 8000
     host: 0.0.0.0
