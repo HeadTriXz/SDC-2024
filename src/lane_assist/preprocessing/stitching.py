@@ -1,105 +1,48 @@
-import math
-
 import cv2
 import numpy as np
 
-# Constants
-MIN_HEIGHT = 0
-MIN_WIDTH = 0
-MAX_HEIGHT = 720
-MAX_WIDTH = 1280
-
-MASK_OFFSET = np.array([[1, 1], [1, -1], [-1, -1], [-1, 1]])
-PTS_ORIGINAL = np.float32(
-    [[MIN_WIDTH, MIN_HEIGHT], [MIN_WIDTH, MAX_HEIGHT], [MAX_WIDTH, MAX_HEIGHT], [MAX_WIDTH, MIN_HEIGHT]]
-)
-
-RATIOS_LEFT = np.float32([[0, 1.0055555], [0.36197916, 2.6185186], [1.6765625, 0.7537037], [1.5010417, 0]])
-RATIOS_RIGHT = np.float32([[0.18125, 0], [0, 0.74907407], [1.28125, 2.55833333], [1.66770833, 0.99722222]])
-
-LEFT_X, LEFT_Y = 0.27027708, 0.5205  # 0.52165085
-RIGHT_X, RIGHT_Y = 0.73115027, 0.5145  # 0.51505412
-CENTER_X, CENTER_Y = 0.5049538, 0.1826793
+from lane_assist.preprocessing.calibrate import CameraCalibrator
 
 
-# Calculate transformation matrices
-def get_points(ratio: np.ndarray) -> np.ndarray:
-    """Get the points of the warped image based on the ratio."""
-    return np.float32(ratio * [MAX_WIDTH, MAX_HEIGHT])
+def stitch_images(base_image: np.ndarray, new_image: np.ndarray, offset: np.ndarray) -> np.ndarray:
+    """Merge a new image onto a base image with the given offset.
+
+    :param base_image: The base image onto which the new image will be merged.
+    :param new_image: The new image to merge onto the base image.
+    :param offset: The offset for the new image.
+    :return: The merged image.
+    """
+    # Calculate dimensions for merging
+    new_height, new_width = new_image.shape[:2]
+    base_height, base_width = base_image.shape[:2]
+    offset_x, offset_y = offset
+
+    # Calculate the region of interest (ROI) for merging
+    roi_top = max(offset_y, 0)
+    roi_bottom = min(offset_y + new_height, base_height)
+    roi_left = max(offset_x, 0)
+    roi_right = min(offset_x + new_width, base_width)
+
+    # Calculate the cropped region of the new image
+    crop_top = roi_top - offset_y
+    crop_bottom = crop_top + (roi_bottom - roi_top)
+    crop_left = roi_left - offset_x
+    crop_right = crop_left + (roi_right - roi_left)
+
+    image = new_image[crop_top:crop_bottom, crop_left:crop_right]
+    image_mask = image != 0
+
+    # Merge the images
+    base_image[roi_top:roi_bottom, roi_left:roi_right][image_mask] = image[image_mask]
+    return base_image
 
 
-def get_matrix(ratio: np.ndarray) -> np.ndarray:
-    """Get the transformation matrix based on the ratio."""
-    return cv2.getPerspectiveTransform(PTS_ORIGINAL, get_points(ratio))
+def warp_image(calibrator: CameraCalibrator, image: np.ndarray, idx: int) -> np.ndarray:
+    """Warp an image using a perspective matrix.
 
-
-MATRIX_LEFT = get_matrix(RATIOS_LEFT)
-MATRIX_RIGHT = get_matrix(RATIOS_RIGHT)
-
-LEFT_WIDTH = np.max(get_points(RATIOS_LEFT)[:, 0]).astype(int)
-LEFT_HEIGHT = np.max(get_points(RATIOS_LEFT)[:, 1]).astype(int)
-RIGHT_WIDTH = np.max(get_points(RATIOS_RIGHT)[:, 0]).astype(int)
-RIGHT_HEIGHT = np.max(get_points(RATIOS_RIGHT)[:, 1]).astype(int)
-
-
-# Functions
-def relative_to_absolute(x: float, y: float, width: float, height: float) -> tuple[float, float]:
-    """Convert relative coordinates to absolute coordinates."""
-    return x * width, y * height
-
-
-def get_ltbr(x: float, y: float, width: int, height: int) -> tuple[int, int, int, int]:
-    """Get the left, top, right, and bottom coordinates of the image based on xywh."""
-    return (
-        round(x - (width / 2)),
-        round(y - (height / 2)),
-        round(x + (width / 2)),
-        round(y + (height / 2)),
-    )
-
-
-def warp_image(image: np.ndarray, matrix: np.ndarray, width: int, height: int) -> np.ndarray:
-    """Warp the image based on the transformation matrix."""
-    return cv2.warpPerspective(image, matrix, (width, height), flags=cv2.INTER_NEAREST)
-
-
-def merge_image(base: np.ndarray, overlay: np.ndarray, x1: int, y1: int, x2: int, y2: int) -> np.ndarray:
-    """Merge two images."""
-    base[y1:y2, x1:x2] = overlay
-    return base
-
-
-result_width = int(math.ceil(LEFT_WIDTH / 2 / LEFT_X))
-result_height = int(math.ceil(MAX_HEIGHT / 2 / CENTER_Y))
-result = np.zeros((result_height, result_width), dtype=np.uint8)
-
-# Calculate the position of the images
-lxc, lyc = relative_to_absolute(LEFT_X, LEFT_Y, result_width, result_height)
-lx1, ly1, lx2, ly2 = get_ltbr(lxc, lyc, LEFT_WIDTH, LEFT_HEIGHT)
-
-rxc, ryc = relative_to_absolute(RIGHT_X, RIGHT_Y, result_width, result_height)
-rx1, ry1, rx2, ry2 = get_ltbr(rxc, ryc, RIGHT_WIDTH, RIGHT_HEIGHT)
-
-cxc, cyc = relative_to_absolute(CENTER_X, CENTER_Y, result_width, result_height)
-cx1, cy1, cx2, cy2 = get_ltbr(cxc, cyc, MAX_WIDTH, MAX_HEIGHT)
-
-
-def stitch_images(left: np.ndarray, center: np.ndarray, right: np.ndarray) -> np.ndarray:
-    """Stitch the images together."""
-    global result
-    # Warp images
-    left_res = warp_image(left, MATRIX_LEFT, LEFT_WIDTH, LEFT_HEIGHT)
-    right_res = warp_image(right, MATRIX_RIGHT, RIGHT_WIDTH, RIGHT_HEIGHT)
-
-    # Create result image
-    result = merge_image(result, left_res, lx1, ly1, lx2, ly2)
-    result = merge_image(result, right_res, rx1, ry1, rx2, ry2)
-    return merge_image(result, center, cx1, cy1, cx2, cy2)
-
-
-def adjust_gamma(image: np.ndarray, gamma: float = 1.0) -> np.ndarray:
-    """Adjust the gamma of the image."""
-    inv_gamma = 1.0 / gamma
-    table = np.array([((i / 255.0) ** inv_gamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
-
-    return cv2.LUT(image, table)
+    :param calibrator: The camera calibrator.
+    :param image: The image to warp.
+    :param idx: The camera to select the configuration for.
+    :return: The warped image and the amount cropped from the top.
+    """
+    return cv2.warpPerspective(image, calibrator.matrices[idx], calibrator.shapes[idx], flags=cv2.INTER_NEAREST)

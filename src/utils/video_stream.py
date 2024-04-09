@@ -1,9 +1,25 @@
-from threading import Thread
-
 import cv2
 import numpy as np
+import sys
 
 from constants import CameraFramerate, CameraResolution
+from threading import Thread
+
+
+def get_camera_backend() -> int:
+    """Get the camera backend based on the platform.
+
+    :return: The camera backend.
+    """
+    match sys.platform:
+        case "linux":
+            return cv2.CAP_V4L2
+        case "win32":
+            return cv2.CAP_DSHOW
+        case "darwin":
+            return cv2.CAP_AVFOUNDATION
+        case _:
+            raise ValueError("Unsupported platform.")
 
 
 class VideoStream:
@@ -65,7 +81,7 @@ class VideoStream:
         self.__initialized = True
 
         self.id = camera_id
-        self.capture = cv2.VideoCapture(camera_id, cv2.CAP_DSHOW)
+        self.capture = cv2.VideoCapture(camera_id, get_camera_backend())
         self.capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc(*"MJPG"))
         self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, resolution[0])
         self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, resolution[1])
