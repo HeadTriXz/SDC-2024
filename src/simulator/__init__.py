@@ -38,7 +38,6 @@ def main() -> None:
 
             if config.telemetry.enabled:
                 telemetry.websocket_handler.send_image("topdown", grayscale)
-                logging.info
 
             yield grayscale
 

@@ -4,7 +4,7 @@ image_manipulation:
 lane_assist:
   line_detection:
     thresholds:
-      zebra_crossing: 10000
+      zebra_crossing: 20000
 
   line_following:
     initial_speed: 15

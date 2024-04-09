@@ -15,4 +15,4 @@ class LoggingHandler(logging.Handler):
 
         :param record: The record.
         """
-        print(self.format(record))
+        print(self.format(record))  # noqa: T201

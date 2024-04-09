@@ -1,6 +1,7 @@
 import sys
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+
 if TYPE_CHECKING:
     from telemetry.webapp.telemetry_server import TelemetryServer
 
@@ -33,7 +34,7 @@ class StdoutWrapper:
         """Check if the log is a tty."""
         return False
 
-    def __getattr__(self, attr: str):
+    def __getattr__(self, attr: str) -> Any:
         """Get an attribute.
 
         :param attr: The attribute to get.
