@@ -12,15 +12,15 @@
 class WebsocketChartComponent extends HTMLElement {
     /**
      * Constructor of the WebsocketChartComponent.
-     * Calls the render method to create the component's UI and establishes a websocket connection.
+     * Calls the render method to create the component"s UI and establishes a websocket connection.
      */
     constructor() {
         super();
 
         this.attrs = {
-            id: this.getAttribute('id'),
-            port: this.getAttribute('port') || 8000,
-            host: this.getAttribute('hostname') || 'localhost',
+            id: this.getAttribute("id"),
+            port: this.getAttribute("port") || 8000,
+            host: this.getAttribute("hostname") || "localhost",
         };
 
         this.render();
@@ -35,7 +35,7 @@ class WebsocketChartComponent extends HTMLElement {
     connectWS() {
         this.ws = new WebSocket(`ws://${this.attrs.host}:${this.attrs.port}/ws/${this.attrs.id}`);
         this.ws.onerror = (event) => {
-            console.error('Websocket error:', event);
+            console.error("Websocket error:", event);
         }
         this.ws.onmessage = (event) => {
             this.update_chart(event.data);
@@ -58,10 +58,10 @@ class WebsocketChartComponent extends HTMLElement {
      * Render the component by creating a chart element.
      */
     render() {
-        const header = document.createElement('h4')
+        const header = document.createElement("h4")
         header.textContent = this.attrs.id;
 
-        const chart_elem = document.createElement('div');
+        const chart_elem = document.createElement("div");
 
         this.appendChild(header);
         this.appendChild(chart_elem);
@@ -99,4 +99,4 @@ class WebsocketChartComponent extends HTMLElement {
     }
 }
 
-customElements.define('websocket-chart', WebsocketChartComponent);
+customElements.define("websocket-chart", WebsocketChartComponent);
