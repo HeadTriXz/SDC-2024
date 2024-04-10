@@ -1,7 +1,7 @@
 camera_ids:
-  left: 1
-  center: 1
-  right: 1
+  left: 0
+  center: 0
+  right: 0
 
 calibration:
   aruco_dict: 0  # DICT_4X4_50
