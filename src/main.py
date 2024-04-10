@@ -14,6 +14,7 @@ from object_recognition.handlers.traffic_light_handler import TrafficLightHandle
 from object_recognition.object_controller import ObjectController
 from object_recognition.object_detector import ObjectDetector
 from pathlib import Path
+from utils.calibration_data import CalibrationData
 from utils.video_stream import VideoStream
 from telemetry.app import TelemetryServer
 
@@ -82,11 +83,11 @@ def start_kart() -> None:
     if not calibration_file.exists():
         raise FileNotFoundError(f"Calibration file not found: {config.calibration.calibration_file}")
 
-    calibrator = CameraCalibrator.load(calibration_file)
+    calibration = CalibrationData.load(calibration_file)
 
     # Initialize the lane assist
     lane_assist = LaneAssist(
-        td_stitched_image_generator(calibrator, cam_left, cam_center, cam_right, telemetry_server),
+        td_stitched_image_generator(calibration, cam_left, cam_center, cam_right, telemetry_server),
         path_follower,
         speed_controller,
         adjust_speed=lambda _: 1,

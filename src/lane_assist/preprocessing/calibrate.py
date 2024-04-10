@@ -47,6 +47,7 @@ class CameraCalibrator:
     matrices: Optional[np.ndarray]
     offsets: Optional[np.ndarray]
     output_shape: Optional[tuple[int, int]]
+    pixels_per_meter: Optional[float]
     ref_idx: int
     shapes: Optional[np.ndarray]
     stitched_shape: Optional[tuple[int, int]]
@@ -276,6 +277,7 @@ class CameraCalibrator:
 
         min_x *= scale_factor
         min_y *= scale_factor
+        self.pixels_per_meter *= scale_factor
         self.output_shape = int(width * scale_factor), int(height * scale_factor)
 
         # Adjust the top-down matrix
@@ -293,6 +295,10 @@ class CameraCalibrator:
         corners, shape = find_corners(self._combined_grid)
         length = euclidean_distance(corners[0], corners[3]) / shape[1]
 
+        # Calculate the pixels per meter
+        self.pixels_per_meter = length / self.board.getSquareLength()
+
+        # Calculate the source and destination points
         flat_grid = self._combined_grid.reshape(-1, 2)
 
         dst_points = get_dst_points(length)
@@ -342,6 +348,8 @@ class CameraCalibrator:
             matrices=self.matrices,
             offsets=self.offsets,
             output_shape=self.output_shape,
+            pixels_per_meter=self.pixels_per_meter,
+            ref_idx=self.ref_idx,
             shapes=self.shapes,
             stitched_shape=self.stitched_shape,
             topdown_matrix=self.topdown_matrix
@@ -409,24 +417,3 @@ class CameraCalibrator:
         :return: The scale factor for the image.
         """
         return max(self._input_shape[1] / image.shape[0], self._input_shape[0] / image.shape[1])
-
-    @staticmethod
-    def load(path: Path | str) -> "CameraCalibrator":
-        """Load the calibration data from a file.
-
-        :param path: The path to the calibration data.
-        :return: The camera calibrator.
-        """
-        data = np.load(Path(path))
-
-        calibrator = CameraCalibrator()
-        calibrator.camera_matrix = data["camera_matrix"]
-        calibrator.dist_coeffs = data["dist_coeffs"]
-        calibrator.matrices = data["matrices"]
-        calibrator.offsets = data["offsets"]
-        calibrator.output_shape = tuple(data["output_shape"])
-        calibrator.shapes = data["shapes"]
-        calibrator.stitched_shape = tuple(data["stitched_shape"])
-        calibrator.topdown_matrix = data["topdown_matrix"]
-
-        return calibrator
