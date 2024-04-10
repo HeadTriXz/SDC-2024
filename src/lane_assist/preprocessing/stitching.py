@@ -1,7 +1,4 @@
-import cv2
 import numpy as np
-
-from lane_assist.preprocessing.calibrate import CameraCalibrator
 
 
 def stitch_images(base_image: np.ndarray, new_image: np.ndarray, offset: np.ndarray) -> np.ndarray:
@@ -35,14 +32,3 @@ def stitch_images(base_image: np.ndarray, new_image: np.ndarray, offset: np.ndar
     # Merge the images
     base_image[roi_top:roi_bottom, roi_left:roi_right][image_mask] = image[image_mask]
     return base_image
-
-
-def warp_image(calibrator: CameraCalibrator, image: np.ndarray, idx: int) -> np.ndarray:
-    """Warp an image using a perspective matrix.
-
-    :param calibrator: The camera calibrator.
-    :param image: The image to warp.
-    :param idx: The camera to select the configuration for.
-    :return: The warped image and the amount cropped from the top.
-    """
-    return cv2.warpPerspective(image, calibrator.matrices[idx], calibrator.shapes[idx], flags=cv2.INTER_NEAREST)
