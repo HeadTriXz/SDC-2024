@@ -121,8 +121,9 @@ class LaneAssist:
             self.telemetry.websocket_handler.send_image("laneassist", rgb)
 
         if len(driving_lines) < 2:
-            self.frame_times.append(time.perf_counter() - start_time)
-            self.telemetry.websocket_handler.send_text("fps", f"{1 / (time.perf_counter() - start_time):.2f}")
+            if config.telemetry.enabled:
+                self.frame_times.append(time.perf_counter() - start_time)
+                self.telemetry.websocket_handler.send_text("fps", f"{1 / (time.perf_counter() - start_time):.2f}")
             return
 
         # Act on the lines in the image.
@@ -130,9 +131,10 @@ class LaneAssist:
         self.stopline_assist.handle_stop_lines(stop_lines)
 
         # FIXME: remove telemetry
-        self.frame_times.append(time.perf_counter() - start_time)
-        self.telemetry.websocket_handler.send_text("fps", f"{1 / (time.perf_counter() - start_time):.2f}")
-        self.telemetry.websocket_handler.send_text("error", f"{self.path_follower.errors[-1]:.2f}")
+        if config.telemetry.enabled:
+            self.frame_times.append(time.perf_counter() - start_time)
+            self.telemetry.websocket_handler.send_text("fps", f"{1 / (time.perf_counter() - start_time):.2f}")
+            self.telemetry.websocket_handler.send_text("error", f"{self.path_follower.errors[-1]:.2f}")
 
     def __follow_path(self, lines: list[Line], car_position: float, lane: int) -> None:
         """Follow the path.
