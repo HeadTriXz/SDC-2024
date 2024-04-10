@@ -112,7 +112,6 @@ class ConfigComponent extends HTMLElement {
         const parent = this.shadow.getElementById(parentKey)
         parent.innerHTML = ""
         parent.style.marginBottom = "1.5em"
-
         for (const key in obj) {
             if (Object.hasOwnProperty.call(obj, key)) {
                 const value = obj[key];
