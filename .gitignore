@@ -81,6 +81,7 @@ venv.bak/
 .vscode
 
 **/.benchmarks
+**/backups
 
 # Compiled object detection model
 *_openvino_model/

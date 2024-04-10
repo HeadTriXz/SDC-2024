@@ -1,5 +1,3 @@
-import os
-
 from config import config
 from constants import Gear, CameraResolution
 from driving.can import CANController, get_can_bus
