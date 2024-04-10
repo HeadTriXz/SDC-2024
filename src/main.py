@@ -70,28 +70,29 @@ def start_kart() -> None:
     # Initialize the object detector
     detector = ObjectDetector.from_model(config.object_detection.model_path, controller, config.camera_ids.center)
 
-    # Start the system
-    can_controller.start()
-    speed_controller.start()
-    detector.start()
-    telemetry_server.start()
-    lane_assist.start()
+    try:
+        # Start the system
+        can_controller.start()
+        speed_controller.start()
+        detector.start()
+        telemetry_server.start()
+        lane_assist.start()
+    finally:
+        input("Press Enter to stop...")
 
-    input("Press Enter to stop...")
+        # write the pickled errors and fps into a file
+        import pickle
+        import time
 
-    # write the pickled errors and fps into a file
-    import pickle
-    import time
+        folder_path = "../data/telemetry/"
+        os.makedirs(folder_path)
 
-    folder_path = "../data/telemetry/"
-    os.makedirs(folder_path)
+        with open(f"{folder_path}{time.time()}-errors.pkl", "wb") as f:
+            pickle.dump(lane_assist.path_follower.errors, f)
 
-    with open(f"{folder_path}{time.time()}-errors.pkl", "wb") as f:
-        pickle.dump(lane_assist.path_follower.errors, f)
-
-    # write the fps into a file
-    with open(f"{folder_path}{time.time()}-frame_times.pkl", "wb") as f:
-        pickle.dump(lane_assist.frame_times, f)
+        # write the fps into a file
+        with open(f"{folder_path}{time.time()}-frame_times.pkl", "wb") as f:
+            pickle.dump(lane_assist.frame_times, f)
 
 
 if __name__ == "__main__":
