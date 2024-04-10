@@ -1,14 +1,13 @@
-from typing import Callable, Generator
-
 import cv2
 import numpy as np
 
 from config import config
-from telemetry.webapp.telemetry_server import TelemetryServer
+from telemetry.app import TelemetryServer
 from lane_assist.preprocessing.calibrate import CameraCalibrator
 from lane_assist.preprocessing.gamma import adjust_gamma
 from lane_assist.preprocessing.stitching import stitch_images, warp_image
 from utils.video_stream import VideoStream
+from typing import Callable, Generator
 
 
 def td_stitched_image_generator(
@@ -29,6 +28,7 @@ def td_stitched_image_generator(
     :param left_cam: The left camera.
     :param center_cam: The center camera.
     :param right_cam: The right camera.
+    :param telemetry: The telemetry server.
     """
 
     def __generator() -> Generator[np.ndarray, None, None]:
