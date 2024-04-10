@@ -38,7 +38,7 @@ pip install -r requirements.txt
 
 **Step 3: Run the Application**
 ```bash
-python src/main.py
+python src/lidar.py
 ```
 
 ## License

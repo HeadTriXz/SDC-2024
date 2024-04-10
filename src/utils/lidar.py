@@ -4,11 +4,7 @@ from math import floor
 from adafruit_rplidar import RPLidar
 from sklearn.cluster import DBSCAN
 import matplotlib
-import cv2
-import time
-
-
-PORT_NAME = 'COM4'
+PORT_NAME = "COM4"
 lidar = RPLidar(None, PORT_NAME, timeout=3)
 max_distance = 0
 
@@ -20,15 +16,15 @@ def find_obstacle_distance(data, anglemin, anglemax):
     return point
 
 def detect_walls(data):
-    """a function used to detect the walls around the car
-    to the right of the car, there will be a straight line with a hole in it, detect this line"""
+    """A function used to detect the walls around the car
+    to the right of the car, there will be a straight line with a hole in it, detect this line
+    """
     angles = np.linspace(0, 2 * np.pi, len(data), endpoint=False)
     coordinates = [(angle, distance) for angle, distance in zip(angles, data)]
 
     # Voer DBSCAN clustering uit op de coördinaten
     dbscan = DBSCAN(eps=eps, min_samples=min_samples)
     dbscan.fit(coordinates)
-
     # Verzamel de clusterpunten die als muren worden beschouwd
     wall_points = [coordinates[i] for i in range(len(coordinates)) if dbscan.labels_[i] != -1]
 
@@ -42,52 +38,72 @@ def display_minimum(data):
     if point < pointleft:
         point = pointleft
     if point > 500:
-        plt.plot(point,0, 'ro')  # Plot het eerste punt in het rood
+        plt.plot(point,0, "ro")  # Plot het eerste punt in het rood
     leftpoint = min(data[45:120])
     rightpoint = min(data[225:320])
     if leftpoint > 500:
-        plt.plot(0, leftpoint, 'ro')
+        plt.plot(0, leftpoint, "ro")
     if rightpoint > 500:
-        plt.plot(0, -rightpoint, 'ro')
+        plt.plot(0, -rightpoint, "ro")
+
+def right_free(data) -> bool:
+    """A function that checks if the right side of the car is free
+
+    :param data: the data from the lidar
+    :return: True if the right side is free, False otherwise
+    """
+    for i in range(20,120):
+        if data[i] < 2500:
+            return False
+
+    if min(data[20:120]) < 2500:
+        if data[i+1] < 2500 or data[i-1] < 2500:
+            return False
+    return True
+
+def free_side(data, anglemin, anglemax) -> bool:
+    """A function that checks if the right side of the car is free
+
+    :param data: the data from the lidar
+    :param side: the side to check, either "right" or "left"
+    :return: True if the side is free, False otherwise
+    """
+    for i in range(anglemin, anglemax):
+        if data[i] < 2500 and (data[i+1] < 2500 or data[i-1] < 2500):
+            return False
+
+        return True
 
 def process_data(data):
-    #matplotlib.use('TkAgg')
-    # Gegevens omzetten naar polaire coördinaten
+    matplotlib.use("TkAgg")
     angles = np.linspace(0, 2*np.pi, len(data), endpoint=False)
     distances = np.array(data)
-    newdistances = distances
-
-    for i in range(len(distances)):
+    newdistances = distances.copy()
+    for i in range(len(distances) - 1):
         if distances[i] < 500:
             newdistances[i] = 15000
-        if distances[i] - distances[i-1] > 1500 or distances[i] - distances[i-1] < -1500:
-            #newdistances[i] = np.nan
-            newdistances[i]= np.nan
-    plt.plot(find_obstacle_distance(newdistances, 0,40), 0, 'ro')
+
+        if np.abs(distances[i] - distances[i + 1]) > 1500:
+            newdistances[i] = np.nan
+
+    plt.plot(find_obstacle_distance(newdistances, 0,40), 0, "ro")
     plt.plot()
     # Omzetten naar cartesische coördinaten
     x = newdistances * np.cos(angles)
     y = newdistances * np.sin(angles)
     #detect_lines(newdistances)
-
-    plt.clf()  # Clear het huidige plot
-    plt.scatter(x, y, s=5)  # s is de grootte van de punten, je kunt deze aanpassen aan je voorkeur
-    plt.title('2D Lidar')
-    plt.xlabel('X')
-    plt.ylabel('Y')
+    plt.clf()  # Wis de plot
+    plt.scatter(x, y, s=5)  # s is de grootte van de punten
+    plt.title("2D Lidar")
+    plt.xlabel("X")
+    plt.ylabel("Y")
     display_minimum(newdistances)
-    #print(find_obstacle_distance(newdistances, 0, 40))
-    #print(newdistances)
-    #fix the plot in place om -5 to 5
+    # print(right_free(newdistances))
+    print(free_side(newdistances,60, 120))
     plt.xlim(-1000, 10000)
     plt.ylim(-2000,2000)
-    #print(freeside(newdistances, 0, 40, 1500))
     plt.grid(True)
-    #plt.axis('equal')  # Zorgt ervoor dat de aspect ratio van de plot correct is
-    plt.pause(0.1)  # Pauze om de plot te laten zien (voor realtime effect)
-    # save the newdistances to a file .txt
-    #dump the data to a file, split by a |
-    #np.savetxt('lidar.txt', newdistances, delimiter='|')
+    plt.pause(0.01)
 
 try:
     scan_data = [0]*360
@@ -95,8 +111,8 @@ try:
         scan_data = [0]*360
         for (_, angle, distance) in scan:
             scan_data[min([359, floor(angle)])] = distance
-            process_data(scan_data)  # dit is de data
+        process_data(scan_data)
 except KeyboardInterrupt:
-    print('Stopping.')
+    print("Stopping.")
 lidar.stop()
 lidar.disconnect()
