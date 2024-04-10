@@ -1,13 +1,12 @@
 import os
 
 from config import config
-from constants import Gear, CameraResolution
+from constants import Gear
 from driving.can import CANController, get_can_bus
 from driving.speed_controller import SpeedController, SpeedControllerState
 from lane_assist.helpers import td_stitched_image_generator
 from lane_assist.lane_assist import LaneAssist
 from lane_assist.line_following.path_follower import PathFollower
-from lane_assist.preprocessing.calibrate import CameraCalibrator
 from object_recognition.handlers.pedestrian_handler import PedestrianHandler
 from object_recognition.handlers.speed_limit_handler import SpeedLimitHandler
 from object_recognition.handlers.traffic_light_handler import TrafficLightHandler
@@ -17,32 +16,6 @@ from pathlib import Path
 from utils.calibration_data import CalibrationData
 from utils.video_stream import VideoStream
 from telemetry.app import TelemetryServer
-
-
-def calibrate_cameras() -> None:
-    """Example script to calibrate the cameras."""
-    cam_left = VideoStream(config.camera_ids.left, resolution=CameraResolution.FHD)
-    cam_center = VideoStream(config.camera_ids.center, resolution=CameraResolution.FHD)
-    cam_right = VideoStream(config.camera_ids.right, resolution=CameraResolution.FHD)
-
-    cam_left.start()
-    cam_center.start()
-    cam_right.start()
-
-    if not cam_left.has_next() or not cam_center.has_next() or not cam_right.has_next():
-        raise ValueError("Could not capture images from cameras")
-
-    left_image = cam_left.next()
-    center_image = cam_center.next()
-    right_image = cam_right.next()
-
-    calibrator = CameraCalibrator([left_image, center_image, right_image], input_shape=(1280, 720))
-    calibrator.calibrate()
-    calibrator.save(config.calibration.save_dir)
-
-    cam_left.stop()
-    cam_center.stop()
-    cam_right.stop()
 
 
 def start_kart() -> None:
