@@ -138,8 +138,6 @@ class ConfigLoader(metaclass=SingletonMeta):
                 diff[key] = value
         return diff
 
-
-
     def rollback(self) -> None:
         """Rollback to the latest backup."""
         backup_path = self.__config_dir / "backups"
