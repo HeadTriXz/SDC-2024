@@ -76,6 +76,8 @@ class LaneAssist:
         self.stopline_assist = StopLineAssist(speed_controller)
         self.telemetry = telemetry
 
+        self.frame_times = []
+
     def start(self, multithreading: bool = False) -> Optional[threading.Thread]:
         """Start the lane assist.
 
@@ -102,9 +104,12 @@ class LaneAssist:
 
         :param image: The image to follow the path in.
         """
+        start_time = time.perf_counter()
+
         lines, stop_lines = get_lines(image)
         driving_lines = filter_lines(lines, image.shape[1] // 2)
 
+        # FIXME: remove telemetry
         if config.telemetry.enabled:
             rgb = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
 
@@ -116,11 +121,18 @@ class LaneAssist:
             self.telemetry.websocket_handler.send_image("laneassist", rgb)
 
         if len(driving_lines) < 2:
+            self.frame_times.append(time.perf_counter() - start_time)
+            self.telemetry.websocket_handler.send_text("fps", f"{1 / (time.perf_counter() - start_time):.2f}")
             return
 
         # Act on the lines in the image.
         self.__follow_path(driving_lines, image.shape[1] // 2, self.requested_lane)
         self.stopline_assist.handle_stop_lines(stop_lines)
+
+        # FIXME: remove telemetry
+        self.frame_times.append(time.perf_counter() - start_time)
+        self.telemetry.websocket_handler.send_text("fps", f"{1 / (time.perf_counter() - start_time):.2f}")
+        self.telemetry.websocket_handler.send_text("error", f"{self.path_follower.errors[-1]:.2f}")
 
     def __follow_path(self, lines: list[Line], car_position: float, lane: int) -> None:
         """Follow the path.
