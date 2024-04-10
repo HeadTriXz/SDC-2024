@@ -57,11 +57,9 @@ class ConfigLoader(metaclass=SingletonMeta):
         if not environment_path.exists():
             raise FileNotFoundError(f"Configuration file not found at {environment_path}")
 
-        default_config = OmegaConf.load(default_path)
-        environment_config = OmegaConf.load(environment_path)
-        merged_config = OmegaConf.merge(default_config, environment_config)
-
-        self.__loaded_config = merged_config
+        self.__default_config = OmegaConf.load(default_path)
+        self.__environment_config = OmegaConf.load(environment_path)
+        self.__loaded_config= OmegaConf.merge(self.__default_config, self.__environment_config)
 
     def __getattr__(self, item: str) -> str | DictConfig | ListConfig:
         """Get the attribute.
@@ -103,7 +101,42 @@ class ConfigLoader(metaclass=SingletonMeta):
             # Move the original file to the backup location
             file_path.rename(backup_path)
 
-        OmegaConf.save(self.__loaded_config, file_path)
+        # get the differences between the loaded config and the default config and store them
+        diff = self.get_changes()
+        OmegaConf.save(diff, file_path)
+
+    def get_changes(self) -> dict:
+        """Get the changes.
+
+        This function will get the changes between the loaded configuration and the default configuration.
+
+        :return: the changes between the loaded configuration and the default configuration.
+        """
+        loaded_dict = OmegaConf.to_container(self.__loaded_config)
+        default_dict = OmegaConf.to_container(self.__default_config)
+
+        return self.__diff_dicts(loaded_dict, default_dict)
+
+    def __diff_dicts(self, loaded_dict: dict, default_dict: dict) -> dict:
+        """Get the difference between two dictionaries.
+
+        This function will get the difference between two dictionaries.
+
+        :param loaded_dict: the loaded dictionary.
+        :param default_dict: the default dictionary.
+        :return: the difference between the two dictionaries.
+        """
+        diff = {}
+        for key, value in loaded_dict.items():
+            if key not in default_dict:
+                diff[key] = value
+            elif isinstance(value, dict):
+                nested_diff = self.__diff_dicts(value, default_dict[key])
+                if nested_diff:
+                    diff[key] = nested_diff
+            elif value != default_dict[key]:
+                diff[key] = value
+        return diff
 
     def rollback(self) -> None:
         """Rollback to the latest backup."""
