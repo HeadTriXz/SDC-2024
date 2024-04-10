@@ -3,6 +3,13 @@ from pydantic import BaseModel
 from config import config
 
 
+class ConfigUpdate(BaseModel):
+    """Model for updating configuration."""
+
+    key: str
+    value: str | int | float | bool
+
+
 def create_config_router() -> APIRouter:
     """Create router for config update."""
     router = APIRouter()
@@ -12,19 +19,9 @@ def create_config_router() -> APIRouter:
         """Retrieve the current configuration."""
         return config.config_dict()
 
-    class ConfigUpdate(BaseModel):
-        key: str
-        value: str | int | float | bool
-
     @router.post("/update-config")
     def update_config(config_update: ConfigUpdate) -> None:
-        """Update a configuration key with a new value.
-
-        Args:
-        ----
-            config_update (ConfigUpdate): The key-value pair to update.
-
-        """
+        """Update a configuration key with a new value."""
         config.update_nested_key(config_update.key, config_update.value)
 
     @router.get("/get-config-structure")

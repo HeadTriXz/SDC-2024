@@ -74,7 +74,6 @@ class ConfigLoader(metaclass=SingletonMeta):
 
         :return: the execution signature.
         """
-        # if self.__signature is None:
         self.__signature = str(time.time()).replace(".", "")
 
         return self.__signature
@@ -130,7 +129,8 @@ class ConfigLoader(metaclass=SingletonMeta):
     def get_config_structure(self, config: dict | None = None) -> dict:
         """Get the structure of the config.
 
-        this function will return the types of the element if it is a leaf otherwise it will recursively call itself.
+        :param config: The configuration dictionary to analyze.
+        :return: A dictionary representing the structure of the configuration.
         """
         if config is None:
             config = OmegaConf.to_container(self.__loaded_config, resolve=False)
@@ -145,7 +145,10 @@ class ConfigLoader(metaclass=SingletonMeta):
         return structure
 
     def config_dict(self) -> dict:
-        """Return loaded config as dict."""
+        """Get the loaded config as dict.
+
+        :return: The configuration dictionary.
+        """
         return OmegaConf.to_container(self.__loaded_config, resolve=False)
 
     def update_nested_key(self, key: str, value: str | int | float | bool) -> None:
@@ -153,8 +156,8 @@ class ConfigLoader(metaclass=SingletonMeta):
 
         This function updates a nested key in the configuration.
 
-        :param key: the key to update.
-        :param value: the new value.
+        :param key: The key to update.
+        :param value: The new value.
         """
         keys = key.split(".")
         current = self.__loaded_config

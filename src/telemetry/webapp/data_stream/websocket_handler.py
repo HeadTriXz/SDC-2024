@@ -1,6 +1,5 @@
 import asyncio
 import base64
-
 import cv2
 import numpy as np
 from fastapi import WebSocket
@@ -21,7 +20,6 @@ class WebsocketDataStream:
         """Send image to the websocket.
 
         :param image: The image to be sent.
-        :return: True if the image was sent successfully.
         """
         if not self.sending:
             return
@@ -36,7 +34,6 @@ class WebsocketDataStream:
         """Send text to the websocket.
 
         :param text: The text to be sent.
-        :return: True if the text was sent successfully.
         """
         if not self.sending:
             return

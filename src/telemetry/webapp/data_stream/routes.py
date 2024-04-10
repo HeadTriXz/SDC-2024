@@ -1,6 +1,5 @@
 from fastapi import APIRouter, WebSocket
 from starlette.websockets import WebSocketDisconnect
-
 from telemetry.webapp.data_stream.websocket_handler import WebsocketHandler
 
 
