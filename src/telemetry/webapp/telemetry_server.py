@@ -9,6 +9,7 @@ from starlette.responses import HTMLResponse
 from starlette.staticfiles import StaticFiles
 
 from config import config
+from telemetry.webapp.update_config.routes import create_config_router
 from telemetry.webapp.data_stream.routes import create_router
 from telemetry.webapp.data_stream.websocket_handler import WebsocketHandler
 from telemetry.webapp.logging_handler import LoggingHandler
@@ -41,6 +42,7 @@ class TelemetryServer:
 
         self.websocket_handler = WebsocketHandler()
         self.__app.include_router(create_router(self.websocket_handler))
+        self.__app.include_router(create_config_router())
 
         self.__app.get("/")(self.__index_route)
         self.__app.mount("/js", StaticFiles(directory=get_path("../../../resources/webcontent/js")), name="static")

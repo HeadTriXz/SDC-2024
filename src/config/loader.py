@@ -2,7 +2,6 @@ import os
 import time
 
 from omegaconf import DictConfig, ListConfig, OmegaConf
-
 from utils.singleton_meta import SingletonMeta
 
 
@@ -58,7 +57,6 @@ class ConfigLoader(metaclass=SingletonMeta):
         merged_config = OmegaConf.merge(defaults, environment_config)
         self.__loaded_config = merged_config
 
-
     def __getattr__(self, item: str) -> str | DictConfig | ListConfig:
         """Get the attribute.
 
@@ -76,8 +74,8 @@ class ConfigLoader(metaclass=SingletonMeta):
 
         :return: the execution signature.
         """
-        if self.__signature is None:
-            self.__signature = str(time.time()).replace(".", "")
+        # if self.__signature is None:
+        self.__signature = str(time.time()).replace(".", "")
 
         return self.__signature
 
@@ -128,3 +126,38 @@ class ConfigLoader(metaclass=SingletonMeta):
         self.__loaded_config = OmegaConf.load(
             os.path.join(os.path.dirname(__file__), f"config.{self.__environment}.yaml")
         )
+
+    def get_config_structure(self, config: dict | None = None) -> dict:
+        """Get the structure of the config.
+
+        this function will return the types of the element if it is a leaf otherwise it will recursively call itself.
+        """
+        if config is None:
+            config = OmegaConf.to_container(self.__loaded_config, resolve=False)
+
+        structure = {}
+        for key, value in config.items():
+            if isinstance(value, dict):
+                structure[key] = self.get_config_structure(value)
+            else:
+                structure[key] = type(value).__name__
+
+        return structure
+
+    def config_dict(self) -> dict:
+        """Return loaded config as dict."""
+        return OmegaConf.to_container(self.__loaded_config, resolve=False)
+
+    def update_nested_key(self, key: str, value: str | int | float | bool) -> None:
+        """Update a nested key in the configuration.
+
+        This function updates a nested key in the configuration.
+
+        :param key: the key to update.
+        :param value: the new value.
+        """
+        keys = key.split(".")
+        current = self.__loaded_config
+        for k in keys[:-1]:
+            current = current[k]
+        current[keys[-1]] = value
