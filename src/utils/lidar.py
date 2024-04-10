@@ -1,10 +1,9 @@
-import numpy as np
 from math import floor
 from adafruit_rplidar import RPLidar
 from threading import Thread
-PORT_NAME = "COM4"
-lidar = RPLidar(None, PORT_NAME, timeout=3)
-max_distance = 0
+
+import numpy as np
+
 
 class Lidar:
     """A class to read data from the lidar and process the data from it."""
@@ -57,6 +56,7 @@ class Lidar:
                     self.scan_data[i] < 2500 and (self.scan_data[i + 1] < 2500 or self.scan_data[i - 1] < 2500)
             ) for i in range(anglemin, anglemax)
         )
+
     def data_processing(self) -> list[int]:
         """A function that processes the data from the lidar.
 
@@ -71,6 +71,7 @@ class Lidar:
             if np.abs(distances[i] - distances[i + 1]) > 1500:
                 newdistances[i] = np.nan
         return newdistances
+
     def capture(self) -> None:
         """A function that captures the data from the lidar."""
         while not self.stopped:
@@ -78,15 +79,15 @@ class Lidar:
                 self.scan_data = [0]*360
                 for (_, angle, distance) in scan:
                     self.scan_data[min([359, floor(angle)])] = distance
+
     def start(self) -> None:
         """Start the lidar."""
         self.stopped = False
         if not self.thread.is_alive():
             self.thread.start()
+
     def stop(self) -> None:
         """Stop the lidar."""
         self.stopped = True
         self.lidar.stop()
         self.lidar.disconnect()
-
-
