@@ -1,7 +1,7 @@
 from adafruit_rplidar import RPLidar
 from math import floor
 from threading import Thread
-
+from src.config.loader import ConfigLoader
 import numpy as np
 
 
@@ -11,12 +11,13 @@ class Lidar:
     the lidar can be used to find the distance to the obstacles around the car.
     """
 
-    def __init__(self, port_name: str) -> None:
+    def __init__(self) -> None:
         """Initializes the lidar.
 
         :param port_name: the name of the port
         """
-        self.port_name = port_name
+        config = ConfigLoader()
+        self.port_name  = config.lidar.port_name
         self.lidar = RPLidar(None, self.port_name, timeout=3)
         self.max_distance = 0
         self.scan_data = [0]*360
@@ -28,7 +29,6 @@ class Lidar:
 
         :param anglemin: the minimum angle to check
         :param anglemax: the maximum angle to check
-
         :return: the distance to the closest obstacle
         """
         point = 15000
@@ -56,11 +56,10 @@ class Lidar:
 
         :return: True if the side is free, False otherwise
         """
-        return all(
-            not (
-                    self.scan_data[i] < 2500 and (self.scan_data[i + 1] < 2500 or self.scan_data[i - 1] < 2500)
-            ) for i in range(anglemin, anglemax)
-        )
+        for i in range(anglemin, anglemax):
+            if self.scan_data[i] < 2500 and (self.scan_data[i + 1] < 2500 or self.scan_data[i - 1] < 2500):
+                return False
+        return True
 
     def data_processing(self) -> list[int]:
         """A function that processes the data from the lidar.
@@ -81,7 +80,6 @@ class Lidar:
         """A function that captures the data from the lidar."""
         while not self.stopped:
             for scan in self.lidar.iter_scans():
-                self.scan_data = [0]*360
                 for (_, angle, distance) in scan:
                     self.scan_data[min([359, floor(angle)])] = distance
 
