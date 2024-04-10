@@ -1,3 +1,5 @@
+import os
+
 import airsim
 import cv2
 import matplotlib.pyplot as plt
@@ -59,15 +61,16 @@ def start_simulator() -> None:
 
     input("Press enter to stop")
 
-    # Plot the errors.
-    plt.plot(path_follower.errors, label="Error", color="black")
+    # write the pickled errors and fps into a file
+    import pickle
+    import time
 
-    # Get the mean error.
-    mean_error = np.mean(path_follower.errors)
-    plt.axhline(mean_error, color="r", linestyle="--")
+    folder_path = "../data/telemetry/"
+    os.makedirs(folder_path)
 
-    std_deviation = np.std(path_follower.errors)
-    plt.axhline(mean_error + std_deviation, color="g", linestyle="--")
-    plt.axhline(mean_error - std_deviation, color="g", linestyle="--")
+    with open(f"{folder_path}{time.time()}-errors.pkl", "wb") as f:
+        pickle.dump(lane_assist.path_follower.errors, f)
 
-    plt.show()
+    # write the fps into a file
+    with open(f"{folder_path}{time.time()}-frame_times.pkl", "wb") as f:
+        pickle.dump(lane_assist.frame_times, f)
