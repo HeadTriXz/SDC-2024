@@ -139,7 +139,6 @@ class ConfigComponent extends HTMLElement {
                     case "int":
                         inputType = "number"
                         break
-
                     case "boolean":
                         inputType = "checkbox"
                         break
