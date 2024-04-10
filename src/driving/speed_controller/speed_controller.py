@@ -1,12 +1,10 @@
-import logging
-
 import can
+import logging
 
 from config import config
 from constants import CANFeedbackIdentifier, Gear
-from driving.can_controller.can_controller_interface import ICANController
-from driving.speed_controller.speed_controller_interface import ISpeedController
-from driving.speed_controller.speed_controller_state import SpeedControllerState
+from driving.can import ICANController
+from driving.speed_controller import ISpeedController, SpeedControllerState
 
 
 class SpeedController(ISpeedController):

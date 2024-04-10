@@ -1,0 +1,31 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 2em 5em;
+}
+
+#cameraContainer {
+    gap: 1em;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+#cameraContainer img {
+    display:block;
+    max-width:500px;
+}
+
+button {
+    margin: 1em 0;
+    padding: 0.6em 1.2em;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.text_field {
+    max-height: 400px;
+    overflow-y: scroll;
+    width: 100%;
+    border: 1px solid #333;
+    padding: 2ch;
+}

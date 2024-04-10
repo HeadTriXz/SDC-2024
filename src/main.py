@@ -1,7 +1,8 @@
+import os
+
 from config import config
 from constants import Gear, CameraResolution
-from driving.can_controller import CANController
-from driving.can_controller.can_bus import get_can_interface
+from driving.can import CANController, get_can_bus
 from driving.speed_controller import SpeedController, SpeedControllerState
 from lane_assist.helpers import td_stitched_image_generator
 from lane_assist.lane_assist import LaneAssist
@@ -14,8 +15,7 @@ from object_recognition.object_controller import ObjectController
 from object_recognition.object_detector import ObjectDetector
 from pathlib import Path
 from utils.video_stream import VideoStream
-from telemetry.webapp.telemetry_server import TelemetryServer
-import os
+from telemetry.app import TelemetryServer
 
 
 def calibrate_cameras() -> None:
@@ -44,7 +44,7 @@ def calibrate_cameras() -> None:
     cam_right.stop()
 
 
-def main() -> None:
+def start_kart() -> None:
     """Start the main loop."""
     cam_left = VideoStream(config.camera_ids.left)
     cam_center = VideoStream(config.camera_ids.center)
@@ -58,7 +58,7 @@ def main() -> None:
     telemetry_server = TelemetryServer()
 
     # Connect to CAN bus
-    bus = get_can_interface()
+    bus = get_can_bus()
     can_controller = CANController(bus)
     speed_controller = SpeedController(can_controller)
 
@@ -107,9 +107,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    # if run in the simulator, import the simulator and run it
-    if "ENVIRONMENT" in os.environ and os.environ["ENVIRONMENT"] == "simulator":
-        from simulator import main
-
-    main()
-
+    if "ENVIRONMENT" in os.environ and os.environ["ENVIRONMENT"] == "simulation":
+        from simulation.main import start_simulator
+        start_simulator()
+    else:
+        start_kart()
