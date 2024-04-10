@@ -6,6 +6,7 @@ from sklearn.cluster import DBSCAN
 import matplotlib
 PORT_NAME = "COM4"
 lidar = RPLidar(None, PORT_NAME, timeout=3)
+
 max_distance = 0
 
 def find_obstacle_distance(data, anglemin, anglemax):
