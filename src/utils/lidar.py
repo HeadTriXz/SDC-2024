@@ -6,7 +6,10 @@ import numpy as np
 
 
 class Lidar:
-    """A class to read data from the lidar and process the data from it."""
+    """A class to read data from the lidar and process the data from it.
+
+    the lidar can be used to find the distance to the obstacles around the car.
+    """
 
     def __init__(self, port_name: str) -> None:
         """Initializes the lidar.
