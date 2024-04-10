@@ -1,5 +1,5 @@
-from math import floor
 from adafruit_rplidar import RPLidar
+from math import floor
 from threading import Thread
 
 import numpy as np
@@ -41,14 +41,16 @@ class Lidar:
         """
         if min(self.scan_data[20:120]) < 2500:
             for i in range(20, 120):
-                if self.scan_data[i] < 2500 and(self.scan_data[i+1] < 2500 or self.scan_data[i-1] < 2500):
+                if self.scan_data[i] < 2500 and (self.scan_data[i+1] < 2500 or self.scan_data[i-1] < 2500):
                     return False
         return True
 
     def free_side(self, anglemin: int, anglemax: int) -> bool:
         """A function that checks if the side between anglemin and anglemax of the car is free.
 
-        :param side: the side to check, either "right" or "left"
+        :param anglemin: the minimum angle to check
+        :param anglemax: the maximum angle to check
+
         :return: True if the side is free, False otherwise
         """
         return all(
