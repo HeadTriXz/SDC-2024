@@ -1,8 +1,9 @@
-import os
-
 import airsim
 import cv2
 import numpy as np
+import os
+import pickle
+import time
 
 from config import config
 from driving.speed_controller import SpeedController, SpeedControllerState
@@ -55,17 +56,15 @@ def start_simulator() -> None:
         telemetry=telemetry,
     )
 
-    lane_assist.start(True)
-    telemetry.start()
+    try:
+        telemetry.start()
+        lane_assist.start()
+    except KeyboardInterrupt:
+        pass
 
-    input("Press enter to stop")
-
-    # write the pickled errors and fps into a file
-    import pickle
-    import time
-
+    # save the telemetry to the disk
     folder_path = "../data/telemetry/"
-    os.makedirs(folder_path)
+    os.makedirs(folder_path, exist_ok=True)
 
     with open(f"{folder_path}{time.time()}-errors.pkl", "wb") as f:
         pickle.dump(lane_assist.path_follower.errors, f)
