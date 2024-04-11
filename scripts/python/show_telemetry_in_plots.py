@@ -5,13 +5,14 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def main():
     folder_path = "../../data/telemetry/"
 
     files = os.listdir(folder_path)
     for file in files:
         with open(folder_path + file, "rb") as f:
-            errors = pickle.load(f)
+            data = pickle.load(f)
 
         timestamp = file.split("-")[0].split(".")[0]
         name = file.split("-")[1].split(".")[0].replace("_", " ")
@@ -20,9 +21,9 @@ def main():
 
         if name == "frame times":
             name = "FPS"
-            errors = np.reciprocal(errors)
+            data = np.reciprocal(data)
 
-        plt.plot(errors)
+        plt.plot(data)
         plt.xlabel("Frame")
         plt.ylabel(name)
         plt.title(f"{name} ({datetime})")
