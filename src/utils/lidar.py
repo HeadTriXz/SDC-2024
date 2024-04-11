@@ -18,6 +18,7 @@ class Lidar:
         """
         config = ConfigLoader()
         self.port_name  = config.lidar.port_name
+        self.port_name = 'COM4'
         self.lidar = RPLidar(None, self.port_name, timeout=3)
         self.max_distance = 0
         self.scan_data = [0]*360
@@ -82,6 +83,7 @@ class Lidar:
             for scan in self.lidar.iter_scans():
                 for (_, angle, distance) in scan:
                     self.scan_data[min([359, floor(angle)])] = distance
+                    print(self.scan_data)
 
     def start(self) -> None:
         """Start the lidar."""
