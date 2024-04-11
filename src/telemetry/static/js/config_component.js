@@ -1,12 +1,12 @@
+/**
+ * Represents a custom element for displaying and interacting with configuration data.
+ */
 class ConfigComponent extends HTMLElement {
-
-
     /**
      * Represents a custom element for displaying and interacting with configuration data.
      */
     constructor() {
         super();
-
         this.render();
     }
 
@@ -82,14 +82,14 @@ class ConfigComponent extends HTMLElement {
      * Sends a request to save the current configuration.
      */
     async saveConfig() {
-        await fetch("./store-config", {method: "POST"});
+        await fetch("./store-config", { method: "POST" });
     }
 
     /**
      * Sends a request to roll back the configuration to its previous state.
      */
     async rollbackConfig() {
-        await fetch("./rollback-config", {method: "POST"});
+        await fetch("./rollback-config", { method: "POST" });
         await this.getConfig();
     }
 
