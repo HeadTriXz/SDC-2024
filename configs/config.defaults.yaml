@@ -77,6 +77,6 @@ telemetry:
     host: 0.0.0.0
 
 lidar:
-  port: "COM4"
+  port_name: "COM4"
   min_distance: 500
   max_distance_between_points: 1000
