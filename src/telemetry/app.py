@@ -1,3 +1,5 @@
+import fastapi
+import logging
 import os
 import sys
 import threading
@@ -7,6 +9,7 @@ from config import config
 from starlette.responses import HTMLResponse
 from starlette.staticfiles import StaticFiles
 from telemetry.data_stream.routes import create_router
+from telemetry.update_config.routes import create_config_router
 from telemetry.data_stream.websocket_handler import WebsocketHandler
 from telemetry.logging_handler import LoggingHandler
 from telemetry.stdout_wrapper import StdoutWrapper

@@ -47,17 +47,24 @@ class ConfigComponent extends HTMLElement {
         this.shadow = this.attachShadow({mode: "closed"})
         this.shadow.innerHTML = `<div>
                     <h2>Config</h2>
-                    <div>
-                        <button onclick="this.saveConfig()">save</button>
-                        <button onclick="this.rollbackConfig()">rollback</button>
-                    </div>
+                    <div class="buttons"></div>
                     <div id="yamlData"></div>
                 </div>`
 
-        const styleTag = document.createElement("style")
-        styleTag.innerHTML = this.css()
+        const save_btn = document.createElement("button");
+        save_btn.innerText = "save";
+        save_btn.onclick = () => this.saveConfig();
+        this.shadow.querySelector(".buttons").appendChild(save_btn);
 
-        this.shadow.appendChild(styleTag)
+        const rollback_btn = document.createElement("button");
+        rollback_btn.innerText = "rollback";
+        rollback_btn.onclick = () => this.rollbackConfig();
+        this.shadow.querySelector(".buttons").appendChild(rollback_btn);
+
+        const styleTag = document.createElement("style");
+        styleTag.innerHTML = this.css();
+
+        this.shadow.appendChild(styleTag);
         this.getConfig();
     }
 
@@ -68,22 +75,22 @@ class ConfigComponent extends HTMLElement {
      */
     async getConfigStructure() {
         return fetch("/get-config-structure")
-            .then(res => res.json())
+            .then((res) => res.json());
     }
 
     /**
      * Sends a request to save the current configuration.
      */
     async saveConfig() {
-        await fetch("./store-config", {method: "POST"})
+        await fetch("./store-config", {method: "POST"});
     }
 
     /**
      * Sends a request to roll back the configuration to its previous state.
      */
     async rollbackConfig() {
-        await fetch("./rollback-config", {method: "POST"})
-        await this.getConfig()
+        await fetch("./rollback-config", {method: "POST"});
+        await this.getConfig();
     }
 
     /**
@@ -93,7 +100,7 @@ class ConfigComponent extends HTMLElement {
         const response = await fetch("/get-config");
         if (response.ok) {
             const jsonData = await response.json();
-            const structure = await this.getConfigStructure()
+            const structure = await this.getConfigStructure();
             this.renderKeysAndInputs(jsonData, structure);
         } else {
             console.error("Error fetching configuration");
@@ -109,9 +116,10 @@ class ConfigComponent extends HTMLElement {
      * @param {number} [depth=0] - The depth of rendering.
      */
     renderKeysAndInputs(obj, structure, parentKey = "yamlData", depth = 0) {
-        const parent = this.shadow.getElementById(parentKey)
-        parent.innerHTML = ""
-        parent.style.marginBottom = "1.5em"
+        const parent = this.shadow.getElementById(parentKey);
+        parent.innerHTML = "";
+        parent.style.marginBottom = "1.5em";
+
         for (const key in obj) {
             if (Object.hasOwnProperty.call(obj, key)) {
                 const value = obj[key];
@@ -147,15 +155,31 @@ class ConfigComponent extends HTMLElement {
                         break
                 }
 
-                currentKey = currentKey.replace("yamlData.", "")
+                currentKey = currentKey.replace("yamlData.", "");
 
-                div.innerHTML = `
-                <div class="input-wrapper">
-                    <label for="${currentKey}">${key}:</label> 
-                    <input type="${inputType}" id="${currentKey}" name="${currentKey}" value="${value}" step="${stepValue}">
-                    <button class="submit-btn" onclick="submit('${currentKey}')">Submit</button>
-                </div>
-            `;
+                const label = document.createElement("label");
+                label.for = currentKey;
+                label.innerText = `${key}: `;
+                div.appendChild(label);
+
+                const input = document.createElement("input");
+                input.type = inputType;
+                input.id = currentKey;
+                input.name = currentKey;
+                input.value = value;
+                input.step = stepValue;
+                input.onkeydown = (e) => {
+                    if (e.code === "Enter") {
+                        this.submit(currentKey).then(r => {});
+                    }
+                }
+                div.appendChild(input)
+
+                const btn = document.createElement("button");
+                btn.classList.add("submit-btn");
+                btn.innerText = "Submit";
+                btn.onclick = () => this.submit(currentKey);
+                div.appendChild(btn);
             }
         }
     }
@@ -171,7 +195,7 @@ class ConfigComponent extends HTMLElement {
             ? parseFloat(inputElement.value)
             : inputElement.type === "checkbox"
                 ? inputElement.checked
-                : inputElement.value
+                : inputElement.value;
 
         const response = await fetch("/update-config", {
             method: "POST",

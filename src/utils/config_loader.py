@@ -2,7 +2,7 @@ import os
 import time
 
 from omegaconf import DictConfig, ListConfig, OmegaConf
-
+from pathlib import Path
 from utils.singleton_meta import SingletonMeta
 
 
@@ -50,18 +50,20 @@ class ConfigLoader(metaclass=SingletonMeta):
 
         self.__environment = environment
         self.__config_dir = Path(__file__).parents[2] / "configs"
+        self.__load_config()
 
+    def __load_config(self) -> None:
         default_path = self.__config_dir / "config.defaults.yaml"
-        environment_path = self.__config_dir / f"config.{environment}.yaml"
+        environment_path = self.__config_dir / f"config.{self.__environment}.yaml"
 
         if not environment_path.exists():
             raise FileNotFoundError(f"Configuration file not found at {environment_path}")
 
-    def __getattr__(self, item: str) -> str | DictConfig | ListConfig:
         self.__default_config = OmegaConf.load(default_path)
         self.__environment_config = OmegaConf.load(environment_path)
         self.__loaded_config = OmegaConf.merge(self.__default_config, self.__environment_config)
 
+    def __getattr__(self, item: str) -> str | DictConfig | ListConfig:
         """Get the attribute.
 
         This function will get the attribute.
@@ -156,7 +158,7 @@ class ConfigLoader(metaclass=SingletonMeta):
         latest_path.rename(original_file)
 
         # Reload the configuration
-        self.__loaded_config = OmegaConf.load(original_file)
+        self.__load_config()
 
     def get_config_structure(self, config: dict | None = None) -> dict:
         """Get the structure of the config.

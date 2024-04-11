@@ -11,7 +11,7 @@ calibration:
   max_image_height: 1600
   max_image_width: 800
   marker_length: 0.070
-  save_dir: "../../data/calibration"
+  save_dir: "../data/calibration"
   square_length: 0.094
   vanishing_line_offset: 0.1
 
