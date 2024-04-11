@@ -18,15 +18,13 @@ class Lidar:
         """
         config = ConfigLoader()
         self.port_name  = config.lidar.port_name
-
-        print(' PAASHAAS ')
         self.lidar = RPLidar(self.port_name, timeout=3)
         self.max_distance = 0
         self.scan_data = [0]*360
         self.stopped = True
         self.thread = Thread(target=self.capture, daemon=True)
 
-    def find_obstacle_distance(self, data: list[int], anglemin: int, anglemax: int) -> int:
+    def find_obstacle_distance(self, anglemin: int, anglemax: int) -> int:
         """A function that finds the distance to the closest obstacle in a certain angle range.
 
         :param anglemin: the minimum angle to check
@@ -35,8 +33,8 @@ class Lidar:
         """
         point = 15000
         for i in range(anglemin, anglemax):
-            if point > data[i] > 500:
-                point = data[i]
+            if point > self.scan_data[i] > 500:
+                point = self.scan_data[i]
         return point
 
     def right_free(self) -> bool:
@@ -97,3 +95,4 @@ class Lidar:
         self.stopped = True
         self.lidar.stop()
         self.lidar.disconnect()
+
