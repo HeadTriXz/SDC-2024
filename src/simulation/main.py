@@ -1,7 +1,9 @@
 import airsim
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
+import os
+import pickle
+import time
 
 from config import config
 from driving.speed_controller import SpeedController, SpeedControllerState
@@ -54,20 +56,19 @@ def start_simulator() -> None:
         telemetry=telemetry,
     )
 
-    lane_assist.start(True)
-    telemetry.start()
+    try:
+        telemetry.start()
+        lane_assist.start()
+    except KeyboardInterrupt:
+        pass
 
-    input("Press enter to stop")
+    # save the telemetry to the disk
+    folder_path = "../data/telemetry/"
+    os.makedirs(folder_path, exist_ok=True)
 
-    # Plot the errors.
-    plt.plot(path_follower.errors, label="Error", color="black")
+    with open(f"{folder_path}{time.time()}-errors.pkl", "wb") as f:
+        pickle.dump(lane_assist.path_follower.errors, f)
 
-    # Get the mean error.
-    mean_error = np.mean(path_follower.errors)
-    plt.axhline(mean_error, color="r", linestyle="--")
-
-    std_deviation = np.std(path_follower.errors)
-    plt.axhline(mean_error + std_deviation, color="g", linestyle="--")
-    plt.axhline(mean_error - std_deviation, color="g", linestyle="--")
-
-    plt.show()
+    # write the fps into a file
+    with open(f"{folder_path}{time.time()}-frame_times.pkl", "wb") as f:
+        pickle.dump(lane_assist.frame_times, f)

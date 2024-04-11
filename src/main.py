@@ -1,4 +1,6 @@
 import os
+import pickle
+import time
 
 from config import config
 from constants import Gear
@@ -70,19 +72,31 @@ def start_kart() -> None:
     # Initialize the object detector
     detector = ObjectDetector.from_model(config.object_detection.model_path, controller, config.camera_ids.center)
 
-    # Start the system
-    can_controller.start()
-    speed_controller.start()
-    detector.start()
-    telemetry_server.start()
-    lane_assist.start()
+    try:
+        # Start the system
+        can_controller.start()
+        speed_controller.start()
+        detector.start()
+        telemetry_server.start()
+        lane_assist.start()
+    except KeyboardInterrupt:
+        pass
+    # write the pickled errors and fps into a file
+    folder_path = "../data/telemetry/"
+    os.makedirs(folder_path, exist_ok=True)
 
-    input("Press Enter to stop...")
+    with open(f"{folder_path}{time.time()}-errors.pkl", "wb") as f:
+        pickle.dump(lane_assist.path_follower.errors, f)
+
+    # write the fps into a file
+    with open(f"{folder_path}{time.time()}-frame_times.pkl", "wb") as f:
+        pickle.dump(lane_assist.frame_times, f)
 
 
 if __name__ == "__main__":
-    if "ENVIRONMENT" in os.environ and os.environ["ENVIRONMENT"] == "simulation":
+    if "ENVIRONMENT" in os.environ and os.environ["ENVIRONMENT"] == "simulator":
         from simulation.main import start_simulator
+
         start_simulator()
     else:
         start_kart()
