@@ -1,4 +1,4 @@
-from adafruit_rplidar import RPLidar
+from rplidar import RPLidar
 from math import floor
 from threading import Thread
 from src.config.loader import ConfigLoader
@@ -18,8 +18,9 @@ class Lidar:
         """
         config = ConfigLoader()
         self.port_name  = config.lidar.port_name
-        self.port_name = 'COM4'
-        self.lidar = RPLidar(None, self.port_name, timeout=3)
+
+        print(' PAASHAAS ')
+        self.lidar = RPLidar(self.port_name, timeout=3)
         self.max_distance = 0
         self.scan_data = [0]*360
         self.stopped = True
@@ -80,10 +81,10 @@ class Lidar:
     def capture(self) -> None:
         """A function that captures the data from the lidar."""
         while not self.stopped:
+            self.scan_data = [0] * 360
             for scan in self.lidar.iter_scans():
                 for (_, angle, distance) in scan:
                     self.scan_data[min([359, floor(angle)])] = distance
-                    print(self.scan_data)
 
     def start(self) -> None:
         """Start the lidar."""

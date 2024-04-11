@@ -20,5 +20,5 @@ uvicorn==0.29.0
 msgpack-rpc-python==0.4.1
 websockets == 12.0
 starlette == 0.36.3
-adafruit-rplidar == 0.0.1
-
+#adafruit-rplidar == 0.0.1
+rplidar-roboticia == 0.9.5
