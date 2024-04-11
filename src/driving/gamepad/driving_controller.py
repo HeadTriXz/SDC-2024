@@ -1,7 +1,7 @@
 import logging
 
 from constants import Gear
-from driving.can_controller.can_controller_interface import ICANController
+from driving.can import ICANController
 from driving.gamepad.gamepad import (
     EventType,
     Gamepad,

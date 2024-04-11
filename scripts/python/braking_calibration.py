@@ -2,7 +2,7 @@ import can
 import logging
 
 from os import system
-from driving.can_controller import CANController
+from driving.can import CANController
 from driving.gamepad.driving_controller import BasicControllerDriving
 from driving.gamepad.gamepad import (
     EventType,

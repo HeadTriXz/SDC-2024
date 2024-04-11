@@ -1,41 +1,42 @@
-from driving.speed_controller import SpeedControllerState
-from driving.speed_controller.speed_controller_interface import ISpeedController
+from driving.speed_controller import ISpeedController, SpeedControllerState
 
 
-class StoplineAssist:
-    """Class to assist stopping at stoplines.
+class StopLineAssist:
+    """Class to assist stopping at stop lines.
 
-    This class will assist in stopping at stoplines.
+    This class will assist in stopping at stop lines.
 
     TODOS:
     ------
-      - TODO: creep towards the stopline if stopped short of it.
+      - TODO: creep towards the stop line if stopped short of it.
       - TODO: take into account the speed of the kart.
 
-    :param speed_controller: the speed controller to use for stopping at stoplines.
-    :param stop_lines_found: the amount of frames a stopline has been detected
+    Attributes
+    ----------
+        speed_controller: The speed controller to use for stopping at stop lines.
+        stop_lines_found: The amount of frames a stop line has been detected.
+
     """
 
     speed_controller: ISpeedController
-    stop_lines_found: int
+    stop_lines_found: int = 0
 
     def __init__(self, speed_controller: ISpeedController) -> None:
-        """Initialize the stopline assist.
+        """Initialize the stop line assist.
 
-        :param speed_controller: the speed controller to use for stopping at stoplines.
+        :param speed_controller: the speed controller to use for stopping at stop-lines.
         """
         self.speed_controller = speed_controller
-        self.stop_lines_found = 0
 
-    def handle_stoplines(self, stoplines: list[int]) -> None:
-        """Handle the stoplines.
+    def handle_stop_lines(self, stop_lines: list[int]) -> None:
+        """Handle the stop lines.
 
-        This function will handle the stoplines in the image.
-        If a stopline is found, it will stop the kart.
+        This function will handle the stop lines in the image.
+        If a stop line is found, it will stop the kart.
 
-        :param stoplines: the stoplines found in the image.
+        :param stop_lines: the stop lines found in the image.
         """
-        if len(stoplines) == 0:
+        if len(stop_lines) == 0:
             self.stop_lines_found = max(0, self.stop_lines_found - 1)
             return
 
@@ -44,6 +45,6 @@ class StoplineAssist:
             return
 
         # TODO: take the distance to the stopline and speed into account
-        if self.speed_controller.state == SpeedControllerState.WAITING_TO_STOP and 200 < stoplines[0] < 700:
+        if self.speed_controller.state == SpeedControllerState.WAITING_TO_STOP and 200 < stop_lines[0] < 700:
             self.speed_controller.state = SpeedControllerState.STOPPED
             self.stop_lines_found = 0

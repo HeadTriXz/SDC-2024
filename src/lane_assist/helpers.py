@@ -1,18 +1,16 @@
-from typing import Callable, Generator
-
 import cv2
 import numpy as np
 
 from config import config
-from telemetry.webapp.telemetry_server import TelemetryServer
-from lane_assist.preprocessing.calibrate import CameraCalibrator
+from telemetry.app import TelemetryServer
 from lane_assist.preprocessing.gamma import adjust_gamma
-from lane_assist.preprocessing.stitching import stitch_images, warp_image
+from utils.calibration_data import CalibrationData
 from utils.video_stream import VideoStream
+from typing import Callable, Generator
 
 
 def td_stitched_image_generator(
-        calibrator: CameraCalibrator,
+        calibration: CalibrationData,
         left_cam: VideoStream,
         center_cam: VideoStream,
         right_cam: VideoStream,
@@ -25,10 +23,11 @@ def td_stitched_image_generator(
     This is a generator function, so we can use it in a for loop.
     This will make it easier to use in the lane assist.
 
-    :param calibrator: The loaded camera calibrator.
+    :param calibration: The calibration data.
     :param left_cam: The left camera.
     :param center_cam: The center camera.
     :param right_cam: The right camera.
+    :param telemetry: The telemetry server.
     """
 
     def __generator() -> Generator[np.ndarray, None, None]:
@@ -47,28 +46,13 @@ def td_stitched_image_generator(
                 center_image = adjust_gamma(center_image, config.image_manipulation.gamma.center)
                 right_image = adjust_gamma(right_image, config.image_manipulation.gamma.right)
 
-            warped_left = warp_image(calibrator, left_image, idx=0)
-            warped_right = warp_image(calibrator, right_image, idx=2)
-
-            stitched = np.zeros(calibrator.stitched_shape[::-1], dtype=np.uint8)
-            stitched = stitch_images(stitched, warped_right, calibrator.offsets[2])
-            stitched = stitch_images(stitched, warped_left, calibrator.offsets[0])
-            stitched = stitch_images(stitched, center_image, calibrator.offsets[1])
-
-            topdown = cv2.warpPerspective(
-                stitched,
-                calibrator.topdown_matrix,
-                calibrator.output_shape,
-                flags=cv2.INTER_NEAREST
-            )
+            topdown = calibration.transform([left_image, center_image, right_image])
 
             # FIXME: remove telemetry
             if config.telemetry.enabled:
                 telemetry.websocket_handler.send_image("left", left_image)
                 telemetry.websocket_handler.send_image("center", center_image)
                 telemetry.websocket_handler.send_image("right", right_image)
-
-                telemetry.websocket_handler.send_image("stitched", stitched)
                 telemetry.websocket_handler.send_image("topdown", topdown)
 
             yield topdown

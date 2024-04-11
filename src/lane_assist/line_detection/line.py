@@ -1,6 +1,6 @@
-from enum import IntEnum
-
 import numpy as np
+
+from enum import IntEnum
 
 
 class LineType(IntEnum):
@@ -11,26 +11,30 @@ class LineType(IntEnum):
 
 
 class Line:
-    """A line in the image.
+    """Represents a line in an image.
 
-    This class is used to represent a line in the image.
-    It contains the points of the line and the type of line.
+    Attributes
+    ----------
+        points: The points of the line.
+        line_type: The type of line.
+
     """
 
     points: np.ndarray
     line_type: LineType
 
     def __init__(
-        self, points: np.ndarray, window_height: int = None, line_type: LineType = None, gaps_allowed: int = 2
+        self,
+        points: np.ndarray,
+        window_height: int = None,
+        line_type: LineType = None,
+        gaps_allowed: int = 2
     ) -> None:
         """Initialize the line.
 
-        Parameters
-        ----------
-        :param points: the points of the line
-        :param window_height: the height of a window. used to determine if it is a solid or dashed line
-        :param line_type: the type of line. this can be set if it is known, for example, stop lines.
-
+        :param points: The points of the line
+        :param window_height: The height of a window, used to determine if it is a solid or dashed line.
+        :param line_type: The type of line. This can be set if it is known, for example, stop lines.
         """
         self.points = points
 
@@ -39,7 +43,7 @@ class Line:
             return
 
         if window_height is None:
-            raise ValueError("window_height or line_type must be provided")
+            raise ValueError("'window_height' or 'line_type' must be provided.")
 
         intervals = np.diff(points[:, 1])
         if len(np.where(abs(intervals) > window_height)[0]) > gaps_allowed * 1.5:

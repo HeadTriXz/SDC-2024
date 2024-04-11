@@ -1,3 +1,4 @@
+airsim==1.8.1
 fastapi==0.110.0
 inputs==0.5
 matplotlib==3.8.3

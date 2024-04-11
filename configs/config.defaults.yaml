@@ -1,0 +1,77 @@
+camera_ids:
+  left: 0
+  center: 0
+  right: 0
+
+calibration:
+  aruco_dict: 0  # DICT_4X4_50
+  board_height: 8
+  board_width: 6
+  calibration_file: "${.save_dir}/latest.npz"
+  max_image_height: 1600
+  max_image_width: 800
+  marker_length: 0.070
+  save_dir: "../../data/calibration"
+  square_length: 0.094
+  vanishing_line_offset: 0.1
+
+speed_modes:
+  selected: ${.options.slow}
+  options:
+    slow: 25
+    normal: 50
+    fast: 75
+    very_fast: 100
+
+image_manipulation:
+  gamma:
+    adjust: false
+    left: 1.0
+    center: 1.0
+    right: 1.0
+  white_threshold: 200
+
+lane_assist:
+  line_detection:
+    line_width: 50
+    pixels_in_window: 1
+
+    thresholds:
+      zebra_crossing: 20000
+      line: 1000
+
+    filtering:
+      rel_height: 0.9
+
+    pid:
+      kp: 1
+      ki: 0.1
+      kd: 0.05
+
+  line_following:
+    requested_lane: 0
+    initial_speed: 5
+
+object_detection:
+  model_path: "../models/yolo8n.pt"
+  min_confidence: 0.5
+  verbose: false
+  image_size: 1280
+  class_to_speed:
+    5: 5
+    6: 10
+    7: 15
+    8: 20
+    9: 30
+    10: 40
+
+pedestrian_detection:
+  crosswalk_overlap_margin: 0.2
+  crosswalk_safe_zone_margin: 0.1
+  crosswalk_min_distance: 2
+
+telemetry:
+  enabled: true
+  server:
+    port: 8000
+    host: 0.0.0.0
