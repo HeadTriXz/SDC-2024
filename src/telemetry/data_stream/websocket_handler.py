@@ -16,35 +16,29 @@ class WebsocketDataStream:
         self.ws = ws
         self.sending = True
 
-    async def send_image(self, image: np.ndarray) -> bool | None:
+    async def send_image(self, image: np.ndarray) -> None:
         """Send image to the websocket.
 
         :param image: The image to be sent.
-        :return: True if the image was sent successfully.
         """
         if not self.sending:
-            return None
+            return
 
         _, buffer = cv2.imencode(".jpg", image)
         image_bytes = base64.b64encode(buffer)
         b64_str = image_bytes.decode("utf-8")
 
-        return await self.send_text(b64_str)
+        await self.send_text(b64_str)
 
-    async def send_text(self, text: str) -> bool | None:
+    async def send_text(self, text: str) -> None:
         """Send text to the websocket.
 
         :param text: The text to be sent.
-        :return: True if the text was sent successfully.
         """
         if not self.sending:
-            return None
+            return
 
-        try:
-            await self.ws.send_text(text)
-            return True
-        except Exception:
-            return False
+        await self.ws.send_text(text)
 
     async def rec_messages(self) -> None:
         """Receive messages from the websocket."""
@@ -91,9 +85,7 @@ class WebsocketHandler:
                 asyncio.set_event_loop(loop)
 
             for ws in self.websocket_clients[name]:
-                success = loop.run_until_complete(ws.send_image(image))
-                if not success and success is not None:
-                    self.websocket_clients[name].remove(ws)
+                loop.create_task(ws.send_image(image))
 
     def send_text(self, name: str, text: str) -> None:
         """Send text on channel with the given name.
@@ -109,7 +101,7 @@ class WebsocketHandler:
                 asyncio.set_event_loop(loop)
 
             for ws in self.websocket_clients[name]:
-                loop.run_until_complete(ws.send_text(text))
+                loop.create_task(ws.send_text(text))
 
     def remove_socket(self, name: str) -> None:
         """Remove a websocket client from the list of clients.

@@ -50,16 +50,18 @@ class ConfigLoader(metaclass=SingletonMeta):
 
         self.__environment = environment
         self.__config_dir = Path(__file__).parents[2] / "configs"
+        self.__load_config()
 
+    def __load_config(self) -> None:
         default_path = self.__config_dir / "config.defaults.yaml"
-        environment_path = self.__config_dir / f"config.{environment}.yaml"
+        environment_path = self.__config_dir / f"config.{self.__environment}.yaml"
 
         if not environment_path.exists():
             raise FileNotFoundError(f"Configuration file not found at {environment_path}")
 
         self.__default_config = OmegaConf.load(default_path)
         self.__environment_config = OmegaConf.load(environment_path)
-        self.__loaded_config= OmegaConf.merge(self.__default_config, self.__environment_config)
+        self.__loaded_config = OmegaConf.merge(self.__default_config, self.__environment_config)
 
     def __getattr__(self, item: str) -> str | DictConfig | ListConfig:
         """Get the attribute.
@@ -78,8 +80,7 @@ class ConfigLoader(metaclass=SingletonMeta):
 
         :return: the execution signature.
         """
-        if self.__signature is None:
-            self.__signature = str(time.time()).replace(".", "")
+        self.__signature = str(time.time()).replace(".", "")
 
         return self.__signature
 
@@ -157,4 +158,43 @@ class ConfigLoader(metaclass=SingletonMeta):
         latest_path.rename(original_file)
 
         # Reload the configuration
-        self.__loaded_config = OmegaConf.load(original_file)
+        self.__load_config()
+
+    def get_config_structure(self, config: dict | None = None) -> dict:
+        """Get the structure of the config.
+
+        :param config: The configuration dictionary to analyze.
+        :return: A dictionary representing the structure of the configuration.
+        """
+        if config is None:
+            config = OmegaConf.to_container(self.__loaded_config, resolve=False)
+
+        structure = {}
+        for key, value in config.items():
+            if isinstance(value, dict):
+                structure[key] = self.get_config_structure(value)
+            else:
+                structure[key] = type(value).__name__
+
+        return structure
+
+    def config_dict(self) -> dict:
+        """Get the loaded config as dict.
+
+        :return: The configuration dictionary.
+        """
+        return OmegaConf.to_container(self.__loaded_config, resolve=False)
+
+    def update_nested_key(self, key: str, value: str | int | float | bool) -> None:
+        """Update a nested key in the configuration.
+
+        This function updates a nested key in the configuration.
+
+        :param key: The key to update.
+        :param value: The new value.
+        """
+        keys = key.split(".")
+        current = self.__loaded_config
+        for k in keys[:-1]:
+            current = current[k]
+        current[keys[-1]] = value
