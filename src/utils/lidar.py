@@ -48,30 +48,31 @@ class Lidar:
 
     def capture(self) -> None:
         """A function that captures the data from the lidar."""
-        while self.running:
-            for scan in self.lidar.iter_scans():
-                for i, (_, angle, distance) in enumerate(scan, 1):
-                    if distance < config.lidar.min_distance:
-                        self.scan_data[floor(angle)] = np.inf
-                        continue
+        for scan in self.lidar.iter_scans():
+            if not self.running:
+                return
 
-                    if (i > 0 and abs(
-                            self.scan_data[i] - self.scan_data[i - 1]) > config.lidar.max_distance_between_points) or (
-                            len(scan) - i > 0 and abs(
-                            self.scan_data[i] - self.scan_data[i + 1]) > config.lidar.max_distance_between_points):
-                        self.scan_data[floor(angle)] = np.inf
-                        continue
+            for i, (_, angle, distance) in enumerate(scan, 1):
+                if distance < config.lidar.min_distance:
+                    self.scan_data[floor(angle)] = np.inf
+                    continue
 
-                    self.scan_data[floor(angle)] = distance
+                if (i > 0 and abs(
+                        self.scan_data[i] - self.scan_data[i - 1]) > config.lidar.max_distance_between_points) or (
+                        len(scan) - i > 0 and abs(
+                        self.scan_data[i] - self.scan_data[i + 1]) > config.lidar.max_distance_between_points):
+                    self.scan_data[floor(angle)] = np.inf
+                    continue
+
+                self.scan_data[floor(angle)] = distance
 
     def start(self) -> None:
         """Start the lidar."""
-        self.running = False
+        self.running = True
         if not self.thread.is_alive():
             self.thread.start()
 
     def stop(self) -> None:
         """Stop the lidar."""
-        self.running = True
-        self.lidar.stop()
-        self.lidar.disconnect()
+        self.running = False
+
