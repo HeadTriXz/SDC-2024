@@ -53,7 +53,7 @@ lane_assist:
     initial_speed: 5
 
 object_detection:
-  model_path: "../models/yolo8n.pt"
+  model_path: "../models/yolo8s.pt"
   min_confidence: 0.5
   verbose: false
   image_size: 1280

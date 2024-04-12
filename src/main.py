@@ -81,6 +81,7 @@ def start_kart() -> None:
         lane_assist.start()
     except KeyboardInterrupt:
         pass
+
     # write the pickled errors and fps into a file
     folder_path = "../data/telemetry/"
     os.makedirs(folder_path, exist_ok=True)

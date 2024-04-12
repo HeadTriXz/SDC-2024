@@ -1,11 +1,9 @@
 import time
-from pathlib import Path
-from threading import Thread
-
-from ultralytics import YOLO
-
 from config import config
 from object_recognition.object_controller import ObjectController
+from pathlib import Path
+from threading import Thread
+from ultralytics import YOLO
 from utils.video_stream import VideoStream
 
 
@@ -50,8 +48,8 @@ class ObjectDetector:
                 frame,
                 imgsz=config.object_detection.image_size,
                 conf=config.object_detection.min_confidence,
-                persist=True,
                 verbose=config.object_detection.verbose,
+                persist=True,
                 device="cpu",
             )
 
@@ -70,10 +68,10 @@ class ObjectDetector:
         :return: The object detector instance.
         """
         path = Path(path)
-        ov_path = path.parent / f"{path.stem}_openvino_model/"
+        ov_path = path.parent / f"{path.stem}_int8_openvino_model/"
         if not ov_path.exists():
             model = YOLO(path)
-            model.export(format="openvino")
+            model.export(format="openvino", int8=True)
 
-        model = YOLO(path.parent / f"{path.stem}_openvino_model/")
+        model = YOLO(ov_path)
         return ObjectDetector(model, controller, camera_id)
