@@ -110,10 +110,8 @@ class VideoStream:
 
             self.__ret, self.__frame = self.capture.read()
             if not self.__ret:
-                self.stopped = True
+                self.stop()
                 break
-
-        self.capture.release()
 
     def has_next(self) -> bool:
         """Checks if the video stream has more frames."""

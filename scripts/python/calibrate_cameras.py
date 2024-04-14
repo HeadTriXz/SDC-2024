@@ -1,3 +1,5 @@
+import logging
+
 from config import config
 from constants import CameraResolution
 from lane_assist.preprocessing.calibrate import CameraCalibrator
@@ -6,6 +8,9 @@ from utils.video_stream import VideoStream
 
 def calibrate_cameras() -> None:
     """A script to calibrate the cameras."""
+    if len({config.camera_ids.left, config.camera_ids.center, config.camera_ids.right}) < 3:
+        raise ValueError("Not all camera ids are unique, calibration may not work as expected")
+
     cam_left = VideoStream(config.camera_ids.left, resolution=CameraResolution.FHD)
     cam_center = VideoStream(config.camera_ids.center, resolution=CameraResolution.FHD)
     cam_right = VideoStream(config.camera_ids.right, resolution=CameraResolution.FHD)
@@ -24,6 +29,8 @@ def calibrate_cameras() -> None:
     calibrator = CameraCalibrator([left_image, center_image, right_image], input_shape=(1280, 720))
     calibrator.calibrate()
     calibrator.save(config.calibration.save_dir)
+
+    logging.info("Successfully calibrated cameras. Output shape: %s", calibrator.output_shape)
 
     cam_left.stop()
     cam_center.stop()
