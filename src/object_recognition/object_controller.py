@@ -1,8 +1,7 @@
-from ultralytics.engine.results import Boxes
-
 from driving.speed_controller import SpeedControllerState
 from driving.speed_controller.speed_controller_interface import ISpeedController
 from object_recognition.handlers.base_handler import BaseObjectHandler
+from ultralytics.engine.results import Boxes
 
 
 class ObjectController:
@@ -12,11 +11,13 @@ class ObjectController:
     ----------
         handlers (list[BaseObjectHandler]): The object handlers.
         speed_controller (SpeedController): The speed controller.
+        stopped_by (BaseObjectHandler): The handler that stopped the go-kart.
 
     """
 
     handlers: list[BaseObjectHandler]
     speed_controller: ISpeedController
+    stopped_by: BaseObjectHandler = None
 
     def __init__(self, speed_controller: ISpeedController) -> None:
         """Initializes the object controller.

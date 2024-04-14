@@ -17,7 +17,6 @@ class PedestrianHandler(BaseObjectHandler):
 
     """
 
-    stopped: bool = False
     track_history: dict[int, np.ndarray]
 
     def __init__(self, controller: ObjectController) -> None:
@@ -33,16 +32,18 @@ class PedestrianHandler(BaseObjectHandler):
 
         :param predictions: The detected pedestrians (.data: x1, y1, x2, y2, track_id, conf, cls).
         """
-        if self.controller.has_stopped() and not self.stopped:
+        if self.is_stopped_by_other():
             return
 
+        stopped = self.controller.has_stopped()
         should_stop = self.__should_stop(predictions)
-        if self.stopped and not should_stop:
+
+        if stopped and not should_stop:
+            self.controller.stopped_by = None
             self.controller.set_state(SpeedControllerState.DRIVING)
-            self.stopped = False
-        elif not self.stopped and should_stop:
+        elif not stopped and should_stop:
+            self.controller.stopped_by = self
             self.controller.set_state(SpeedControllerState.STOPPED)
-            self.stopped = True
 
     def __get_direction(self, history: np.ndarray) -> int:
         """Calculates the direction of the pedestrian.

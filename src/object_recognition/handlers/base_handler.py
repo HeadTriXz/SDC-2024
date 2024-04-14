@@ -1,7 +1,6 @@
-from abc import ABC, abstractmethod
-
 import numpy as np
 
+from abc import ABC, abstractmethod
 from constants import Label
 from typing import Optional, TYPE_CHECKING
 from ultralytics.engine.results import Boxes
@@ -58,6 +57,13 @@ class BaseObjectHandler(ABC):
                 closest_class = cls
 
         return Label(closest_class)
+
+    def is_stopped_by_other(self) -> bool:
+        """Checks if another handler has stopped the go-kart.
+
+        :return: Whether the handler has stopped the go-kart.
+        """
+        return self.controller.has_stopped() and self.controller.stopped_by != self
 
     @abstractmethod
     def handle(self, predictions: Boxes) -> None:
