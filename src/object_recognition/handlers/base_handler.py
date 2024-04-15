@@ -1,7 +1,6 @@
 import numpy as np
 
 from abc import ABC, abstractmethod
-from constants import Label
 from typing import Optional, TYPE_CHECKING
 from ultralytics.engine.results import Boxes
 
