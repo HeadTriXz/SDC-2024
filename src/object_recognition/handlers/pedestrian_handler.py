@@ -62,7 +62,7 @@ class PedestrianHandler(BaseObjectHandler):
         :param history: The pedestrian's previous positions.
         :return: The most recent side the pedestrian was on. -1 if left, 1 if right, 0 if in the middle.
         """
-        margin = config.pedestrian_detection.crosswalk_safe_zone_margin
+        margin = config.crosswalk.safe_zone_margin
         known_sides = []
 
         for position in history[::-1]:
@@ -100,7 +100,7 @@ class PedestrianHandler(BaseObjectHandler):
         :param pedestrian: The relative coordinates of the pedestrian.
         :return: Whether the bounding boxes overlap.
         """
-        min_margin = -config.pedestrian_detection.crosswalk_overlap_margin
+        min_margin = -config.crosswalk.overlap_margin
         max_margin = 1 - min_margin
 
         return (min_margin <= pedestrian[3] <= max_margin and
@@ -121,7 +121,7 @@ class PedestrianHandler(BaseObjectHandler):
         if direction == side:
             return False
 
-        margin = config.pedestrian_detection.crosswalk_safe_zone_margin
+        margin = config.crosswalk.safe_zone_margin
         if direction == -1:
             return history[-1][0] < margin
 

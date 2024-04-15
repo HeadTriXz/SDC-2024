@@ -9,6 +9,7 @@ from driving.speed_controller import SpeedController, SpeedControllerState
 from lane_assist.helpers import td_stitched_image_generator
 from lane_assist.lane_assist import LaneAssist
 from lane_assist.line_following.path_follower import PathFollower
+from lane_assist.stopline_assist import StopLineAssist
 from object_recognition.handlers.pedestrian_handler import PedestrianHandler
 from object_recognition.handlers.speed_limit_handler import SpeedLimitHandler
 from object_recognition.handlers.traffic_light_handler import TrafficLightHandler
@@ -47,22 +48,24 @@ def start_kart() -> None:
     path_follower = PathFollower(1, 0.01, 0.05, look_ahead_distance=10)
     path_follower.max_steering_range = 30.0
 
-    # # Initialize the object controller
-    controller = ObjectController(speed_controller)
-    controller.add_handler(PedestrianHandler(controller))
-    controller.add_handler(SpeedLimitHandler(controller))
-    controller.add_handler(TrafficLightHandler(controller))
-
     # Load the calibration data
     calibration_file = Path(config.calibration.calibration_file)
     if not calibration_file.exists():
-        raise FileNotFoundError(f"Calibration file not found: {config.calibration.calibration_file}")
+        raise FileNotFoundError(f"Calibration file not found: {calibration_file}")
 
     calibration = CalibrationData.load(calibration_file)
 
+    # Initialize the object controller
+    controller = ObjectController(speed_controller)
+    controller.add_handler(PedestrianHandler(controller))
+    controller.add_handler(SpeedLimitHandler(controller, calibration))
+    controller.add_handler(TrafficLightHandler(controller))
+
     # Initialize the lane assist
+    stop_line_assist = StopLineAssist(speed_controller, calibration)
     lane_assist = LaneAssist(
         td_stitched_image_generator(calibration, cam_left, cam_center, cam_right, telemetry_server),
+        stop_line_assist,
         path_follower,
         speed_controller,
         adjust_speed=lambda _: 1,

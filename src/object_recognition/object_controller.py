@@ -34,6 +34,13 @@ class ObjectController:
         """
         self.handlers.append(handler)
 
+    def get_braking_distance(self) -> float:
+        """Calculates the braking distance of the go-kart.
+
+        :return: The braking distance.
+        """
+        return self.speed_controller.get_braking_distance()
+
     def handle(self, predictions: Boxes) -> None:
         """Handles the predictions.
 

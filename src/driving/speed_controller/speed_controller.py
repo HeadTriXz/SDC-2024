@@ -98,6 +98,13 @@ class SpeedController(ISpeedController):
         self.__target_speed = speed
         self.__adjust_speed()
 
+    def get_braking_distance(self) -> float:
+        """Get the braking distance of the go-kart.
+
+        :return: The braking distance in meters.
+        """
+        return (self.current_speed ** 2) / (250 * 0.8)  # TODO: calculate the braking distance
+
     def start(self) -> None:
         """Start the speed controller."""
         self.__can.add_listener(CANFeedbackIdentifier.SPEED_SENSOR, self.__update_speed)
