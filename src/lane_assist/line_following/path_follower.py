@@ -27,7 +27,7 @@ class PathFollower:
         kd: float,
         setpoint: float = 0,
         look_ahead_distance: int = 10,
-        max_steering_range: float = 30.0,
+        max_steering_range: float = 40.0,
     ) -> None:
         """Initialize the LineFollowing class.
 
@@ -36,6 +36,7 @@ class PathFollower:
         :param kd: The derivative gain.
         :param setpoint: The setpoint of the PID controller.
         :param look_ahead_distance: The distance to look ahead.
+        :param max_steering_range: The max steering range.
         """
         self.pid = PID(Kp=kp, Ki=ki, Kd=kd, setpoint=setpoint)
         self.look_ahead_distance = look_ahead_distance
@@ -47,12 +48,12 @@ class PathFollower:
 
         :param path: The path to follow.
         :param car_position: The current x position.
-        :return: The steering angle remapped to the range of -1 to 1.
+        :return: The steering angle remapped to the range of -1.25 to 1.25.
         """
         angle = self.get_steering_angle(path, car_position)
         angle = np.clip(angle, -self.max_steering_range, self.max_steering_range)
 
-        return angle / self.max_steering_range
+        return angle / self.max_steering_range * 1.25
 
     def get_steering_angle(self, path: np.ndarray, car_position: float) -> float:
         """Get the steering angle to follow the path.

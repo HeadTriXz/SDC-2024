@@ -1,4 +1,5 @@
 import can
+import logging
 import os
 
 
@@ -16,4 +17,5 @@ def get_can_bus(channel: str = "can0", bitrate: int = 500000) -> can.ThreadSafeB
         os.system("ip link set can0 up")
         return can.ThreadSafeBus(interface="socketcan", channel=channel, bitrate=bitrate)
 
+    logging.warning("Failed to create CAN interface, using virtual interface instead.")
     return can.ThreadSafeBus(interface="virtual", channel="vcan0")
