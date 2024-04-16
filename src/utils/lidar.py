@@ -1,4 +1,3 @@
-
 import numpy as np
 
 from config import config
@@ -8,9 +7,9 @@ from threading import Thread
 
 
 class Lidar:
-    """A class to read data from the lidar and process the data from it.
+    """Class to read data from the lidar and process the data from it.
 
-    the lidar can be used to find the distance to the obstacles around the car.
+    The lidar can be used to find the distance to the obstacles around the car.
     """
 
     scan_data = np.full(360, np.inf)
