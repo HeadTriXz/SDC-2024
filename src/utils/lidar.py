@@ -46,7 +46,7 @@ class Lidar:
         return self.find_obstacle_distance(angle_min, angle_max) > distance
 
     def capture(self) -> None:
-        """A function that captures the data from the lidar."""
+        """A function that captures the data from the lidar and filters it."""
         for scan in self.lidar.iter_scans():
             if not self.running:
                 return
