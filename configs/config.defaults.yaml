@@ -82,3 +82,8 @@ telemetry:
   server:
     port: 8000
     host: 0.0.0.0
+
+lidar:
+  port_name: "COM4"
+  min_distance: 500
+  max_distance_between_points: 1000
