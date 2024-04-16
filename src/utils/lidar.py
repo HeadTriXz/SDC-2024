@@ -10,18 +10,26 @@ class Lidar:
     """Class to read data from the lidar and process the data from it.
 
     The lidar can be used to find the distance to the obstacles around the car.
+
+    Attributes
+    ----------
+        lidar: The lidar object.
+        running: Whether the lidar is running.
+        scan_data: The data from the lidar.
+        thread: The thread that captures the data from the lidar.
+
     """
 
-    scan_data = np.full(360, np.inf)
-    running = False
+    lidar: RPLidar
+    running: bool = False
+    scan_data: np.ndarray
+    thread: Thread
 
     def __init__(self) -> None:
-        """Initializes the lidar.
-
-        :param port_name: The name of the port.
-        """
+        """Initializes the lidar."""
         self.lidar = RPLidar(config.lidar.port_name, timeout=3)
         self.thread = Thread(target=self.capture, daemon=True)
+        self.scan_data = np.full(360, np.inf)
 
     def find_obstacle_distance(self, angle_min: int, angle_max: int) -> int:
         """A function that finds the distance to the closest obstacle in a certain angle range.
