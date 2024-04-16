@@ -18,7 +18,7 @@ class Lidar:
     def __init__(self) -> None:
         """Initializes the lidar.
 
-        :param port_name: the name of the port
+        :param port_name: The name of the port.
         """
         self.lidar = RPLidar(config.lidar.port_name, timeout=3)
         self.thread = Thread(target=self.capture, daemon=True)
@@ -26,9 +26,9 @@ class Lidar:
     def find_obstacle_distance(self, angle_min: int, angle_max: int) -> int:
         """A function that finds the distance to the closest obstacle in a certain angle range.
 
-        :param angle_min: the minimum angle to check
-        :param angle_max: the maximum angle to check
-        :return: the distance to the closest obstacle
+        :param angle_min: The minimum angle to check.
+        :param angle_max: The maximum angle to check.
+        :return: The distance to the closest obstacle.
         """
         if angle_min < 0:
             return min(*self.scan_data[359 + angle_min:], *self.scan_data[:angle_max])
@@ -38,16 +38,15 @@ class Lidar:
     def free_range(self, angle_min: int, angle_max: int, distance: int) -> bool:
         """A function that checks if the side between angle_min and angle_max of the car is free.
 
-        :param angle_min: the minimum angle to check (180 is the front of the car)
-        :param angle_max: the maximum angle to check (180 is the front of the car)
-        :param distance: the minimum distance to consider the side free
-        :return: True if the side is free, False otherwise
+        :param angle_min: The minimum angle to check. (180 is the front of the car)
+        :param angle_max: The maximum angle to check. (180 is the front of the car)
+        :param distance: The minimum distance to consider the side free.
+        :return: True if the side is free, False otherwise.
         """
         return self.find_obstacle_distance(angle_min, angle_max) > distance
 
     def capture(self) -> None:
-        """A function that captures the data from the lidar and filters it.
-        """
+        """A function that captures the data from the lidar and filters it."""
         for scan in self.lidar.iter_scans():
             if not self.running:
                 return
