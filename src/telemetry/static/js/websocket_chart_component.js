@@ -47,8 +47,7 @@ class WebsocketChartComponent extends HTMLElement {
      * @param val
      */
     update_chart(val) {
-        const time = new Date().getTime();
-        this.data[0].push(time);
+        this.data[0].push(this.data[0].length + 1);
         this.data[1].push(val);
 
         this.chart.setData(this.data);
@@ -67,7 +66,7 @@ class WebsocketChartComponent extends HTMLElement {
         this.appendChild(chart_elem);
 
         const options = {
-            width: 1000,
+            width: 1200,
             height: 400,
             title: `Chart ${this.attrs.id}`,
             id: `chart-${this.attrs.id}`,
@@ -87,7 +86,7 @@ class WebsocketChartComponent extends HTMLElement {
             ],
             scales: {
                 x: {
-                    time: true
+                    time: false,
                 },
                 y: {
                     auto: true,

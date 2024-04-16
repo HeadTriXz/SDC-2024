@@ -1,5 +1,6 @@
 from fastapi import APIRouter, WebSocket
 from telemetry.data_stream.websocket_handler import WebsocketHandler
+from starlette.websockets import WebSocketDisconnect
 
 
 def create_router(websocket_handler: WebsocketHandler) -> APIRouter:
@@ -19,6 +20,9 @@ def create_router(websocket_handler: WebsocketHandler) -> APIRouter:
         """
         await websocket.accept()
         client = websocket_handler.add_socket(name, websocket)
-        await client.rec_messages()
+        try:
+            await client.rec_messages()
+        except WebSocketDisconnect:
+            websocket_handler.websocket_clients[name].remove(client)
 
     return router

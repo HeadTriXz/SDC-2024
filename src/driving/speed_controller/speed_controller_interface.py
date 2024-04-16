@@ -59,6 +59,14 @@ class ISpeedController(ABC):
         pass
 
     @abstractmethod
+    def get_braking_distance(self) -> float:
+        """Get the braking distance of the go-kart.
+
+        :return: The braking distance in meters.
+        """
+        pass
+
+    @abstractmethod
     def start(self) -> None:
         """Start the speed controller."""
         pass

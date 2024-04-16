@@ -11,17 +11,17 @@ calibration:
   max_image_height: 1600
   max_image_width: 800
   marker_length: 0.070
-  save_dir: "../../data/calibration"
+  save_dir: "../data/calibration"
   square_length: 0.094
   vanishing_line_offset: 0.1
 
 speed_modes:
   selected: ${.options.slow}
   options:
-    slow: 25
-    normal: 50
-    fast: 75
-    very_fast: 100
+    slow: 20
+    normal: 40
+    fast: 60
+    very_fast: 80
 
 image_manipulation:
   gamma:
@@ -53,10 +53,14 @@ lane_assist:
     initial_speed: 5
 
 object_detection:
-  model_path: "../models/yolo8n.pt"
+  model_path: "../models/yolo8s.pt"
   min_confidence: 0.5
   verbose: false
   image_size: 1280
+
+speed_limit:
+  height_ratio: 3.1
+  min_distance: 3
   class_to_speed:
     5: 5
     6: 10
@@ -65,10 +69,13 @@ object_detection:
     9: 30
     10: 40
 
-pedestrian_detection:
-  crosswalk_overlap_margin: 0.2
-  crosswalk_safe_zone_margin: 0.1
-  crosswalk_min_distance: 2
+traffic_light:
+  min_distance: 2
+
+crosswalk:
+  overlap_margin: 0.2
+  safe_zone_margin: 0.1
+  min_distance: 3
 
 telemetry:
   enabled: true

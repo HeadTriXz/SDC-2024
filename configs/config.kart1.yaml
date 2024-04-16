@@ -6,10 +6,10 @@ camera_ids:
 speed_modes:
   selected: ${.options.slow}
   options:
-    slow: 25
-    normal: 50
-    fast: 75
-    very_fast: 100
+    slow: 20
+    normal: 40
+    fast: 60
+    very_fast: 80
 
 object_detection:
   verbose: true

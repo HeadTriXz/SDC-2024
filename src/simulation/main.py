@@ -1,14 +1,19 @@
 import airsim
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
+import os
+import pickle
+import time
 
 from config import config
 from driving.speed_controller import SpeedController, SpeedControllerState
 from lane_assist.lane_assist import LaneAssist, PathFollower
+from lane_assist.stopline_assist import StopLineAssist
+from pathlib import Path
 from simulation.can_controller import SimCanController
 from telemetry.app import TelemetryServer
 from typing import Generator
+from utils.calibration_data import CalibrationData
 
 
 def start_simulator() -> None:
@@ -43,31 +48,41 @@ def start_simulator() -> None:
     speed_controller.max_speed = 50
     speed_controller.state = SpeedControllerState.DRIVING
 
+    # Load the calibration data
+    calibration_file = Path(f"../{config.calibration.calibration_file}")
+    if not calibration_file.exists():
+        raise FileNotFoundError(f"Calibration file not found: {calibration_file}")
+
+    calibration = CalibrationData.load(calibration_file)
+
+    # Initialize the path follower
     path_follower = PathFollower(1, 0.01, 0.05, look_ahead_distance=10)
     path_follower.max_steering_range = 30.0
 
+    # Initialize the lane assist
+    stop_line_assist = StopLineAssist(speed_controller, calibration)
     lane_assist = LaneAssist(
         get_sim_image_generator,
+        stop_line_assist,
         path_follower,
         speed_controller,
         adjust_speed=lambda _path: 15,
         telemetry=telemetry,
     )
 
-    lane_assist.start(True)
-    telemetry.start()
+    try:
+        telemetry.start()
+        lane_assist.start()
+    except KeyboardInterrupt:
+        pass
 
-    input("Press enter to stop")
+    # save the telemetry to the disk
+    folder_path = "../data/telemetry/"
+    os.makedirs(folder_path, exist_ok=True)
 
-    # Plot the errors.
-    plt.plot(path_follower.errors, label="Error", color="black")
+    with open(f"{folder_path}{time.time()}-errors.pkl", "wb") as f:
+        pickle.dump(lane_assist.path_follower.errors, f)
 
-    # Get the mean error.
-    mean_error = np.mean(path_follower.errors)
-    plt.axhline(mean_error, color="r", linestyle="--")
-
-    std_deviation = np.std(path_follower.errors)
-    plt.axhline(mean_error + std_deviation, color="g", linestyle="--")
-    plt.axhline(mean_error - std_deviation, color="g", linestyle="--")
-
-    plt.show()
+    # write the fps into a file
+    with open(f"{folder_path}{time.time()}-frame_times.pkl", "wb") as f:
+        pickle.dump(lane_assist.frame_times, f)

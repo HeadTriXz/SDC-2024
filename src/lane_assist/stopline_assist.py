@@ -1,4 +1,6 @@
+from config import config
 from driving.speed_controller import ISpeedController, SpeedControllerState
+from utils.calibration_data import CalibrationData
 
 
 class StopLineAssist:
@@ -21,12 +23,16 @@ class StopLineAssist:
     speed_controller: ISpeedController
     stop_lines_found: int = 0
 
-    def __init__(self, speed_controller: ISpeedController) -> None:
+    __calibration: CalibrationData
+
+    def __init__(self, speed_controller: ISpeedController, calibration: CalibrationData) -> None:
         """Initialize the stop line assist.
 
-        :param speed_controller: the speed controller to use for stopping at stop-lines.
+        :param speed_controller: The speed controller to use for stopping at stop-lines.
+        :param calibration: The calibration data.
         """
         self.speed_controller = speed_controller
+        self.__calibration = calibration
 
     def handle_stop_lines(self, stop_lines: list[int]) -> None:
         """Handle the stop lines.
@@ -44,7 +50,17 @@ class StopLineAssist:
             self.stop_lines_found += 1
             return
 
-        # TODO: take the distance to the stopline and speed into account
-        if self.speed_controller.state == SpeedControllerState.WAITING_TO_STOP and 200 < stop_lines[0] < 700:
-            self.speed_controller.state = SpeedControllerState.STOPPED
-            self.stop_lines_found = 0
+        if self.speed_controller.state != SpeedControllerState.WAITING_TO_STOP:
+            return
+
+        height = self.__calibration.output_shape[1]
+        distance = self.__calibration.get_distance(height - stop_lines[0])
+
+        braking_distance = self.speed_controller.get_braking_distance()
+        total_distance = distance - braking_distance
+
+        if total_distance > config.traffic_light.min_distance:
+            return
+
+        self.speed_controller.state = SpeedControllerState.STOPPED
+        self.stop_lines_found = 0

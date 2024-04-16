@@ -1,4 +1,6 @@
 import os
+import pickle
+import time
 
 from config import config
 from constants import Gear
@@ -7,6 +9,7 @@ from driving.speed_controller import SpeedController, SpeedControllerState
 from lane_assist.helpers import td_stitched_image_generator
 from lane_assist.lane_assist import LaneAssist
 from lane_assist.line_following.path_follower import PathFollower
+from lane_assist.stopline_assist import StopLineAssist
 from object_recognition.handlers.pedestrian_handler import PedestrianHandler
 from object_recognition.handlers.speed_limit_handler import SpeedLimitHandler
 from object_recognition.handlers.traffic_light_handler import TrafficLightHandler
@@ -45,22 +48,24 @@ def start_kart() -> None:
     path_follower = PathFollower(1, 0.01, 0.05, look_ahead_distance=10)
     path_follower.max_steering_range = 30.0
 
-    # # Initialize the object controller
-    controller = ObjectController(speed_controller)
-    controller.add_handler(PedestrianHandler(controller))
-    controller.add_handler(SpeedLimitHandler(controller))
-    controller.add_handler(TrafficLightHandler(controller))
-
     # Load the calibration data
     calibration_file = Path(config.calibration.calibration_file)
     if not calibration_file.exists():
-        raise FileNotFoundError(f"Calibration file not found: {config.calibration.calibration_file}")
+        raise FileNotFoundError(f"Calibration file not found: {calibration_file}")
 
     calibration = CalibrationData.load(calibration_file)
 
+    # Initialize the object controller
+    controller = ObjectController(speed_controller)
+    controller.add_handler(PedestrianHandler(controller))
+    controller.add_handler(SpeedLimitHandler(controller, calibration))
+    controller.add_handler(TrafficLightHandler(controller))
+
     # Initialize the lane assist
+    stop_line_assist = StopLineAssist(speed_controller, calibration)
     lane_assist = LaneAssist(
         td_stitched_image_generator(calibration, cam_left, cam_center, cam_right, telemetry_server),
+        stop_line_assist,
         path_follower,
         speed_controller,
         adjust_speed=lambda _: 1,
@@ -70,19 +75,32 @@ def start_kart() -> None:
     # Initialize the object detector
     detector = ObjectDetector.from_model(config.object_detection.model_path, controller, config.camera_ids.center)
 
-    # Start the system
-    can_controller.start()
-    speed_controller.start()
-    detector.start()
-    telemetry_server.start()
-    lane_assist.start()
+    try:
+        # Start the system
+        can_controller.start()
+        speed_controller.start()
+        detector.start()
+        telemetry_server.start()
+        lane_assist.start()
+    except KeyboardInterrupt:
+        pass
 
-    input("Press Enter to stop...")
+    # write the pickled errors and fps into a file
+    folder_path = "../data/telemetry/"
+    os.makedirs(folder_path, exist_ok=True)
+
+    with open(f"{folder_path}{time.time()}-errors.pkl", "wb") as f:
+        pickle.dump(lane_assist.path_follower.errors, f)
+
+    # write the fps into a file
+    with open(f"{folder_path}{time.time()}-frame_times.pkl", "wb") as f:
+        pickle.dump(lane_assist.frame_times, f)
 
 
 if __name__ == "__main__":
-    if "ENVIRONMENT" in os.environ and os.environ["ENVIRONMENT"] == "simulation":
+    if "ENVIRONMENT" in os.environ and os.environ["ENVIRONMENT"] == "simulator":
         from simulation.main import start_simulator
+
         start_simulator()
     else:
         start_kart()

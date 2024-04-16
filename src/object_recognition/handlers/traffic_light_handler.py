@@ -8,8 +8,6 @@ from ultralytics.engine.results import Boxes
 class TrafficLightHandler(BaseObjectHandler):
     """A handler for the traffic lights."""
 
-    stopped: bool = False
-
     def __init__(self, controller: ObjectController) -> None:
         """Initializes the traffic light handler.
 
@@ -22,19 +20,19 @@ class TrafficLightHandler(BaseObjectHandler):
 
         :param predictions: The detected traffic light.
         """
-        if self.controller.has_stopped() and not self.stopped:
+        if self.is_stopped_by_other():
             return
 
-        closest_class = self.get_closest_prediction(predictions)
-        if closest_class is None:
+        closest = self.get_closest_prediction(predictions)
+        if closest is None:
             return
 
-        match closest_class:
+        match closest[-1]:
             case Label.TRAFFIC_LIGHT_RED:
-                self.stopped = True
+                self.controller.stopped_by = self
                 self.controller.set_state(SpeedControllerState.WAITING_TO_STOP)
             case Label.TRAFFIC_LIGHT_GREEN:
-                self.stopped = False
+                self.controller.stopped_by = None
                 self.controller.set_state(SpeedControllerState.DRIVING)
             case _:
                 pass

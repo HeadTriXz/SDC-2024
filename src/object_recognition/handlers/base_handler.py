@@ -1,8 +1,6 @@
-from abc import ABC, abstractmethod
-
 import numpy as np
 
-from constants import Label
+from abc import ABC, abstractmethod
 from typing import Optional, TYPE_CHECKING
 from ultralytics.engine.results import Boxes
 
@@ -42,22 +40,29 @@ class BaseObjectHandler(ABC):
 
         return Boxes(data, predictions.orig_shape)
 
-    def get_closest_prediction(self, predictions: Boxes) -> Optional[Label]:
+    def get_closest_prediction(self, predictions: Boxes) -> Optional[np.ndarray]:
         """Gets the closest prediction to the go-kart. We assume the largest bounding box is the closest.
 
         :param predictions: The predictions to search.
-        :return: The class of the closest prediction.
+        :return: The closest prediction.
         """
         largest_area = 0
-        closest_class = None
+        closest_prediction = None
 
-        for cls, xywh in zip(predictions.cls, predictions.xywh):
-            area = xywh[2] * xywh[3]
+        for box in predictions.data:
+            area = box[2] * box[3]
             if area > largest_area:
                 largest_area = area
-                closest_class = cls
+                closest_prediction = box
 
-        return Label(closest_class)
+        return closest_prediction
+
+    def is_stopped_by_other(self) -> bool:
+        """Checks if another handler has stopped the go-kart.
+
+        :return: Whether the handler has stopped the go-kart.
+        """
+        return self.controller.has_stopped() and self.controller.stopped_by != self
 
     @abstractmethod
     def handle(self, predictions: Boxes) -> None:
