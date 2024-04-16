@@ -56,10 +56,13 @@ class Lidar:
                     self.scan_data[floor(angle)] = np.inf
                     continue
 
-                if (i > 0 and abs(
-                        self.scan_data[i] - self.scan_data[i - 1]) > config.lidar.max_distance_between_points) or (
-                        len(scan) - i > 0 and abs(
-                        self.scan_data[i] - self.scan_data[i + 1]) > config.lidar.max_distance_between_points):
+                prev_diff = abs(self.scan_data[i] - self.scan_data[i - 1])
+                next_diff = abs(self.scan_data[i] - self.scan_data[i + 1])
+
+                prev_larger = prev_diff > config.lidar.max_distance_between_points
+                next_larger = next_diff > config.lidar.max_distance_between_points
+
+                if (i > 0 and prev_larger) or ((len(scan) - i) > 0 and next_larger):
                     self.scan_data[floor(angle)] = np.inf
                     continue
 
