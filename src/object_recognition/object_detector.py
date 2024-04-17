@@ -1,4 +1,5 @@
 import time
+
 from config import config
 from object_recognition.object_controller import ObjectController
 from pathlib import Path
@@ -13,25 +14,25 @@ class ObjectDetector:
     Attributes
     ----------
         controller (ObjectController): The object controller.
-        model (YOLO): The object detection model.
+        model_path (str | Path): The path to the object detection model.
         stream (VideoStream): The video stream.
 
     """
 
     controller: ObjectController
-    model: YOLO
+    model_path: str | Path
     stream: VideoStream
     __thread: Thread
 
-    def __init__(self, model: YOLO, controller: ObjectController, camera_id: int) -> None:
+    def __init__(self, model_path: str | Path, controller: ObjectController, camera_id: int) -> None:
         """Initializes the object detector.
 
-        :param model: The object detection model.
+        :param model_path: The path to the object detection model.
         :param controller: The object controller.
         :param camera_id: The camera ID.
         """
         self.controller = controller
-        self.model = model
+        self.model_path = model_path
         self.stream = VideoStream(camera_id)
         self.__thread = Thread(target=self.__track_video_stream, daemon=True)
 
@@ -42,15 +43,17 @@ class ObjectDetector:
 
     def __track_video_stream(self) -> None:
         """Track the objects in the video stream."""
+        model = YOLO(self.model_path)
+
         while self.stream.has_next():
             frame = self.stream.next()
-            results = self.model.track(
+            results = model.track(
                 frame,
                 imgsz=config.object_detection.image_size,
                 conf=config.object_detection.min_confidence,
                 verbose=config.object_detection.verbose,
                 persist=True,
-                device="cpu",
+                device="cpu"
             )
 
             self.controller.handle(results[0].boxes)
@@ -73,5 +76,4 @@ class ObjectDetector:
             model = YOLO(path)
             model.export(format="openvino", int8=True)
 
-        model = YOLO(ov_path)
-        return ObjectDetector(model, controller, camera_id)
+        return ObjectDetector(ov_path, controller, camera_id)
