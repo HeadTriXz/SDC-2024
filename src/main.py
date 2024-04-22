@@ -10,6 +10,7 @@ from lane_assist.helpers import td_stitched_image_generator
 from lane_assist.lane_assist import LaneAssist
 from lane_assist.line_following.path_follower import PathFollower
 from lane_assist.stopline_assist import StopLineAssist
+from object_recognition.handlers.overtake_handler import OvertakeHandler
 from object_recognition.handlers.pedestrian_handler import PedestrianHandler
 from object_recognition.handlers.speed_limit_handler import SpeedLimitHandler
 from object_recognition.handlers.traffic_light_handler import TrafficLightHandler
@@ -55,12 +56,6 @@ def start_kart() -> None:
 
     calibration = CalibrationData.load(calibration_file)
 
-    # Initialize the object controller
-    controller = ObjectController(speed_controller)
-    controller.add_handler(PedestrianHandler(controller))
-    controller.add_handler(SpeedLimitHandler(controller, calibration))
-    controller.add_handler(TrafficLightHandler(controller))
-
     # Initialize the lane assist
     stop_line_assist = StopLineAssist(speed_controller, calibration)
     lane_assist = LaneAssist(
@@ -73,6 +68,12 @@ def start_kart() -> None:
     )
 
     # Initialize the object detector
+    controller = ObjectController(calibration, lane_assist, speed_controller)
+    controller.add_handler(PedestrianHandler(controller))
+    controller.add_handler(SpeedLimitHandler(controller))
+    controller.add_handler(TrafficLightHandler(controller))
+    controller.add_handler(OvertakeHandler(controller))
+
     detector = ObjectDetector.from_model(config.object_detection.model_path, controller, config.camera_ids.center)
 
     try:

@@ -60,6 +60,21 @@ class CalibrationData(metaclass=SingletonMeta):
             flags=cv2.INTER_NEAREST
         )
 
+    def transform_point(self, x: int, y: int) -> tuple[int, int]:
+        """Transform a point to a topdown view.
+
+        :param x: The x-coordinate of the point.
+        :param y: The y-coordinate of the point.
+        :return: The transformed point.
+        """
+        x += self.offsets[self.ref_idx][0]
+        y += self.offsets[self.ref_idx][1]
+
+        src_point = np.array([[[x, y]]], dtype=np.float32)
+        dst_point = cv2.perspectiveTransform(src_point, self.topdown_matrix)
+
+        return int(dst_point[0][0][0]), int(dst_point[0][0][1])
+
     def get_distance(self, pixels: int) -> float:
         """Get the distance in meters from pixels.
 
@@ -77,14 +92,7 @@ class CalibrationData(metaclass=SingletonMeta):
         :return: The distance in meters.
         """
         if not topdown:
-            offset = self.offsets[self.ref_idx]
-            x += offset[0]
-            y += offset[1]
-
-            src_point = np.array([[[x, y]]], dtype=np.float32)
-            dst_point = cv2.perspectiveTransform(src_point, self.topdown_matrix)
-
-            x, y = dst_point[0][0]
+            x, y = self.transform_point(x, y)
             if x < 0 or y < 0:
                 raise ValueError("Point is not on the ground plane.")
 
