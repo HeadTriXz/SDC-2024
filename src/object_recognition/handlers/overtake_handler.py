@@ -41,6 +41,10 @@ class OvertakeHandler(BaseObjectHandler):
         full_lanes = set()
         for x1, x2, y1, y2 in predictions.xyxy:
             cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
+            distance = self.controller.calibration.get_distance_to_point(cx, y2, False)
+            if distance > config.overtake.min_distance:
+                continue
+
             lane = self.controller.get_object_lane(cx, cy)
             if lane is None:
                 continue
