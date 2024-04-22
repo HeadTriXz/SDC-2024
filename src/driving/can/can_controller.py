@@ -93,6 +93,6 @@ class CANController(ICANController):
             message = self.bus.recv()
             if message.arbitration_id in self.__listeners:
                 for listener in self.__listeners[message.arbitration_id]:
-                    listener(message.data)
+                    listener(message)
 
             time.sleep(0)
