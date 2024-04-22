@@ -34,6 +34,7 @@ class LaneAssist:
         adjust_speed: A function that calculates the dynamic speed that can be driven on the generated path
         can_controller: The can controller.
         image_generator: A function that generates images.
+        lines: The lines on the road.
         path_follower: The line follower class.
         requested_lane: The lane to follow.
         speed_controller: The speed controller.
@@ -45,6 +46,7 @@ class LaneAssist:
     adjust_speed: Callable[[Path], int]
     can_controller: ICANController
     image_generator: Callable[[], Generator[np.ndarray, None, None]]
+    lines: list[Line]
     path_follower: PathFollower
     requested_lane: int
     speed_controller: ISpeedController
@@ -72,6 +74,7 @@ class LaneAssist:
         self.adjust_speed = adjust_speed
         self.can_controller = speed_controller.can_controller
         self.image_generator = image_generation
+        self.lines = []
         self.path_follower = path_follower
         self.requested_lane = config.lane_assist.line_following.requested_lane
         self.speed_controller = speed_controller
@@ -132,6 +135,7 @@ class LaneAssist:
         # Act on the lines in the image.
         self.__follow_path(driving_lines, image.shape[1] // 2, self.requested_lane)
         self.stopline_assist.handle_stop_lines(stop_lines)
+        self.lines = driving_lines
 
         # FIXME: remove telemetry
         self.frame_times.append(time.perf_counter() - start_time)

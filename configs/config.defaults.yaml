@@ -72,6 +72,13 @@ speed_limit:
 traffic_light:
   min_distance: 2
 
+overtake:
+  consecutive_frames: 3
+  min_distance: 5
+  min_angle: 250
+  max_angle: 300
+  range_threshold: 3000
+
 crosswalk:
   overlap_margin: 0.2
   safe_zone_margin: 0.1
