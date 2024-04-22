@@ -39,7 +39,7 @@ class OvertakeHandler(BaseObjectHandler):
         :param predictions: The detected overtaking vehicles (.data: x1, y1, x2, y2, track_id, conf, cls).
         """
         full_lanes = set()
-        for x1, x2, y1, y2 in predictions.xyxy:
+        for x1, x2, _, y2 in predictions.xyxy:
             cx = (x1 + x2) // 2
             distance = self.controller.calibration.get_distance_to_point(cx, y2, False)
             if distance > config.overtake.min_distance:
