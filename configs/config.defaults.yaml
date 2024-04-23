@@ -8,7 +8,7 @@ calibration:
   board_height: 8
   board_width: 6
   calibration_file: "${.save_dir}/latest.npz"
-  max_image_height: 750
+  max_image_height: 400
   max_image_width: 200
   marker_length: 0.070
   render_distance:
