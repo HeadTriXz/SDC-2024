@@ -120,7 +120,9 @@ class SpeedController(ISpeedController):
     def __debug(self) -> None:
         """Print debug information."""
         while True:
-            logging.info(f"Current: {self.current_speed} | Target: {self.__target_speed} | Max: {self.__max_speed}")
+            logging.info(
+                "Current: %s | Target: %s | Max: %s", self.current_speed, self.__target_speed, self.__max_speed
+            )
             time.sleep(1)
 
     def __adjust_speed(self) -> None:
