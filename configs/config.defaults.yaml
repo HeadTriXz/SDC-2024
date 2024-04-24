@@ -8,12 +8,12 @@ calibration:
   board_height: 8
   board_width: 6
   calibration_file: "${.save_dir}/latest.npz"
-  max_image_height: 1600
-  max_image_width: 800
+  max_image_height: 400
+  max_image_width: 200
   marker_length: 0.070
   save_dir: "../data/calibration"
   square_length: 0.094
-  vanishing_line_offset: 0.1
+  vanishing_line_offset: 0.02
 
 speed_modes:
   selected: ${.options.slow}
@@ -57,7 +57,7 @@ lane_assist:
 
 object_detection:
   model_path: "../models/yolo8s.pt"
-  min_confidence: 0.5
+  min_confidence: 0.
   verbose: false
   image_size: 1280
 
@@ -92,6 +92,7 @@ telemetry:
   server:
     port: 8000
     host: 0.0.0.0
+    root_url: 192.168.1.89
 
 dynamic_speed:
   friction_coefficient: 0.9
