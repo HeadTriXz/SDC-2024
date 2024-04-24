@@ -89,6 +89,7 @@ telemetry:
   server:
     port: 8000
     host: 0.0.0.0
+    root_url: 0.0.0.0
 
 lidar:
   port_name: "COM4"
