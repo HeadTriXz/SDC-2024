@@ -15,6 +15,10 @@ calibration:
   square_length: 0.094
   vanishing_line_offset: 0.02
 
+  render_distance:
+    front: 20.0
+    side: 6.0
+
 speed_modes:
   selected: ${.options.slow}
   options:
@@ -57,7 +61,7 @@ lane_assist:
 
 object_detection:
   model_path: "../models/yolo8s.pt"
-  min_confidence: 0.
+  min_confidence: 0.6
   verbose: false
   image_size: 1280
 
