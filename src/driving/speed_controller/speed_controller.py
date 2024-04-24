@@ -1,5 +1,7 @@
 import can
 import logging
+import threading
+import time
 
 from config import config
 from constants import CANFeedbackIdentifier, Gear
@@ -26,6 +28,7 @@ class SpeedController(ISpeedController):
     __can: ICANController
     __max_speed: int = 0
     __target_speed: int = 0
+    __thread: threading.Thread
     __state: SpeedControllerState = SpeedControllerState.STOPPED
 
     def __init__(self, can_bus: ICANController) -> None:
@@ -35,6 +38,9 @@ class SpeedController(ISpeedController):
         """
         self.__can = can_bus
         self.logger = logging.getLogger(__name__)
+
+        # FIXME: remove telemetry
+        self.__thread = threading.Thread(target=self.__debug, daemon=True)
 
     @property
     def gear(self) -> Gear:
@@ -108,6 +114,16 @@ class SpeedController(ISpeedController):
     def start(self) -> None:
         """Start the speed controller."""
         self.__can.add_listener(CANFeedbackIdentifier.SPEED_SENSOR, self.__update_speed)
+        if config.telemetry.enabled:
+            self.__thread.start()
+
+    def __debug(self) -> None:
+        """Print debug information."""
+        while True:
+            logging.info(
+                "Current: %s | Target: %s | Max: %s", self.current_speed, self.__target_speed, self.__max_speed
+            )
+            time.sleep(1)
 
     def __adjust_speed(self) -> None:
         """Adjust the speed of the kart."""
