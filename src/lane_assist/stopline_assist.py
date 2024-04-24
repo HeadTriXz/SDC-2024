@@ -1,5 +1,9 @@
+import numpy as np
+
 from config import config
 from driving.speed_controller import ISpeedController, SpeedControllerState
+from lane_assist.line_detection.line import Line
+from lane_assist.line_detection.line_detector import get_stoplines
 from utils.calibration_data import CalibrationData
 
 
@@ -34,33 +38,34 @@ class StopLineAssist:
         self.speed_controller = speed_controller
         self.__calibration = calibration
 
-    def handle_stop_lines(self, stop_lines: list[int]) -> None:
+    def detect_and_handle(self, img: np.ndarray, filtered_lines: list[Line]) -> None:
         """Handle the stop lines.
 
         This function will handle the stop lines in the image.
         If a stop line is found, it will stop the kart.
 
-        :param stop_lines: the stop lines found in the image.
+        :param filtered_lines: the stop lines found in the image.
         """
-        if len(stop_lines) == 0:
-            self.stop_lines_found = max(0, self.stop_lines_found - 1)
-            return
-
-        if self.stop_lines_found < 3:
-            self.stop_lines_found += 1
-            return
-
         if self.speed_controller.state != SpeedControllerState.WAITING_TO_STOP:
             return
 
-        height = self.__calibration.output_shape[1]
-        distance = self.__calibration.get_distance(height - stop_lines[0])
-
-        braking_distance = self.speed_controller.get_braking_distance()
-        total_distance = distance - braking_distance
-
-        if total_distance > config.traffic_light.min_distance:
+        if len(filtered_lines) == 0:
             return
 
-        self.speed_controller.state = SpeedControllerState.STOPPED
-        self.stop_lines_found = 0
+        # get stoplines
+        stoplines = get_stoplines(img, filtered_lines, self.__calibration)
+        if len(stoplines) == 0:
+            return
+
+        braking_distance = self.speed_controller.get_braking_distance()
+
+        for line in stoplines:
+            line_height = np.average(line.points[:, 1])
+            distance = self.__calibration.get_distance(img.shape[1] - line_height)
+            total_distance = distance - braking_distance
+
+            if total_distance > config.traffic_light.min_distance:
+                continue
+
+            self.speed_controller.state = SpeedControllerState.STOPPED
+            self.stop_lines_found = 0

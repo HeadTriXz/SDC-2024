@@ -65,6 +65,7 @@ def start_kart() -> None:
         speed_controller,
         adjust_speed=lambda _: 1,
         telemetry=telemetry_server,
+        calibration=calibration
     )
 
     # Initialize the object detector
@@ -76,26 +77,12 @@ def start_kart() -> None:
 
     detector = ObjectDetector.from_model(config.object_detection.model_path, controller, config.camera_ids.center)
 
-    try:
-        # Start the system
-        can_controller.start()
-        speed_controller.start()
-        detector.start()
-        telemetry_server.start()
-        lane_assist.start()
-    except KeyboardInterrupt:
-        pass
-
-    # write the pickled errors and fps into a file
-    folder_path = "../data/telemetry/"
-    os.makedirs(folder_path, exist_ok=True)
-
-    with open(f"{folder_path}{time.time()}-errors.pkl", "wb") as f:
-        pickle.dump(lane_assist.path_follower.errors, f)
-
-    # write the fps into a file
-    with open(f"{folder_path}{time.time()}-frame_times.pkl", "wb") as f:
-        pickle.dump(lane_assist.frame_times, f)
+    # Start the system
+    can_controller.start()
+    speed_controller.start()
+    detector.start()
+    telemetry_server.start()
+    lane_assist.start()
 
 
 if __name__ == "__main__":

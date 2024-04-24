@@ -8,6 +8,7 @@ class LineType(IntEnum):
 
     SOLID = 1
     DASHED = 2
+    STOP = 3
 
 
 class Line:
@@ -46,7 +47,7 @@ class Line:
             raise ValueError("'window_height' or 'line_type' must be provided.")
 
         intervals = np.diff(points[:, 1])
-        if len(np.where(abs(intervals) > window_height)[0]) > gaps_allowed * 1.5:
+        if len(np.where(abs(intervals) == window_height)[0]) > gaps_allowed * 1.5:
             self.line_type = LineType.DASHED
         else:
             self.line_type = LineType.SOLID
@@ -69,6 +70,8 @@ class Line:
                 type_str = "SOLID"
             case LineType.DASHED:
                 type_str = "DASHED"
+            case LineType.STOP:
+                type_str = "STOP"
             case _:
                 type_str = "UNKNOWN"
 

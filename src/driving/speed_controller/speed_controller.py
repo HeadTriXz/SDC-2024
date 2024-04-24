@@ -1,7 +1,8 @@
-import can
 import logging
 import threading
 import time
+
+import can
 
 from config import config
 from constants import CANFeedbackIdentifier, Gear
@@ -121,7 +122,8 @@ class SpeedController(ISpeedController):
         """Print debug information."""
         while True:
             logging.info(
-                "Current: %s | Target: %s | Max: %s", self.current_speed, self.__target_speed, self.__max_speed
+                "Current: %s | Target: %s | Max: %s | state %s", self.current_speed, self.__target_speed,
+                self.__max_speed, self.state.name
             )
             time.sleep(1)
 
@@ -133,7 +135,7 @@ class SpeedController(ISpeedController):
             return
 
         self.__can.set_throttle(self.__get_target_percentage(), self.__gear)
-        self.__can.set_brake(0 if self.current_speed <= self.__target_speed else 30)  # TODO: brake at threshold
+        self.__can.set_brake(0 if self.current_speed <= self.__target_speed else 100)  # TODO: brake at threshold
 
     def __get_target_percentage(self) -> int:
         """Get the target percentage of the throttle to apply."""
