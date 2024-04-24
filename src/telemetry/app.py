@@ -13,6 +13,7 @@ from telemetry.update_config.routes import create_config_router
 from telemetry.data_stream.websocket_handler import WebsocketHandler
 from telemetry.logging_handler import LoggingHandler
 from telemetry.stdout_wrapper import StdoutWrapper
+from utils.ip_loader import get_ip
 
 
 def get_path(rel_path: str) -> str:
@@ -56,11 +57,11 @@ class TelemetryServer:
         """Start the telemetry server."""
         uvicorn.run(self.__app, host=self.__host, port=self.__port)
 
-    @staticmethod
-    def __index_route() -> HTMLResponse:
+    def __index_route(self) -> HTMLResponse:
         """The index route.
 
         :return: The HTML response.
         """
         with open(get_path("static/index.html")) as f:
-            return HTMLResponse(content=f.read())
+            html = f.read().replace("$root-url", f"{get_ip()}:{self.__port}")
+            return HTMLResponse(content=html)

@@ -210,4 +210,4 @@ class ConfigComponent extends HTMLElement {
     }
 }
 
-customElements.define("config-shower", ConfigComponent);
+customElements.define("config-editor", ConfigComponent);

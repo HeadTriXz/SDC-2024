@@ -39,7 +39,7 @@ class Lidar:
         :return: The distance to the closest obstacle.
         """
         if angle_min < 0:
-            return min(*self.scan_data[359 + angle_min:], *self.scan_data[:angle_max])
+            return min(*self.scan_data[359 + angle_min :], *self.scan_data[:angle_max])
 
         return min(self.scan_data[angle_min:angle_max])
 
@@ -85,4 +85,3 @@ class Lidar:
     def stop(self) -> None:
         """Stop the lidar."""
         self.running = False
-

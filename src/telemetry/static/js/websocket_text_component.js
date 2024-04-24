@@ -49,7 +49,7 @@ class WebsocketTextComponent extends HTMLElement {
      */
     connectWS() {
         // create a new websocket connection
-        this.ws = new WebSocket(`ws://localhost:8000/ws/${this.getAttribute('id')}`);
+        this.ws = new WebSocket(`ws://${this.getAttribute('root-url')}/ws/${this.getAttribute('id')}`);
         this.ws.onerror = (event) => {
             console.error('Websocket error:', event);
         }

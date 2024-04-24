@@ -3,26 +3,21 @@
 <head>
     <link rel="stylesheet" type="text/css" href="css/style.css">
     <title>Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/uplot@1.6.30/dist/uPlot.iife.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/uplot@1.6.30/dist/uPlot.min.css" rel="stylesheet">
 </head>
 <body>
     <h1>Dashboard</h1>
     <div id="cameraContainer">
-        <websocket-image id="left"></websocket-image>
-        <websocket-image id="center"></websocket-image>
-        <websocket-image id="right"></websocket-image>
-        <websocket-image id="topdown"></websocket-image>
-        <websocket-image id="laneassist"></websocket-image>
+        <websocket-image id="left" root-url="$root-url"></websocket-image>
+        <websocket-image id="center" root-url="$root-url"></websocket-image>
+        <websocket-image id="right" root-url="$root-url"></websocket-image>
+        <websocket-image id="topdown" root-url="$root-url"></websocket-image>
+        <websocket-image id="laneassist" root-url="$root-url"></websocket-image>
     </div>
-    <websocket-text id="logs" append="true"></websocket-text>
+    <websocket-text id="logs" append="true" root-url="$root-url"></websocket-text>
 
-    <websocket-chart id="fps"></websocket-chart>
-    <websocket-chart id="error"></websocket-chart>
-    <config-shower></config-shower>
+    <config-editor root-url="$root-url"></config-editor>
 
     <script src="js/websocket_text_component.js"></script>
-    <script src="js/websocket_chart_component.js"></script>
     <script src="js/websocket_image_component.js"></script>
     <script src="js/config_component.js"></script>
 </body>
