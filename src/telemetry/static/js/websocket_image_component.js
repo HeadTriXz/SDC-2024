@@ -49,7 +49,7 @@ class WebsocketImageComponent extends HTMLElement {
      * When a new message is received, update the image.
      * The image is sent as a base64 encoded JPEG.
      */
-     connectWS() {
+    connectWS() {
         // create a new websocket connection
         this.ws = new WebSocket(`ws://${this.getAttribute('root-url')}/ws/${this.getAttribute('id')}`);
         this.ws.onerror = (event) => {
