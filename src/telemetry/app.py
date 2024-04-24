@@ -63,7 +63,5 @@ class TelemetryServer:
         :return: The HTML response.
         """
         with open(get_path("static/index.html")) as f:
-            url = f"{get_ip()}:{self.__port}"
-            html = f.read()
-            html = html.replace("$root-url", url)
+            html = f.read().replace("$root-url", f"{get_ip()}:{self.__port}")
             return HTMLResponse(content=html)
