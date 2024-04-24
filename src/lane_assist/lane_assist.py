@@ -86,8 +86,6 @@ class LaneAssist:
 
         self.__calibration = calibration
 
-        self.frame_times = []
-
     def start(self, multithreading: bool = False) -> Optional[threading.Thread]:
         """Start the lane assist.
 
@@ -114,8 +112,6 @@ class LaneAssist:
 
         :param image: The image to follow the path in.
         """
-        start_time = time.perf_counter()
-
         lines= get_lines(image, calibration=self.__calibration)
         filtered_lines = filter_lines(lines, image.shape[1] // 2)
 
@@ -139,11 +135,6 @@ class LaneAssist:
         self.lines = filtered_lines
         self.stopline_assist.detect_and_handle(image, filtered_lines)
 
-        # FIXME: remove telemetry
-        self.frame_times.append(time.perf_counter() - start_time)
-        if config.telemetry.enabled:
-            self.telemetry.websocket_handler.send_text("fps", f"{1 / (time.perf_counter() - start_time):.2f}")
-            self.telemetry.websocket_handler.send_text("error", f"{self.path_follower.errors[-1]:.2f}")
 
     def __follow_path(self, lines: list[Line], car_position: float, lane: int) -> None:
         """Follow the path.
