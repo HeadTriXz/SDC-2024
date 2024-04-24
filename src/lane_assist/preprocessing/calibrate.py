@@ -247,6 +247,15 @@ class CameraCalibrator:
         src_center = np.array([[[w // 2, h]]], dtype=np.float32) + self.offsets[self.ref_idx]
         dst_center = cv2.perspectiveTransform(src_center, self.topdown_matrix)[0][0]
 
+        # Update the render distance
+        render_front = config.calibration.render_distance.front * self.pixels_per_meter
+        render_side = config.calibration.render_distance.side * self.pixels_per_meter
+
+        min_x = max(min_x, dst_center[0] - render_side)
+        max_x = min(max_x, dst_center[0] + render_side)
+        min_y = max(min_y, dst_center[1] - render_front)
+
+        # Adjust the left and right sides of the image
         dist_to_left = dst_center[0] - min_x
         dist_to_right = max_x - dst_center[0]
         diff = dist_to_left - dist_to_right
