@@ -1,9 +1,11 @@
-import cv2
-import numpy as np
 import threading
 import time
-
 from collections.abc import Callable, Generator
+from typing import Optional
+
+import cv2
+import numpy as np
+
 from config import config
 from driving.can import ICANController
 from driving.speed_controller import ISpeedController
@@ -13,8 +15,6 @@ from lane_assist.line_following.path_follower import PathFollower
 from lane_assist.line_following.path_generator import Path, generate_driving_path
 from lane_assist.stopline_assist import StopLineAssist
 from telemetry.app import TelemetryServer
-from typing import Optional
-
 from utils.calibration_data import CalibrationData
 
 colours = {
@@ -56,14 +56,14 @@ class LaneAssist:
     telemetry: TelemetryServer
 
     def __init__(
-        self,
-        image_generation: Callable[[], Generator[np.ndarray, None, None]],
-        stopline_assist: StopLineAssist,
-        path_follower: PathFollower,
-        speed_controller: ISpeedController,
-        adjust_speed: Callable[[Path], int],
-        telemetry: TelemetryServer,
-        calibration: CalibrationData,
+            self,
+            image_generation: Callable[[], Generator[np.ndarray, None, None]],
+            stopline_assist: StopLineAssist,
+            path_follower: PathFollower,
+            speed_controller: ISpeedController,
+            adjust_speed: Callable[[Path], int],
+            telemetry: TelemetryServer,
+            calibration: CalibrationData,
     ) -> None:
         """Initialize the lane assist.
 
@@ -112,7 +112,7 @@ class LaneAssist:
 
         :param image: The image to follow the path in.
         """
-        lines= get_lines(image, calibration=self.__calibration)
+        lines = get_lines(image, calibration=self.__calibration)
         filtered_lines = filter_lines(lines, image.shape[1] // 2)
 
         # FIXME: remove telemetry
@@ -134,7 +134,6 @@ class LaneAssist:
 
         self.lines = filtered_lines
         self.stopline_assist.detect_and_handle(image, filtered_lines)
-
 
     def __follow_path(self, lines: list[Line], car_position: float, lane: int) -> None:
         """Follow the path.

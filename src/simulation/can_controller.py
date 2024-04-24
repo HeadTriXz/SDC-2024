@@ -8,6 +8,12 @@ from driving.can.can_controller_interface import ICANController
 class SimCanController(ICANController):
     """Simulate the can controller."""
 
+    updating = False
+
+    brake = 0
+    throttle = 0
+    steering = 0
+
     def __init__(self) -> None:
         """Initialize the can controller."""
         self.update_client = airsim.CarClient()
@@ -17,10 +23,6 @@ class SimCanController(ICANController):
 
         self.get_client = airsim.CarClient()
         self.get_client.confirmConnection()
-
-        self.brake = 0
-        self.throttle = 0
-        self.steering = 0
 
         self.__listeners = {}
 
@@ -58,8 +60,6 @@ class SimCanController(ICANController):
         self.update_client.setCarControls(car_controls)
         state = self.update_client.getCarState()
         self.__update(state.speed)
-
-    updating = False
 
     def __update(self, speed: float) -> None:
         if self.updating:

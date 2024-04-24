@@ -10,7 +10,8 @@ from lane_assist.line_detection.window import Window
 
 
 def window_search(
-    filtered_img: np.ndarray, window_count: int, windows: Iterable[Window], window_height: int, stopline: bool = False
+        filtered_img: np.ndarray, window_count: int, windows: Iterable[Window], window_height: int,
+        stopline: bool = False
 ) -> list[Line]:
     """Search for the windows in the image.
 
@@ -70,8 +71,8 @@ def __kill_windows(window: Window, other_window: Window, img_center: int) -> Non
     :param img_center: The center of the image (x-axis).
     """
     if (
-        window.x - window.margin < other_window.x + other_window.margin
-        and window.x + window.margin > other_window.x - other_window.margin
+        window.x - window.margin < other_window.x + other_window.margin and
+        window.x + window.margin > other_window.x - other_window.margin
     ):
         if window.found_in_previous and other_window.found_in_previous:
             # Kill the one furthest from the center.
