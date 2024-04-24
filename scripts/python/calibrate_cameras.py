@@ -1,8 +1,10 @@
+import cv2
 import logging
 
 from config import config
 from constants import CameraResolution
 from lane_assist.preprocessing.calibrate import CameraCalibrator
+from pathlib import Path
 from utils.video_stream import VideoStream
 
 
@@ -11,6 +13,7 @@ def calibrate_cameras() -> None:
     if len({config.camera_ids.left, config.camera_ids.center, config.camera_ids.right}) < 3:
         raise ValueError("Not all camera ids are unique, calibration may not work as expected")
 
+    # Initialize the camera streams.
     cam_left = VideoStream(config.camera_ids.left, resolution=CameraResolution.FHD)
     cam_center = VideoStream(config.camera_ids.center, resolution=CameraResolution.FHD)
     cam_right = VideoStream(config.camera_ids.right, resolution=CameraResolution.FHD)
@@ -22,15 +25,27 @@ def calibrate_cameras() -> None:
     if not cam_left.has_next() or not cam_center.has_next() or not cam_right.has_next():
         raise ValueError("Could not capture images from cameras")
 
+    # Calibrate the cameras.
     left_image = cam_left.next()
     center_image = cam_center.next()
     right_image = cam_right.next()
 
     calibrator = CameraCalibrator([left_image, center_image, right_image], input_shape=(1280, 720))
     calibrator.calibrate()
-    calibrator.save(config.calibration.save_dir)
 
-    logging.info("Successfully calibrated cameras. Output shape: %s", calibrator.output_shape)
+    save_dir = Path(config.calibration.save_dir)
+    history_file = calibrator.save(save_dir)
+
+    # Save the used images to the images dir.
+    images_dir = save_dir / "images" / history_file.stem
+    images_dir.mkdir(exist_ok=True, parents=True)
+
+    cv2.imwrite(str(images_dir / "left.png"), left_image)
+    cv2.imwrite(str(images_dir / "center.png"), center_image)
+    cv2.imwrite(str(images_dir / "right.png"), right_image)
+
+    # Clean up the resources.
+    logging.info("Saved the calibration results to %s. Output shape: %s", history_file, calibrator.output_shape)
 
     cam_left.stop()
     cam_center.stop()
@@ -38,4 +53,5 @@ def calibrate_cameras() -> None:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
     calibrate_cameras()

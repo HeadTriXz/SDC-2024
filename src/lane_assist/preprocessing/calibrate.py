@@ -335,10 +335,11 @@ class CameraCalibrator:
             self._charuco_ids.append(charuco_ids)
             self._src_grids[i] = corners_to_grid(charuco_corners, charuco_ids, get_board_shape())
 
-    def save(self, save_dir: Path | str) -> None:
+    def save(self, save_dir: Path | str) -> Path:
         """Save the calibration data to a file.
 
         :param save_dir: The folder to save the calibration data to.
+        :return: The path to the saved file.
         """
         if self.matrices is None or self.offsets is None:
             raise ValueError("The cameras have not been calibrated")
@@ -366,6 +367,7 @@ class CameraCalibrator:
 
         np.savez(history_file, **arrays)
         np.savez(latest_file, **arrays)
+        return history_file
 
     def _calculate_dst_grids(self) -> None:
         """Calculate the destination grids."""
