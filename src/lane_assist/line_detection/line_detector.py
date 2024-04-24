@@ -1,16 +1,14 @@
 from collections.abc import Callable
-from typing import Any, Tuple, List
+from typing import Any
 
 import cv2
 import numpy as np
 import scipy
-from matplotlib import pyplot as plt
 
 from config import config
 from lane_assist.line_detection.line import Line, LineType
 from lane_assist.line_detection.window import Window
 from lane_assist.line_detection.window_search import window_search
-from lane_assist.preprocessing.image_filters import basic_filter
 from utils.calibration_data import CalibrationData
 
 
@@ -36,7 +34,7 @@ def filter_lines(lines: list[Line], starting_point: int) -> list[Line]:
             break
         i += 1
 
-    return lines[j : i + 1]
+    return lines[j: i + 1]
 
 
 def get_lines(image: np.ndarray, calibration: CalibrationData) -> list[Line]:
@@ -51,10 +49,10 @@ def get_lines(image: np.ndarray, calibration: CalibrationData) -> list[Line]:
     cv2.threshold(image, config.image_manipulation.white_threshold, 255, cv2.THRESH_BINARY, image)
 
     # Filter the image. This is done in place and will be used to remove zebra crossings.
-    # basic_filter(image)
+    # basic_filter(image)  # noqa: ERA001 might be needed in real life
 
     # create histogram to find the start of the lines
-    pixels = image[image.shape[0] // 2 :, :]
+    pixels = image[image.shape[0] // 2:, :]
     pixels = np.multiply(pixels, np.linspace(0, 1, pixels.shape[0])[:, np.newaxis])
     histogram = np.sum(pixels, axis=0)
 
@@ -102,8 +100,9 @@ def get_stoplines(image: np.ndarray, lines: list[Line], calibration: Calibration
     # get the number of windows needed to be at least 2.5 meters long. a stopline will be 3 meters long
     min_windows = int(2.5 * calibration.pixels_per_meter) // window_height
     max_windows = int(3.5 * calibration.pixels_per_meter) // window_height
-    # return filter_stoplines(lines, window_height, min_windows, max_windows) #FIXME: reinstate shit
-    return filter_stoplines(lines, window_height, 8, 99999999999999999999999999999999)
+    return filter_stoplines(lines, window_height, min_windows, max_windows)
+    # return filter_stoplines(lines, window_height, 8, 999)  # noqa: ERA001 Simulator has no real calibration
+
 
 def filter_stoplines(lines: list[Line], window_height: int, minimum_points: int, max_points: int) -> list[Line]:
     """Filter the stoplines to be actual stoplines.
@@ -118,7 +117,7 @@ def filter_stoplines(lines: list[Line], window_height: int, minimum_points: int,
     for line in lines:
         gaps = np.diff(line.points[:, 0])
         start, stop = __longest_sequence(gaps, lambda x: x == -window_height)
-        if stop - start > minimum_points and stop-start < max_points:
+        if stop - start > minimum_points and stop - start < max_points:
             filtered_lines.append(Line(line.points[start:stop], line_type=LineType.STOP))
 
     return filtered_lines
@@ -142,7 +141,7 @@ def __longest_sequence(items: np.ndarray, condition: Callable[[Any], bool]) -> t
 
 
 def __get_lines(
-    image: np.ndarray, histogram: np.ndarray, calibration: CalibrationData, stopline: bool = False
+        image: np.ndarray, histogram: np.ndarray, calibration: CalibrationData, stopline: bool = False
 ) -> tuple[list[Line], int]:
     """Get the lines in the image.
 
@@ -189,4 +188,3 @@ def __lines_to_points(lines: list[Line]) -> np.ndarray:
     for line in lines:
         points = np.append(points, line.points)
     return points.reshape(-1, 2).astype(int)
-

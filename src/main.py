@@ -1,6 +1,4 @@
 import os
-import pickle
-import time
 
 from config import config
 from constants import Gear
