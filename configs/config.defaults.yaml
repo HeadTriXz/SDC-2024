@@ -4,18 +4,18 @@ camera_ids:
   right: 0
 
 calibration:
-  aruco_dict: 0  # DICT_4X4_50
+  aruco_dict: 1  # DICT_4X4_100
   board_height: 8
-  board_width: 6
+  board_width: 10
   calibration_file: "${.save_dir}/latest.npz"
   max_image_height: 400
   max_image_width: 200
-  marker_length: 0.070
+  marker_length: 0.086
   render_distance:
     front: 20.0
     side: 6.0
   save_dir: "../data/calibration"
-  square_length: 0.094
+  square_length: 0.115
   vanishing_line_offset: 0.02
 
 speed_modes:
