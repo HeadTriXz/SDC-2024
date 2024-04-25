@@ -5,6 +5,7 @@ from config import config
 from constants import CameraResolution
 from lane_assist.preprocessing.calibrate import CameraCalibrator
 from pathlib import Path
+from scripts.python.show_calibrated_cameras import send_discord_calibration
 from utils.video_stream import VideoStream
 
 
@@ -36,6 +37,13 @@ def calibrate_cameras() -> None:
     save_dir = Path(config.calibration.save_dir)
     history_file = calibrator.save(save_dir)
 
+    # Clean up the resources.
+    logging.info("Saved the calibration results to %s. Output shape: %s", history_file, calibrator.output_shape)
+
+    cam_left.stop()
+    cam_center.stop()
+    cam_right.stop()
+
     # Save the used images to the images dir.
     images_dir = save_dir / "images" / history_file.stem
     images_dir.mkdir(exist_ok=True, parents=True)
@@ -44,12 +52,8 @@ def calibrate_cameras() -> None:
     cv2.imwrite(str(images_dir / "center.png"), center_image)
     cv2.imwrite(str(images_dir / "right.png"), right_image)
 
-    # Clean up the resources.
-    logging.info("Saved the calibration results to %s. Output shape: %s", history_file, calibrator.output_shape)
-
-    cam_left.stop()
-    cam_center.stop()
-    cam_right.stop()
+    # Send an example to Discord.
+    send_discord_calibration()
 
 
 if __name__ == "__main__":
