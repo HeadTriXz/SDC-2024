@@ -121,7 +121,11 @@ class SpeedController(ISpeedController):
         """Print debug information."""
         while True:
             logging.info(
-                "Current: %s | Target: %s | Max: %s", self.current_speed, self.__target_speed, self.__max_speed
+                "Current: %s | Target: %s | Max: %s | State: %s",
+                self.current_speed,
+                self.__target_speed,
+                self.__max_speed,
+                self.state.name
             )
             time.sleep(1)
 

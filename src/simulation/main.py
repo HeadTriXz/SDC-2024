@@ -1,9 +1,6 @@
 import airsim
 import cv2
 import numpy as np
-import os
-import pickle
-import time
 
 from config import config
 from driving.speed_controller import SpeedController, SpeedControllerState
@@ -23,8 +20,6 @@ def start_simulator() -> None:
     # Start the client.
     client = airsim.CarClient()
     client.confirmConnection()
-    client.enableApiControl(True)
-    client.reset()
 
     def get_sim_image_generator() -> Generator[np.ndarray, None, None]:
         while True:
@@ -43,13 +38,13 @@ def start_simulator() -> None:
 
             yield grayscale
 
-    can_controller = SimCanController(client)
+    can_controller = SimCanController()
     speed_controller = SpeedController(can_controller)
     speed_controller.max_speed = 50
     speed_controller.state = SpeedControllerState.DRIVING
 
     # Load the calibration data
-    calibration_file = Path(f"../{config.calibration.calibration_file}")
+    calibration_file = Path(config.calibration.calibration_file)
     if not calibration_file.exists():
         raise FileNotFoundError(f"Calibration file not found: {calibration_file}")
 
@@ -68,21 +63,9 @@ def start_simulator() -> None:
         speed_controller,
         adjust_speed=lambda _path: 15,
         telemetry=telemetry,
+        calibration=calibration
     )
 
-    try:
-        telemetry.start()
-        lane_assist.start()
-    except KeyboardInterrupt:
-        pass
-
-    # save the telemetry to the disk
-    folder_path = "../data/telemetry/"
-    os.makedirs(folder_path, exist_ok=True)
-
-    with open(f"{folder_path}{time.time()}-errors.pkl", "wb") as f:
-        pickle.dump(lane_assist.path_follower.errors, f)
-
-    # write the fps into a file
-    with open(f"{folder_path}{time.time()}-frame_times.pkl", "wb") as f:
-        pickle.dump(lane_assist.frame_times, f)
+    telemetry.start()
+    speed_controller.start()
+    lane_assist.start()

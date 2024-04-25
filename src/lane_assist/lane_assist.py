@@ -14,6 +14,8 @@ from lane_assist.line_following.path_generator import Path, generate_driving_pat
 from lane_assist.stopline_assist import StopLineAssist
 from telemetry.app import TelemetryServer
 from typing import Optional
+from utils.calibration_data import CalibrationData
+
 
 colours = {
     LineType.SOLID: (0, 255, 0),
@@ -54,13 +56,14 @@ class LaneAssist:
     telemetry: TelemetryServer
 
     def __init__(
-        self,
-        image_generation: Callable[[], Generator[np.ndarray, None, None]],
-        stopline_assist: StopLineAssist,
-        path_follower: PathFollower,
-        speed_controller: ISpeedController,
-        adjust_speed: Callable[[Path], int],
-        telemetry: TelemetryServer
+            self,
+            image_generation: Callable[[], Generator[np.ndarray, None, None]],
+            stopline_assist: StopLineAssist,
+            path_follower: PathFollower,
+            speed_controller: ISpeedController,
+            adjust_speed: Callable[[Path], int],
+            telemetry: TelemetryServer,
+            calibration: CalibrationData,
     ) -> None:
         """Initialize the lane assist.
 
@@ -81,7 +84,7 @@ class LaneAssist:
         self.stopline_assist = stopline_assist
         self.telemetry = telemetry
 
-        self.frame_times = []
+        self.__calibration = calibration
 
     def start(self, multithreading: bool = False) -> Optional[threading.Thread]:
         """Start the lane assist.
@@ -109,39 +112,28 @@ class LaneAssist:
 
         :param image: The image to follow the path in.
         """
-        start_time = time.perf_counter()
-
-        lines, stop_lines = get_lines(image)
-        driving_lines = filter_lines(lines, image.shape[1] // 2)
+        lines = get_lines(image, calibration=self.__calibration)
+        filtered_lines = filter_lines(lines, image.shape[1] // 2)
 
         # FIXME: remove telemetry
         if config.telemetry.enabled:
             rgb = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
 
             # Draw the lines on the image.
-            for line in driving_lines:
+            for line in filtered_lines:
                 for point in line.points:
                     cv2.circle(rgb, (point[0], point[1]), 3, colours[line.line_type], -1)
 
             self.telemetry.websocket_handler.send_image("laneassist", rgb)
 
-        if len(driving_lines) < 2:
-            # FIXME: remove telemetry
-            self.frame_times.append(time.perf_counter() - start_time)
-            if config.telemetry.enabled:
-                self.telemetry.websocket_handler.send_text("fps", f"{1 / (time.perf_counter() - start_time):.2f}")
+        if len(filtered_lines) < 2:
             return
 
         # Act on the lines in the image.
-        self.__follow_path(driving_lines, image.shape[1] // 2, self.requested_lane)
-        self.stopline_assist.handle_stop_lines(stop_lines)
-        self.lines = driving_lines
+        self.__follow_path(filtered_lines, image.shape[1] // 2, self.requested_lane)
 
-        # FIXME: remove telemetry
-        self.frame_times.append(time.perf_counter() - start_time)
-        if config.telemetry.enabled:
-            self.telemetry.websocket_handler.send_text("fps", f"{1 / (time.perf_counter() - start_time):.2f}")
-            self.telemetry.websocket_handler.send_text("error", f"{self.path_follower.errors[-1]:.2f}")
+        self.lines = filtered_lines
+        self.stopline_assist.detect_and_handle(image, filtered_lines)
 
     def __follow_path(self, lines: list[Line], car_position: float, lane: int) -> None:
         """Follow the path.

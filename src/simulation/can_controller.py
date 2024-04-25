@@ -1,20 +1,36 @@
 import airsim
+import can
+
+from constants import CANFeedbackIdentifier
 from driving.can.can_controller_interface import ICANController
 
 
 class SimCanController(ICANController):
     """Simulate the can controller."""
 
-    def __init__(self, client: airsim.CarClient) -> None:
-        """Initialize the can controller."""
-        self.client = client
-        self.brake = 0
-        self.throttle = 0
-        self.steering = 0
+    updating = False
 
-    def add_listener(self, message_id: int, listener: callable) -> None:
+    brake = 0
+    throttle = 0
+    steering = 0
+
+    def __init__(self) -> None:
+        """Initialize the can controller."""
+        self.update_client = airsim.CarClient()
+        self.update_client.confirmConnection()
+        self.update_client.enableApiControl(True)
+        self.update_client.reset()
+
+        self.get_client = airsim.CarClient()
+        self.get_client.confirmConnection()
+
+        self.__listeners = {}
+
+    def add_listener(self, message_id: CANFeedbackIdentifier, listener: callable) -> None:
         """Add a listener."""
-        pass
+        if message_id not in self.__listeners:
+            self.__listeners[message_id] = []
+        self.__listeners[message_id].append(listener)
 
     def set_brake(self, brake: int) -> None:
         """Set the brake."""
@@ -41,4 +57,20 @@ class SimCanController(ICANController):
         car_controls.steering = self.steering
         car_controls.throttle = self.throttle
         car_controls.brake = self.brake
-        self.client.setCarControls(car_controls)
+        self.update_client.setCarControls(car_controls)
+        state = self.update_client.getCarState()
+        self.__update(state.speed)
+
+    def __update(self, speed: float) -> None:
+        if self.updating:
+            return
+
+        self.updating = True
+
+        msg_bytes = int(speed * 36).to_bytes(2, byteorder="big")
+        can_msg = can.Message(arbitration_id=CANFeedbackIdentifier.SPEED_SENSOR, data=msg_bytes)
+        if CANFeedbackIdentifier.SPEED_SENSOR in self.__listeners:
+            for listener in self.__listeners[CANFeedbackIdentifier.SPEED_SENSOR]:
+                listener(can_msg)
+
+        self.updating = False

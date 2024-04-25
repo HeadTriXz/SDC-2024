@@ -32,18 +32,22 @@ image_manipulation:
     left: 1.0
     center: 1.0
     right: 1.0
-  white_threshold: 200
+  white_threshold: 180
 
 lane_assist:
   line_detection:
-    line_width: 50
     pixels_in_window: 1
+    window_margin_growth: 0.25
+
+    window_sizing:
+      height: 0.2
+      width: 0.5
 
     thresholds:
       zebra_crossing: 20000
-      line: 1000
 
     filtering:
+      active: true
       rel_height: 0.9
 
     pid:
@@ -93,6 +97,10 @@ telemetry:
     port: 8000
     host: 0.0.0.0
     root_url: 192.168.1.89
+
+dynamic_speed:
+  friction_coefficient: 0.9
+  static: false
 
 lidar:
   port_name: "COM4"
