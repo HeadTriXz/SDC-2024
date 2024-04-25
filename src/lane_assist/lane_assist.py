@@ -1,11 +1,9 @@
-import threading
-import time
-from collections.abc import Callable, Generator
-from typing import Optional
-
 import cv2
 import numpy as np
+import threading
+import time
 
+from collections.abc import Callable, Generator
 from config import config
 from driving.can import ICANController
 from driving.speed_controller import ISpeedController
@@ -15,7 +13,10 @@ from lane_assist.line_following.path_follower import PathFollower
 from lane_assist.line_following.path_generator import Path, generate_driving_path
 from lane_assist.stopline_assist import StopLineAssist
 from telemetry.app import TelemetryServer
+from typing import Optional
 from utils.calibration_data import CalibrationData
+from utils.calibration_data import CalibrationData
+
 
 colours = {
     LineType.SOLID: (0, 255, 0),

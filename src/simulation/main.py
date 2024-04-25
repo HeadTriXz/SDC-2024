@@ -44,7 +44,7 @@ def start_simulator() -> None:
     speed_controller.state = SpeedControllerState.DRIVING
 
     # Load the calibration data
-    calibration_file = Path(f"{config.calibration.calibration_file}")
+    calibration_file = Path(config.calibration.calibration_file)
     if not calibration_file.exists():
         raise FileNotFoundError(f"Calibration file not found: {calibration_file}")
 

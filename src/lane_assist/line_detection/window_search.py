@@ -1,12 +1,12 @@
 import itertools
-from collections.abc import Iterable
-
 import numpy as np
 import scipy
 
+from collections.abc import Iterable
 from config import config
 from lane_assist.line_detection.line import Line, LineType
 from lane_assist.line_detection.window import Window
+
 
 
 def window_search(

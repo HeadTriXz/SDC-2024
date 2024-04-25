@@ -1,16 +1,14 @@
-from collections.abc import Callable
-from typing import Any
-
 import cv2
 import numpy as np
 import scipy
 
+from collections.abc import Callable
 from config import config
 from lane_assist.line_detection.line import Line, LineType
 from lane_assist.line_detection.window import Window
 from lane_assist.line_detection.window_search import window_search
+from typing import Any
 from utils.calibration_data import CalibrationData
-
 
 def filter_lines(lines: list[Line], starting_point: int) -> list[Line]:
     """Get the lines between the solid lines closest to each side of the starting point.
