@@ -3,6 +3,7 @@ import numpy as np
 import scipy
 
 from config import config
+from utils.calibration_data import CalibrationData
 
 
 @dataclasses.dataclass
@@ -24,7 +25,7 @@ class HistogramPeak:
     right: int
 
 
-def basic_filter(img: np.ndarray) -> tuple[np.ndarray, list[HistogramPeak]]:
+def basic_filter(img: np.ndarray, calibration: CalibrationData) -> tuple[np.ndarray, list[HistogramPeak]]:
     """Filter the image based on the axis.
 
     :param img: The image to filter.
@@ -34,9 +35,11 @@ def basic_filter(img: np.ndarray) -> tuple[np.ndarray, list[HistogramPeak]]:
     pixels = img[:, third : 2 * third]
 
     histogram = np.sum(pixels, axis=1)
-
+    width = calibration.pixels_per_meter * 0.5
     peaks = scipy.signal.find_peaks(
-        histogram, height=config.lane_assist.line_detection.thresholds.zebra_crossing, distance=40
+        histogram,
+        height=config.lane_assist.line_detection.thresholds.zebra_crossing,
+        width=width
     )[0]
 
     widths, _, lefts, rights = scipy.signal.peak_widths(
@@ -50,11 +53,9 @@ def basic_filter(img: np.ndarray) -> tuple[np.ndarray, list[HistogramPeak]]:
     if len(peaks) == 0:
         return img, []
 
-    std = np.std(histogram)
     for peak in histogram_peaks:
-        if peak.width > std:
-            img[int(peak.left) : int(peak.right)] = 0
-            img[int(peak.left) : int(peak.right)] = 0
+        img[int(peak.left) : int(peak.right)] = 0
+        img[int(peak.left) : int(peak.right)] = 0
 
     return img, histogram_peaks
 

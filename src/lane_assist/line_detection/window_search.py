@@ -8,7 +8,6 @@ from lane_assist.line_detection.line import Line, LineType
 from lane_assist.line_detection.window import Window
 
 
-
 def window_search(
         filtered_img: np.ndarray, window_count: int, windows: Iterable[Window], window_height: int,
         stopline: bool = False
@@ -33,10 +32,10 @@ def window_search(
 
         for window in running_windows:
             # Get the new sides of the window.
-            top = window.y - window_height
-            bottom = window.y
-            left = window.x - int(window.margin)
-            right = window.x + int(window.margin)
+            top = min(max(window.y - window_height, 0), filtered_img.shape[0])
+            bottom = min(max(window.y, 0), filtered_img.shape[0])
+            left = min(max(window.x - int(window.margin), 0), filtered_img.shape[1])
+            right = min(max(window.x + int(window.margin), 0), filtered_img.shape[1])
 
             non_zero_count = np.sum(filtered_img[top:bottom, left:right]) // 255
             if non_zero_count < config.lane_assist.line_detection.pixels_in_window:

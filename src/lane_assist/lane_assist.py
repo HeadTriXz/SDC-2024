@@ -15,7 +15,6 @@ from lane_assist.stopline_assist import StopLineAssist
 from telemetry.app import TelemetryServer
 from typing import Optional
 from utils.calibration_data import CalibrationData
-from utils.calibration_data import CalibrationData
 
 
 colours = {

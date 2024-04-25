@@ -1,9 +1,11 @@
 image_manipulation:
-  white_threshold: 220
+  white_threshold: 185
+
 
 lane_assist:
   line_detection:
-    thresholds:
-      zebra_crossing: 25000
     filtering:
-        rel_height: 0.98
+        rel_height: 0.95
+
+    thresholds:
+      zebra_crossing: 5000

@@ -8,7 +8,9 @@ from lane_assist.line_detection.line import Line, LineType
 from lane_assist.line_detection.window import Window
 from lane_assist.line_detection.window_search import window_search
 from typing import Any
+from lane_assist.preprocessing.image_filters import basic_filter
 from utils.calibration_data import CalibrationData
+
 
 def filter_lines(lines: list[Line], starting_point: int) -> list[Line]:
     """Get the lines between the solid lines closest to each side of the starting point.
@@ -47,7 +49,8 @@ def get_lines(image: np.ndarray, calibration: CalibrationData) -> list[Line]:
     cv2.threshold(image, config.image_manipulation.white_threshold, 255, cv2.THRESH_BINARY, image)
 
     # Filter the image. This is done in place and will be used to remove zebra crossings.
-    # basic_filter(image)  # noqa: ERA001 might be needed in real life
+    if config.lane_assist.line_detection.filtering.active:
+        basic_filter(image, calibration)
 
     # create histogram to find the start of the lines
     pixels = image[image.shape[0] // 2:, :]
@@ -114,8 +117,8 @@ def filter_stoplines(lines: list[Line], window_height: int, minimum_points: int,
     filtered_lines = []
     for line in lines:
         gaps = np.diff(line.points[:, 0])
-        start, stop = __longest_sequence(gaps, lambda x: x == -window_height)
-        if stop - start > minimum_points and stop - start < max_points:
+        start, stop = __longest_sequence(gaps, lambda x: window_height + 2 > -x > window_height - 2)
+        if minimum_points < stop - start < max_points:
             filtered_lines.append(Line(line.points[start:stop], line_type=LineType.STOP))
 
     return filtered_lines
@@ -157,7 +160,6 @@ def __get_lines(
     window_count = image.shape[0] // window_height
 
     peaks = scipy.signal.find_peaks(histogram, height=std, distance=window_width * 2)[0]
-
     windows = [Window(center, image.shape[0], window_width // 2, window_count) for center in peaks]
     lines = window_search(image, window_count, windows, image.shape[0] // window_count, stopline)
     return lines, window_height
