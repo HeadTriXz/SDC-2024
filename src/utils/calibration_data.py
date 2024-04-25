@@ -44,9 +44,8 @@ class CalibrationData(metaclass=SingletonMeta):
             raise ValueError("Calibrator has not been calibrated yet.")
 
         # Ensure all the images are the right shape
-        valid_shape = tuple(self.input_shape[::-1])
         for i, image in enumerate(images):
-            if image.shape == valid_shape:
+            if image.shape == self.input_shape[::-1]:
                 continue
 
             images[i] = cv2.resize(image, self.input_shape, interpolation=cv2.INTER_NEAREST)
@@ -138,12 +137,12 @@ class CalibrationData(metaclass=SingletonMeta):
         data = np.load(Path(path))
 
         calibration_data = CalibrationData()
-        calibration_data.input_shape = data["input_shape"]
+        calibration_data.input_shape = tuple(data["input_shape"])
         calibration_data.matrices = data["matrices"]
         calibration_data.offsets = data["offsets"]
         calibration_data.output_shape = tuple(data["output_shape"])
-        calibration_data.pixels_per_meter = data["pixels_per_meter"]
-        calibration_data.ref_idx = data["ref_idx"]
+        calibration_data.pixels_per_meter = float(data["pixels_per_meter"])
+        calibration_data.ref_idx = int(data["ref_idx"])
         calibration_data.shapes = data["shapes"]
         calibration_data.stitched_shape = tuple(data["stitched_shape"])
         calibration_data.topdown_matrix = data["topdown_matrix"]
