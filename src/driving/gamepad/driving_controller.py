@@ -34,6 +34,7 @@ class BasicControllerDriving:
         super().__init__()
         self.can_controller = can_controller
         self.gamepad = gamepad
+        self.paused = False
 
     def start(self) -> None:
         """Start driving using a controller."""
@@ -86,6 +87,9 @@ class BasicControllerDriving:
 
         :param value: The value of the steering angle.
         """
+        if self.paused:
+            return
+
         if abs(value) <= 0.1:
             value = 0.0
 
@@ -96,4 +100,7 @@ class BasicControllerDriving:
 
         :param value: The value of the throttle.
         """
+        if self.paused:
+            return
+
         self.can_controller.set_throttle(int(value * 100), self.gear)

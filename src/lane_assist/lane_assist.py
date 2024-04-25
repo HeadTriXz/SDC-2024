@@ -15,10 +15,7 @@ from lane_assist.stopline_assist import StopLineAssist
 from telemetry.app import TelemetryServer
 from typing import Optional
 
-colours = {
-    LineType.SOLID: (0, 255, 0),
-    LineType.DASHED: (0, 0, 255)
-}
+colours = {LineType.SOLID: (0, 255, 0), LineType.DASHED: (0, 0, 255)}
 
 
 class LaneAssist:
@@ -60,7 +57,7 @@ class LaneAssist:
         path_follower: PathFollower,
         speed_controller: ISpeedController,
         adjust_speed: Callable[[Path], int],
-        telemetry: TelemetryServer
+        telemetry: TelemetryServer,
     ) -> None:
         """Initialize the lane assist.
 
@@ -76,6 +73,7 @@ class LaneAssist:
         self.image_generator = image_generation
         self.lines = []
         self.path_follower = path_follower
+        self.paused = True
         self.requested_lane = config.lane_assist.line_following.requested_lane
         self.speed_controller = speed_controller
         self.stopline_assist = stopline_assist
@@ -99,6 +97,10 @@ class LaneAssist:
 
     def __run(self) -> None:
         for gray_image in self.image_generator():
+            if self.paused:
+                time.sleep(0.5)
+                continue
+
             self.lane_assist_loop(gray_image)
             time.sleep(0)
 

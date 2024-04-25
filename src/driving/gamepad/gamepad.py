@@ -69,12 +69,7 @@ class Gamepad:
         self._long_press_timers = {}
         self.__thread = Thread(target=self.__listen, daemon=True)
 
-    def add_listener(
-            self,
-            input_type: GamepadButton | GamepadAxis,
-            event_type: EventType,
-            callback: callable
-    ) -> None:
+    def add_listener(self, input_type: GamepadButton | GamepadAxis, event_type: EventType, callback: callable) -> None:
         """Add a listener for an event.
 
         :param input_type: The type of input to listen on.
@@ -114,10 +109,7 @@ class Gamepad:
             self._long_press_timers[button].cancel()
 
     def _check_events(
-            self,
-            input_type: GamepadButton | GamepadAxis,
-            event_type: EventType,
-            value: float = None
+        self, input_type: GamepadButton | GamepadAxis, event_type: EventType, value: float = None
     ) -> None:
         """Check if any listeners are waiting for an event.
 
@@ -156,11 +148,10 @@ class Gamepad:
         :param event: The event to handle.
         """
         button = GamepadButton(event.code)
-
         if event.state:
             self._buttons[button] = True
             self._check_events(button, EventType.BUTTON_DOWN)
-            if button not in self._last_buttons:
+            if button not in self._last_buttons or not self._last_buttons[button]:
                 self._start_long_press_timer(button)
         else:
             self._buttons[button] = False
