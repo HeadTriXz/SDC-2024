@@ -1,7 +1,7 @@
 import os
 
 from config import config
-from constants import Gear
+from constants import Gear, CameraResolution
 from driving.can import CANController, get_can_bus
 from driving.speed_controller import SpeedController, SpeedControllerState
 from lane_assist.helpers import td_stitched_image_generator
@@ -22,9 +22,9 @@ from telemetry.app import TelemetryServer
 
 def start_kart() -> None:
     """Start the main loop."""
-    cam_left = VideoStream(config.camera_ids.left)
-    cam_center = VideoStream(config.camera_ids.center)
-    cam_right = VideoStream(config.camera_ids.right)
+    cam_left = VideoStream(config.camera_ids.left, resolution=CameraResolution.NHD)
+    cam_center = VideoStream(config.camera_ids.center, resolution=CameraResolution.HD)
+    cam_right = VideoStream(config.camera_ids.right, resolution=CameraResolution.NHD)
 
     cam_left.start()
     cam_center.start()

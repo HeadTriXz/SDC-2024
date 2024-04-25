@@ -30,7 +30,7 @@ def calibrate_cameras() -> None:
     center_image = cam_center.next()
     right_image = cam_right.next()
 
-    calibrator = CameraCalibrator([left_image, center_image, right_image], input_shape=(1280, 720))
+    calibrator = CameraCalibrator([left_image, center_image, right_image], input_shape=CameraResolution.NHD)
     calibrator.calibrate()
 
     save_dir = Path(config.calibration.save_dir)

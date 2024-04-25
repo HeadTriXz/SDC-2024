@@ -12,6 +12,7 @@ class CalibrationData(metaclass=SingletonMeta):
 
     Attributes
     ----------
+        input_shape: The shape of the input images (width, height).
         matrices: The perspective matrices for each camera.
         offsets: The offsets for each camera.
         output_shape: The output shape for the topdown image (width, height).
@@ -23,6 +24,7 @@ class CalibrationData(metaclass=SingletonMeta):
 
     """
 
+    input_shape: tuple[int, int]
     matrices: np.ndarray
     offsets: np.ndarray
     output_shape: tuple[int, int]
@@ -40,6 +42,13 @@ class CalibrationData(metaclass=SingletonMeta):
         """
         if self.topdown_matrix is None:
             raise ValueError("Calibrator has not been calibrated yet.")
+
+        # Ensure all the images are the right shape
+        for i, image in enumerate(images):
+            if image.shape == self.input_shape[::-1]:
+                continue
+
+            images[i] = cv2.resize(image, self.input_shape, interpolation=cv2.INTER_NEAREST)
 
         # Stitch the warped images together
         stitched = np.zeros(self.stitched_shape[::-1], dtype=np.uint8)
@@ -128,11 +137,12 @@ class CalibrationData(metaclass=SingletonMeta):
         data = np.load(Path(path))
 
         calibration_data = CalibrationData()
+        calibration_data.input_shape = tuple(data["input_shape"])
         calibration_data.matrices = data["matrices"]
         calibration_data.offsets = data["offsets"]
         calibration_data.output_shape = tuple(data["output_shape"])
-        calibration_data.pixels_per_meter = data["pixels_per_meter"]
-        calibration_data.ref_idx = data["ref_idx"]
+        calibration_data.pixels_per_meter = float(data["pixels_per_meter"])
+        calibration_data.ref_idx = int(data["ref_idx"])
         calibration_data.shapes = data["shapes"]
         calibration_data.stitched_shape = tuple(data["stitched_shape"])
         calibration_data.topdown_matrix = data["topdown_matrix"]
