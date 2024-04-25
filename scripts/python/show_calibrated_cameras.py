@@ -1,4 +1,5 @@
 import cv2
+import logging
 import numpy as np
 import requests
 
@@ -47,7 +48,10 @@ def send_discord_calibration() -> None:
     calibration_data = CalibrationData.load(calibration_path)
     topdown = calibration_data.transform([left_image, center_image, right_image])
 
-    send_discord_image(topdown)
+    try:
+        send_discord_image(topdown)
+    except Exception as e:
+        logging.warning("Failed to send image to Discord: %s", e)
 
     left_cam.stop()
     center_cam.stop()

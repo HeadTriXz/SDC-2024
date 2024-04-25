@@ -37,13 +37,6 @@ def calibrate_cameras() -> None:
     save_dir = Path(config.calibration.save_dir)
     history_file = calibrator.save(save_dir)
 
-    # Clean up the resources.
-    logging.info("Saved the calibration results to %s. Output shape: %s", history_file, calibrator.output_shape)
-
-    cam_left.stop()
-    cam_center.stop()
-    cam_right.stop()
-
     # Save the used images to the images dir.
     images_dir = save_dir / "images" / history_file.stem
     images_dir.mkdir(exist_ok=True, parents=True)
@@ -54,6 +47,13 @@ def calibrate_cameras() -> None:
 
     # Send an example to Discord.
     send_discord_calibration()
+
+    # Clean up the resources.
+    logging.info("Saved the calibration results to %s. Output shape: %s", history_file, calibrator.output_shape)
+
+    cam_left.stop()
+    cam_center.stop()
+    cam_right.stop()
 
 
 if __name__ == "__main__":
