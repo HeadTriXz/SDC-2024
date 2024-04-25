@@ -184,7 +184,4 @@ def __lines_to_points(lines: list[Line]) -> np.ndarray:
     :param lines: The lines to convert.
     :return: The points of the lines.
     """
-    points = np.array([])
-    for line in lines:
-        points = np.append(points, line.points)
-    return points.reshape(-1, 2).astype(int)
+    return np.concatenate([line.points for line in lines], dtype=np.int32)
