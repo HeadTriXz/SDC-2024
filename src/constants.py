@@ -32,6 +32,7 @@ class CameraResolution(tuple[int, int], Enum):
     FHD = (1920, 1080)
     HD = (1280, 720)
     VGA = (848, 480)
+    NHD = (640, 360)
 
 
 class CameraFramerate(float, Enum):

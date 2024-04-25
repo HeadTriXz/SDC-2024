@@ -355,6 +355,7 @@ class CameraCalibrator:
         arrays = dict(
             camera_matrix=self.camera_matrix,
             dist_coeffs=self.dist_coeffs,
+            input_shape=self._input_shape,
             matrices=self.matrices,
             offsets=self.offsets,
             output_shape=self.output_shape,
@@ -380,13 +381,13 @@ class CameraCalibrator:
         self._combined_grid = np.zeros(self._src_grids.shape[1:], dtype=np.float32)
         self._dst_grids = np.zeros_like(self._src_grids, dtype=np.float32)
 
-        for i, (image, matrix, grid) in enumerate(zip(self.images, self.matrices, self._src_grids)):
+        for i, (matrix, grid) in enumerate(zip(self.matrices, self._src_grids)):
             if i == self.ref_idx:
                 merge_grids(self._combined_grid, grid)
                 self._dst_grids[i] = grid
                 continue
 
-            min_x, min_y = get_transformed_corners(matrix, image.shape[:2])[:2]
+            min_x, min_y = get_transformed_corners(matrix, self._input_shape[::-1])[:2]
             dst_grid = cv2.perspectiveTransform(grid.reshape(-1, 1, 2), matrix).reshape(grid.shape)
             dst_grid[np.all(grid == 0, axis=2)] = 0
 
