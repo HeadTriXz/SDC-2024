@@ -12,9 +12,10 @@ def get_can_bus(channel: str = "can0", bitrate: int = 500000) -> can.ThreadSafeB
     :param bitrate: The bitrate to use.
     :return: The created CAN bus.
     """
-    status = os.system("ip link set can0 type can bitrate 500000")
-    if status == 0:
-        os.system("ip link set can0 up")
+    if os.path.exists(f"/dev/{channel}"):
+        os.system(f"ip link set {channel} type can bitrate {bitrate}")
+        os.system(f"ip link set {channel} up")
+
         return can.ThreadSafeBus(interface="socketcan", channel=channel, bitrate=bitrate)
 
     logging.warning("Failed to create CAN interface, using virtual interface instead.")
