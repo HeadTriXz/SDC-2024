@@ -184,9 +184,14 @@ class Gamepad:
     def __listen(self) -> None:
         """Listen for gamepad events."""
         while True:
-            events = inputs.get_gamepad()
-            for event in events:
-                if event.ev_type == "Key":
-                    self._handle_button_event(event)
-                elif event.ev_type == "Absolute":
-                    self._handle_axis_event(event)
+            try:
+                events = inputs.get_gamepad()
+                for event in events:
+                    if event.ev_type == "Key":
+                        self._handle_button_event(event)
+                    elif event.ev_type == "Absolute":
+                        self._handle_axis_event(event)
+            except inputs.UnknownEventType:
+                pass
+            except Exception as e:
+                logging.error("Failed to read gamepad events: %s", e)
