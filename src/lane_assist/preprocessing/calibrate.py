@@ -399,6 +399,36 @@ class CameraCalibrator:
             adjusted_matrix = np.array([[1, 0, -min_x], [0, 1, -min_y], [0, 0, 1]])
             self.matrices[i] = np.dot(adjusted_matrix, matrix)
 
+    def _calculate_intersections(self, vertical: bool = False) -> float:
+        """Calculate the intersections of the ChArUco board.
+
+        :param vertical: Whether to use the vertical lines.
+        :return: The intersections of the ChArUco board.
+        """
+        # Get the grid of the ChArUco board
+        grid = self._combined_grid
+        if vertical:
+            grid = grid.transpose(1, 0, 2)
+
+        # Find the lines of the ChArUco board
+        lines = [[point for point in row if np.any(point)] for row in grid]
+        lines = [(line[0], line[-1]) for line in lines if len(line) > 1]
+
+        # Find the intersections of the lines
+        intersections = [find_intersection(lines[i], lines[j], False)
+                         for i in range(len(lines) - 1)
+                         for j in range(i + 1, len(lines))]
+        intersections = [point for point in intersections if point is not None]
+        intersections = np.array(intersections)
+
+        if len(intersections) == 0:
+            return np.nan
+
+        vanishing_line = np.median(intersections, axis=0)[1]
+        vanishing_line *= 1 + config.calibration.vanishing_line_offset
+
+        return vanishing_line
+
     def _calculate_vanishing_line(self) -> None:
         """Calculate the vanishing line."""
         if self.images is None:
@@ -407,19 +437,11 @@ class CameraCalibrator:
         if self._combined_grid is None:
             raise ValueError("The cameras have not been calibrated")
 
-        lines = [[point for point in row if np.any(point)] for row in self._combined_grid]
-        lines = [(line[0], line[-1]) for line in lines if len(line) > 1]
+        h_line = self._calculate_intersections(False)
+        v_line = self._calculate_intersections(True)
 
-        intersections = [find_intersection(lines[i], lines[j], False)
-                         for i in range(len(lines) - 1)
-                         for j in range(i + 1, len(lines))]
-        intersections = [point for point in intersections if point is not None]
-        intersections = np.array(intersections)
-
-        if len(intersections) > 0:
-            vanishing_line = np.median(intersections, axis=0)[1]
-            vanishing_line *= 1 + config.calibration.vanishing_line_offset
-
+        vanishing_line = min(h_line, v_line)
+        if vanishing_line > 0:
             self._vanishing_line = int(vanishing_line)
 
     def _get_scale(self, image: np.ndarray) -> float:
