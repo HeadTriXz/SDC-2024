@@ -1,8 +1,8 @@
 import numpy as np
 
-from constants import METERS_PER_PIXEL
 from lane_assist.line_detection.line import Line
 from scipy.signal import savgol_filter
+from utils.calibration_data import CalibrationData
 
 
 class Path:
@@ -18,12 +18,16 @@ class Path:
     points: np.ndarray
     radius: float
 
-    def __init__(self, points: np.ndarray) -> None:
+    __calibration: CalibrationData
+
+    def __init__(self, calibration: CalibrationData, points: np.ndarray) -> None:
         """Initialize the path.
 
+        :param calibration: The calibration data.
         :param points: the points of the path.
         """
         self.points = points
+        self.__calibration = calibration
         self.__fit_curve()
 
     def __fit_curve(self) -> None:
@@ -31,12 +35,13 @@ class Path:
         self.__fit = np.polyfit(self.points[:, 1], self.points[:, 0], 2)
 
         # Fit polynomial curve to points in real-world coordinates
-        fit_cr = np.polyfit(self.points[:, 1] * METERS_PER_PIXEL, self.points[:, 0] * METERS_PER_PIXEL, 2)[:2]
+        meters_per_pixel = 1 / self.__calibration.pixels_per_meter
+        fit_cr = np.polyfit(self.points[:, 1] * meters_per_pixel, self.points[:, 0] * meters_per_pixel, 2)[:2]
         y_eval = np.max(self.points[:, 1])
         a, b = fit_cr
 
         # Calculate the radius of curvature
-        self.radius = (((1 + (2 * a * y_eval * METERS_PER_PIXEL + b) ** 2) ** 1.5) / np.absolute(2 * a))
+        self.radius = (((1 + (2 * a * y_eval * meters_per_pixel + b) ** 2) ** 1.5) / np.absolute(2 * a))
 
     def __repr__(self) -> str:
         """Get the representation of the path."""
@@ -47,9 +52,10 @@ class Path:
         return f"Path({self.points}, {self.radius})"
 
 
-def generate_driving_path(lines: list[Line], requested_lane: int) -> Path:
+def generate_driving_path(calibration: CalibrationData, lines: list[Line], requested_lane: int) -> Path:
     """Generate the driving path based on the lines.
 
+    :param calibration: The calibration data.
     :param requested_lane: The lane we want to drive in.
     :param lines: The lines to generate the path from.
     :return: The generated path.
@@ -77,7 +83,7 @@ def generate_driving_path(lines: list[Line], requested_lane: int) -> Path:
     midx = savgol_filter(midx, 51, 3)
     midy = savgol_filter(midy, 51, 3)
 
-    return Path(np.array([midx, midy]).T)
+    return Path(calibration, np.array([midx, midy]).T)
 
 
 def interpolate_line(line: Line, points: int) -> tuple[np.ndarray, np.ndarray]:

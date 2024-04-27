@@ -144,7 +144,7 @@ class LaneAssist:
         :param lane: The lane to follow.
         """
         # Generate the driving path.
-        path = generate_driving_path(lines, lane)
+        path = generate_driving_path(self.__calibration, lines, lane)
         speed = min(self.speed_controller.max_speed, get_max_path_speed(path))
         self.speed_controller.target_speed = speed
 
