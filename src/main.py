@@ -40,7 +40,7 @@ def start_kart() -> None:
 
     # Initialize the speed controller
     speed_controller.gear = Gear.DRIVE
-    speed_controller.state = SpeedControllerState.WAITING_TO_STOP
+    speed_controller.state = SpeedControllerState.DRIVING
     speed_controller.max_speed = 50
 
     # Initialize the path follower
@@ -61,7 +61,6 @@ def start_kart() -> None:
         stop_line_assist,
         path_follower,
         speed_controller,
-        adjust_speed=lambda _: 1,
         telemetry=telemetry_server,
         calibration=calibration
     )

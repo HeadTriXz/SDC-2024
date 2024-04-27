@@ -1,16 +1,26 @@
 import numpy as np
 
-
-def get_coefficient_of_friction(speed: float, radius: float) -> float:
-    """Get the coefficient of friction."""
-    return speed**2 / (9.81 * radius)
+from config import config
+from lane_assist.line_following.path_generator import Path
 
 
 def get_max_corner_speed(radius: float, friction_coefficient: float = 0.9) -> float:
-    """Get the max speed around a circle."""
+    """Get the max speed around a circle in meters per second.
+
+    :param radius: The radius of the circle.
+    :param friction_coefficient: The friction coefficient of the road.
+    :return: The max speed around the circle in m/s.
+    """
     return np.sqrt(friction_coefficient * 9.81 * radius)
 
 
-def get_radius_of_path(_path: np.ndarray) -> set[float, float, float]:
-    """Get the radius of curvature."""
-    raise NotImplementedError('The function "get_radius_of_path" is not implemented yet.')
+def get_max_path_speed(path: Path) -> int:
+    """Get the max speed on the path in meters per second.
+
+    :param path: The path to get the max speed from.
+    :return: The max speed on the path in m/s.
+    """
+    if config.dynamic_speed.static:
+        return config.dynamic_speed.static_speed
+
+    return int(get_max_corner_speed(path.radius, config.dynamic_speed.friction_coefficient) * 10)
