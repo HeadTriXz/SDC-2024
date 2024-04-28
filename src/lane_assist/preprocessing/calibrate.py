@@ -254,6 +254,7 @@ class CameraCalibrator:
         min_x = max(min_x, dst_center[0] - render_side)
         max_x = min(max_x, dst_center[0] + render_side)
         min_y = max(min_y, dst_center[1] - render_front)
+        max_y = dst_center[1]
 
         # Adjust the left and right sides of the image
         dist_to_left = dst_center[0] - min_x
