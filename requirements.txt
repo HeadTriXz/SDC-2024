@@ -1,15 +1,13 @@
-airsim==1.8.1
 fastapi==0.110.0
 inputs==0.5
 matplotlib==3.8.3
-msgpack-python~=0.5.6
-msgpack-rpc-python==0.4.1
+nncf==2.10.0
 numpy==1.26.4
 omegaconf==2.3.0
 opencv-python==4.9.0.80
-openvino==2024.0.0
+openvino==2024.1.0
 packaging==23.2
-pydantic~=2.6.4
+pydantic==2.6.4
 pytest==8.1.1
 pytest-benchmark==4.0.0
 python-can==4.3.1
@@ -18,7 +16,6 @@ rplidar-roboticia==0.9.5
 scipy==1.12.0
 simple_pid==2.0.0
 starlette==0.36.3
-typing~=3.7.4.3
-ultralytics==8.1.30
+ultralytics==8.2.3
 uvicorn==0.29.0
 websockets==12.0
