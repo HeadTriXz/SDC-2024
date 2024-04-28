@@ -101,6 +101,7 @@ telemetry:
 dynamic_speed:
   friction_coefficient: 0.9
   static: false
+  static_speed: 10
 
 lidar:
   port_name: "COM4"

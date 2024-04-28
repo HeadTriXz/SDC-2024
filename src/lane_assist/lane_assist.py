@@ -9,8 +9,9 @@ from driving.can import ICANController
 from driving.speed_controller import ISpeedController
 from lane_assist.line_detection.line import Line, LineType
 from lane_assist.line_detection.line_detector import filter_lines, get_lines
+from lane_assist.line_following.dynamic_speed import get_max_path_speed
 from lane_assist.line_following.path_follower import PathFollower
-from lane_assist.line_following.path_generator import Path, generate_driving_path
+from lane_assist.line_following.path_generator import generate_driving_path
 from lane_assist.stopline_assist import StopLineAssist
 from telemetry.app import TelemetryServer
 from typing import Optional
@@ -33,7 +34,6 @@ class LaneAssist:
 
     Attributes
     ----------
-        adjust_speed: A function that calculates the dynamic speed that can be driven on the generated path
         can_controller: The can controller.
         image_generator: A function that generates images.
         lines: The lines on the road.
@@ -45,7 +45,6 @@ class LaneAssist:
 
     """
 
-    adjust_speed: Callable[[Path], int]
     can_controller: ICANController
     image_generator: Callable[[], Generator[np.ndarray, None, None]]
     lines: list[Line]
@@ -55,13 +54,14 @@ class LaneAssist:
     stopline_assist: StopLineAssist
     telemetry: TelemetryServer
 
+    __calibration: CalibrationData
+
     def __init__(
             self,
             image_generation: Callable[[], Generator[np.ndarray, None, None]],
             stopline_assist: StopLineAssist,
             path_follower: PathFollower,
             speed_controller: ISpeedController,
-            adjust_speed: Callable[[Path], int],
             telemetry: TelemetryServer,
             calibration: CalibrationData,
     ) -> None:
@@ -71,10 +71,9 @@ class LaneAssist:
         :param stopline_assist: The stopline assist instance.
         :param path_follower: The line follower class.
         :param speed_controller: The speed controller.
-        :param adjust_speed: A function that calculates the dynamic speed that can be driven on the generated path.
         :param telemetry: The telemetry server.
+        :param calibration: The calibration data.
         """
-        self.adjust_speed = adjust_speed
         self.can_controller = speed_controller.can_controller
         self.image_generator = image_generation
         self.lines = []
@@ -145,8 +144,8 @@ class LaneAssist:
         :param lane: The lane to follow.
         """
         # Generate the driving path.
-        path = generate_driving_path(lines, lane)
-        speed = self.adjust_speed(path)
+        path = generate_driving_path(self.__calibration, lines, lane)
+        speed = min(self.speed_controller.max_speed, get_max_path_speed(path))
         self.speed_controller.target_speed = speed
 
         # Steer the kart based on the path and its position.

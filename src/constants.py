@@ -3,8 +3,6 @@ from enum import Enum, IntEnum
 
 # Constants
 CAN_SEND_PERIOD = 0.04
-PIXELS_PER_METER = 19.2495
-METERS_PER_PIXEL = 1 / PIXELS_PER_METER
 
 
 # Enums
