@@ -66,14 +66,15 @@ class ObjectController:
         """
         return self.lane_assist.requested_lane
 
-    def get_object_lane(self, x: int, y: int) -> Optional[int]:
+    def get_object_lane(self, x: int, y: int, shape: tuple[int, int]) -> Optional[int]:
         """Gets the lane the object is in.
 
         :param x: The x-coordinate of the object.
         :param y: The y-coordinate of the object.
+        :param shape: The shape of the image (width, height).
         :return: The lane the object is in.
         """
-        point = np.array(self.calibration.transform_point(x, y))
+        point = np.array(self.calibration.transform_point(x, y, shape))
 
         def is_left(p0: np.ndarray, p1: np.ndarray, p: np.ndarray) -> bool:
             return np.sign(np.cross(p1 - p0, p - p0)) > 0
