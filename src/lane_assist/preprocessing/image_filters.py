@@ -62,15 +62,13 @@ def basic_filter(img: np.ndarray, calibration: CalibrationData) -> tuple[np.ndar
     return img, histogram_peaks
 
 
-def filter_small_clusters(img: np.ndarray, min_size=100) -> np.ndarray:
+def filter_small_clusters(img: np.ndarray, min_size: int = 100) -> np.ndarray:
     """Filter clusters of pixels smaller then a certain area."""
     # Find the connected components
     nb_components, output, stats, centroids = cv2.connectedComponentsWithStats(img, connectivity=8)
 
     sizes = stats[1:, -1]
     nb_components = nb_components - 1
-
-    # print(sizes)
 
     for i in range(0, nb_components):
         if sizes[i] <= min_size:
