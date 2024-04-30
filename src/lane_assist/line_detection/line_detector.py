@@ -10,6 +10,7 @@ from lane_assist.line_detection.line import Line, LineType
 from lane_assist.line_detection.window import Window
 from lane_assist.line_detection.window_search import window_search
 from lane_assist.preprocessing.image_filters import basic_filter
+from lane_assist.preprocessing.utils.corners import get_border_of_points
 from utils.calibration_data import CalibrationData
 
 
@@ -82,7 +83,7 @@ def get_stoplines(image: np.ndarray, lines: list[Line], calibration: Calibration
     """
     # Get the bounding box of the lines.
     points = __lines_to_points(lines)
-    x_min, x_max, y_min, y_max = __get_bounding_box(points)
+    x_min, x_max, y_min, y_max = get_border_of_points(points)
 
     # Create a new image. This is the bounding box rotated 90 degrees clockwise.
     new_img = image[y_min:y_max, x_min:x_max]
@@ -149,19 +150,6 @@ def __get_lines(
     windows = [Window(int(center), image.shape[0], window_width // 2, window_count) for center in peaks]
     lines = window_search(image, window_count, windows, image.shape[0] // window_count, stopline)
     return lines, window_height
-
-
-def __get_bounding_box(points: np.ndarray) -> tuple[int, int, int, int]:
-    """Get the bounding box of the points.
-
-    :param points: The points to get the bounding box from.
-    :return: The bounding box.
-    """
-    y_min = np.min(points[:, 1])
-    y_max = np.max(points[:, 1])
-    x_min = np.min(points[:, 0])
-    x_max = np.max(points[:, 0])
-    return x_min, x_max, y_min, y_max
 
 
 def __longest_sequence(items: np.ndarray, condition: Callable[[Any], bool]) -> tuple[int, int]:
