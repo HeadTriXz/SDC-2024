@@ -149,8 +149,8 @@ class CalibrationData(metaclass=SingletonMeta):
         """
         return cv2.warpPerspective(image, self.matrices[idx], self.shapes[idx], flags=cv2.INTER_NEAREST)
 
-    @staticmethod
-    def load(path: Path | str) -> "CalibrationData":
+    @classmethod
+    def load(cls, path: Path | str) -> "CalibrationData":
         """Load calibration data from a file.
 
         :param path: The path to the file.
@@ -158,7 +158,7 @@ class CalibrationData(metaclass=SingletonMeta):
         """
         data = np.load(Path(path))
 
-        calibration_data = CalibrationData()
+        calibration_data = cls()
         calibration_data.input_shape = tuple(data["input_shape"])
         calibration_data.matrices = data["matrices"]
         calibration_data.offsets = data["offsets"]

@@ -16,6 +16,7 @@ from object_recognition.object_controller import ObjectController
 from object_recognition.object_detector import ObjectDetector
 from pathlib import Path
 from utils.calibration_data import CalibrationData
+from utils.lidar import Lidar
 from utils.video_stream import VideoStream
 from telemetry.app import TelemetryServer
 
@@ -70,7 +71,10 @@ def start_kart() -> None:
     controller.add_handler(PedestrianHandler(controller))
     controller.add_handler(SpeedLimitHandler(controller))
     controller.add_handler(TrafficLightHandler(controller))
-    controller.add_handler(OvertakeHandler(controller))
+
+    lidar = Lidar.safe_init()
+    if lidar is not None:
+        controller.add_handler(OvertakeHandler(controller, lidar))
 
     detector = ObjectDetector.from_model(config.object_detection.model_path, controller, config.camera_ids.center)
 

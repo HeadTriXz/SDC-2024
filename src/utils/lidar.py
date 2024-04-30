@@ -1,9 +1,11 @@
+import logging
 import numpy as np
 
 from config import config
 from rplidar import RPLidar
 from math import floor
 from threading import Thread
+from typing import Optional
 
 
 class Lidar:
@@ -85,3 +87,15 @@ class Lidar:
     def stop(self) -> None:
         """Stop the lidar."""
         self.running = False
+
+    @classmethod
+    def safe_init(cls) -> Optional["Lidar"]:
+        """Get the lidar sensor.
+
+        :return: The lidar sensor.
+        """
+        try:
+            return cls()
+        except Exception as e:
+            logging.warning("Failed to initialize the lidar: %s", e)
+            return None

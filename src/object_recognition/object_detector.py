@@ -61,8 +61,8 @@ class ObjectDetector:
 
         self.stream.stop()
 
-    @staticmethod
-    def from_model(path: str | Path, controller: ObjectController, camera_id: int) -> "ObjectDetector":
+    @classmethod
+    def from_model(cls, path: str | Path, controller: ObjectController, camera_id: int) -> "ObjectDetector":
         """Creates a new instance of the object detector from a model file.
 
         :param path: The path to the model file.
@@ -76,4 +76,4 @@ class ObjectDetector:
             model = YOLO(path)
             model.export(format="openvino", int8=True)
 
-        return ObjectDetector(ov_path, controller, camera_id)
+        return cls(ov_path, controller, camera_id)
