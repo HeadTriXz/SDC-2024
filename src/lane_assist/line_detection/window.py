@@ -44,14 +44,9 @@ class Window:
         self.__points = np.zeros((max_point_count, 2), dtype=int)
 
     @property
-    def point_count(self) -> int:
-        """Get the number of points in the window."""
-        return self.point_index
-
-    @property
     def points(self) -> np.ndarray:
         """Get the points in the window."""
-        return self.__points[:self.point_count]  # Use point_count for clarity
+        return self.__points[:self.point_index]
 
     def move(self, x: int, y: int, points: bool = True) -> None:
         """Move the window to a new position.

@@ -1,16 +1,16 @@
-from collections.abc import Callable
-from typing import Any
 
 import cv2
 import numpy as np
 import scipy
 
 from config import config
+from collections.abc import Callable
 from lane_assist.line_detection.line import Line, LineType
 from lane_assist.line_detection.window import Window
 from lane_assist.line_detection.window_search import window_search
 from lane_assist.preprocessing.image_filters import basic_filter
 from lane_assist.preprocessing.utils.corners import get_border_of_points
+from typing import Any
 from utils.calibration_data import CalibrationData
 
 
@@ -44,7 +44,6 @@ def get_lines(image: np.ndarray, calibration: CalibrationData) -> list[Line]:
 
     :param image: The image to get the lines from.
     :param calibration: The calibration data of the stitching, used for calculating the window sizes.
-    :param filter_image: Whether to filter the image or not.
     :return: The lines in the image.
     """
     # Dilate the image to make the lines thicker and more solid. Then threshold the image.

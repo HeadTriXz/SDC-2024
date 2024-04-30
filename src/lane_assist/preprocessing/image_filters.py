@@ -1,6 +1,5 @@
-import dataclasses
-
 import cv2
+import dataclasses
 import numpy as np
 import scipy
 
