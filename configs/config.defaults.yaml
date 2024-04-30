@@ -100,8 +100,8 @@ telemetry:
 
 braking:
   margin: 1.0
-  max_force: 0.5
-  min_force: 0.3
+  max_force: 50
+  min_force: 30
 
 dynamic_speed:
   friction_coefficient: 0.9
