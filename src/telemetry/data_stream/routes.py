@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import APIRouter, WebSocket
 from telemetry.data_stream.websocket_handler import WebsocketHandler
 from starlette.websockets import WebSocketDisconnect
@@ -19,10 +21,11 @@ def create_router(websocket_handler: WebsocketHandler) -> APIRouter:
         :param websocket: The websocket instance.
         """
         await websocket.accept()
-        client = websocket_handler.add_socket(name, websocket)
+        client = websocket_handler.add_socket(name, websocket, asyncio.get_event_loop())
         try:
             await client.rec_messages()
         except WebSocketDisconnect:
             websocket_handler.websocket_clients[name].remove(client)
 
     return router
+
