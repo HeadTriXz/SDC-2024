@@ -2,13 +2,14 @@ import cv2
 import numpy as np
 import scipy
 
-from collections.abc import Callable
 from config import config
+from collections.abc import Callable
 from lane_assist.line_detection.line import Line, LineType
 from lane_assist.line_detection.window import Window
 from lane_assist.line_detection.window_search import window_search
-from typing import Any
 from lane_assist.preprocessing.image_filters import basic_filter
+from lane_assist.preprocessing.utils.corners import get_border_of_points
+from typing import Any
 from utils.calibration_data import CalibrationData
 
 
@@ -34,7 +35,7 @@ def filter_lines(lines: list[Line], starting_point: int) -> list[Line]:
             break
         i += 1
 
-    return lines[j: i + 1]
+    return lines[j : i + 1]
 
 
 def get_lines(image: np.ndarray, calibration: CalibrationData) -> list[Line]:
@@ -51,9 +52,10 @@ def get_lines(image: np.ndarray, calibration: CalibrationData) -> list[Line]:
     # Filter the image. This is done in place and will be used to remove zebra crossings.
     if config.lane_assist.line_detection.filtering.active:
         basic_filter(image, calibration)
+        # filter_small_clusters(image)  # noqa: ERA001
 
     # create histogram to find the start of the lines
-    pixels = image[image.shape[0] // 2:, :]
+    pixels = image[image.shape[0] // 2 :, :]
     pixels = np.multiply(pixels, np.linspace(0, 1, pixels.shape[0])[:, np.newaxis])
     histogram = np.sum(pixels, axis=0)
 
@@ -79,7 +81,7 @@ def get_stoplines(image: np.ndarray, lines: list[Line], calibration: Calibration
     """
     # Get the bounding box of the lines.
     points = __lines_to_points(lines)
-    x_min, x_max, y_min, y_max = __get_bounding_box(points)
+    x_min, x_max, y_min, y_max = get_border_of_points(points)
 
     # Create a new image. This is the bounding box rotated 90 degrees clockwise.
     new_img = image[y_min:y_max, x_min:x_max]
@@ -124,25 +126,8 @@ def filter_stoplines(lines: list[Line], window_height: int, minimum_points: int,
     return filtered_lines
 
 
-def __longest_sequence(items: np.ndarray, condition: Callable[[Any], bool]) -> tuple[int, int]:
-    """Get the longest subsequence of numbers that satisfy the condition.
-
-    :param items: The boolean array to get the subsequence from.
-    :param condition: The condition to satisfy.
-    :return: The start and end index of the subsequence.
-    """
-    # use numpy to get the start and end of the longest consecutive True sequence
-    bools = np.array([condition(item) for item in items])
-    idx = np.where(np.diff(np.hstack(([False], bools, [False]))))[0].reshape(-1, 2)
-    if len(idx) == 0:
-        return 0, 0
-
-    idx = idx[np.argmax(np.diff(idx, axis=1)), :]
-    return idx[0], idx[1] + 1
-
-
 def __get_lines(
-        image: np.ndarray, histogram: np.ndarray, calibration: CalibrationData, stopline: bool = False
+    image: np.ndarray, histogram: np.ndarray, calibration: CalibrationData, stopline: bool = False
 ) -> tuple[list[Line], int]:
     """Get the lines in the image.
 
@@ -160,22 +145,26 @@ def __get_lines(
     window_count = image.shape[0] // window_height
 
     peaks = scipy.signal.find_peaks(histogram, height=std, distance=window_width * 2)[0]
-    windows = [Window(center, image.shape[0], window_width // 2, window_count) for center in peaks]
+    windows = [Window(int(center), image.shape[0], window_width // 2, window_count) for center in peaks]
     lines = window_search(image, window_count, windows, image.shape[0] // window_count, stopline)
     return lines, window_height
 
 
-def __get_bounding_box(points: np.ndarray) -> tuple[int, int, int, int]:
-    """Get the bounding box of the points.
+def __longest_sequence(items: np.ndarray, condition: Callable[[Any], bool]) -> tuple[int, int]:
+    """Get the longest subsequence of numbers that satisfy the condition.
 
-    :param points: The points to get the bounding box from.
-    :return: The bounding box.
+    :param items: The boolean array to get the subsequence from.
+    :param condition: The condition to satisfy.
+    :return: The start and end index of the subsequence.
     """
-    y_min = np.min(points[:, 1])
-    y_max = np.max(points[:, 1])
-    x_min = np.min(points[:, 0])
-    x_max = np.max(points[:, 0])
-    return x_min, x_max, y_min, y_max
+    # use numpy to get the start and end of the longest consecutive True sequence
+    bools = np.array([condition(item) for item in items])
+    idx = np.where(np.diff(np.hstack(([False], bools, [False]))))[0].reshape(-1, 2)
+    if len(idx) == 0:
+        return 0, 0
+
+    idx = idx[np.argmax(np.diff(idx, axis=1)), :]
+    return idx[0], idx[1] + 1
 
 
 def __lines_to_points(lines: list[Line]) -> np.ndarray:
