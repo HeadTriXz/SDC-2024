@@ -16,17 +16,13 @@ class Window:
 
     """
 
-    collided: bool = False
-    direction_changes: list
-    found_in_previous: bool = False
+    collided: bool
+    found_in_previous: bool
     margin: int
-    point_index: int = 0
+    point_index: int
     x: int
     y: int
 
-    __new_points: np.ndarray
-    __non_found: int = 0
-    __orig_margin: int
     __points: np.ndarray
 
     def __init__(self, x: int, y: int, margin: int, max_point_count: int = 120) -> None:
@@ -37,14 +33,15 @@ class Window:
         :param margin: The margin of the window.
         :param max_point_count: The maximum amount of points the window can hold.
         """
-        self.direction_changes = []
         self.x = x
         self.y = y
         self.margin = margin
 
-        self.__points = np.zeros((0, 2), dtype=int)
-        self.__new_points = np.zeros((max_point_count, 2), dtype=int)
-        self.__orig_margin = margin
+        self.collided = False
+        self.found_in_previous = False
+        self.point_index = 0
+
+        self.__points = np.zeros((max_point_count, 2), dtype=int)
 
     @property
     def point_count(self) -> int:
@@ -54,7 +51,7 @@ class Window:
     @property
     def points(self) -> np.ndarray:
         """Get the points in the window."""
-        return self.__new_points[:self.point_index]
+        return self.__points[:self.point_count]  # Use point_count for clarity
 
     def move(self, x: int, y: int, points: bool = True) -> None:
         """Move the window to a new position.
@@ -68,13 +65,10 @@ class Window:
 
         if points:
             self.found_in_previous = True
-            self.margin = self.__orig_margin
-            self.__non_found = 0
-            self.__new_points[self.point_index] = [x, y]
+            self.__points[self.point_index] = [x, y]
             self.point_index += 1
         else:
             self.margin += 0.75
-            self.__non_found += 1
 
     def collides(self, other: "Window") -> bool:
         """Check if the window collides with another window.

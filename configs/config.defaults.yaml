@@ -44,7 +44,7 @@ lane_assist:
       width: 0.5
 
     thresholds:
-      zebra_crossing: 20000
+      zebra_crossing: 0.02
 
     filtering:
       active: true

@@ -1,4 +1,6 @@
 import dataclasses
+
+import cv2
 import numpy as np
 import scipy
 
@@ -50,12 +52,28 @@ def basic_filter(img: np.ndarray, calibration: CalibrationData) -> tuple[np.ndar
 
     histogram_peaks = list(map(lambda params: HistogramPeak(*params), zip(peaks, widths, lefts, rights)))
 
-    if len(peaks) == 0:
-        return img, []
-
     for peak in histogram_peaks:
-        img[int(peak.left) : int(peak.right)] = 0
-        img[int(peak.left) : int(peak.right)] = 0
+        if peak.width > calibration.pixels_per_meter * 6:
+            continue
+
+        img[int(peak.left): int(peak.right)] = 0
+        img[int(peak.left): int(peak.right)] = 0
 
     return img, histogram_peaks
 
+
+def filter_small_clusters(img: np.ndarray, min_size=100) -> np.ndarray:
+    """Filter clusters of pixels smaller then a certain area."""
+    # Find the connected components
+    nb_components, output, stats, centroids = cv2.connectedComponentsWithStats(img, connectivity=8)
+
+    sizes = stats[1:, -1]
+    nb_components = nb_components - 1
+
+    # print(sizes)
+
+    for i in range(0, nb_components):
+        if sizes[i] <= min_size:
+            img[output == i + 1] = 0
+
+    return img
