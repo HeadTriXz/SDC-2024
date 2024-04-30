@@ -1,8 +1,8 @@
 import base64
-from asyncio import AbstractEventLoop
-
 import cv2
 import numpy as np
+
+from asyncio import AbstractEventLoop
 from fastapi import WebSocket
 
 
@@ -13,6 +13,7 @@ class WebsocketDataStream:
         """Initialize the websocket data stream.
 
         :param ws: The websocket instance.
+        :param loop: The event loop.
         """
         self.ws = ws
         self.sending = True
