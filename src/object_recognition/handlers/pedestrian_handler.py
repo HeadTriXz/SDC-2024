@@ -127,13 +127,22 @@ class PedestrianHandler(BaseObjectHandler):
 
         return history[-1][0] > 1 - margin
 
-    def __should_brake(self, crosswalk: np.ndarray) -> bool:
+    def __should_brake(self, crosswalk: np.ndarray, shape: tuple[int, int]) -> bool:
         """Checks if the crosswalk is close enough to stop.
 
         :param crosswalk: The bounding box of the crosswalk.
+        :param shape: The shape of the image (width, height).
         :return: Whether the crosswalk is close enough to stop.
         """
-        return crosswalk[3] > 330  # TODO: Dynamically calculate the distance
+        x = (crosswalk[0] + crosswalk[2]) // 2
+        y = int(crosswalk[3])
+
+        # Calculate the distance to the crosswalk.
+        distance = self.controller.calibration.get_distance_to_y(x, y, shape)
+        braking_distance = self.controller.get_braking_distance()
+        total_distance = distance - braking_distance
+
+        return total_distance < config.crosswalk.min_distance
 
     def __should_stop(self, predictions: Boxes) -> bool:
         """Checks if the go-kart should stop.
@@ -151,7 +160,7 @@ class PedestrianHandler(BaseObjectHandler):
             return False
 
         for crosswalk in crosswalks:
-            if not self.__should_brake(crosswalk):
+            if not self.__should_brake(crosswalk, predictions.orig_shape[::-1]):
                 continue
 
             for pedestrian in pedestrians:

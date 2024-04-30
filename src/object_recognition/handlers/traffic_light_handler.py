@@ -29,6 +29,9 @@ class TrafficLightHandler(BaseObjectHandler):
 
         match closest[-1]:
             case Label.TRAFFIC_LIGHT_RED:
+                if self.controller.has_stopped():
+                    return
+
                 self.controller.stopped_by = self
                 self.controller.set_state(SpeedControllerState.WAITING_TO_STOP)
             case Label.TRAFFIC_LIGHT_GREEN:

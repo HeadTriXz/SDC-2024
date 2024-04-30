@@ -69,13 +69,17 @@ class CalibrationData(metaclass=SingletonMeta):
             flags=cv2.INTER_NEAREST
         )
 
-    def transform_point(self, x: int, y: int) -> tuple[int, int]:
+    def transform_point(self, x: int, y: int, shape: tuple[int, int]) -> tuple[int, int]:
         """Transform a point to a topdown view.
 
         :param x: The x-coordinate of the point.
         :param y: The y-coordinate of the point.
+        :param shape: The shape of the image (width, height).
         :return: The transformed point.
         """
+        x *= self.input_shape[0] / shape[0]
+        y *= self.input_shape[1] / shape[1]
+
         x += self.offsets[self.ref_idx][0]
         y += self.offsets[self.ref_idx][1]
 
@@ -92,23 +96,41 @@ class CalibrationData(metaclass=SingletonMeta):
         """
         return pixels / self.pixels_per_meter
 
-    def get_distance_to_point(self, x: int, y: int, topdown: bool) -> float:
+    def get_distance_to_point(self, x: int, y: int, shape: tuple[int, int]) -> float:
         """Get the distance in meters from a coordinate.
 
         :param x: The x-coordinate in an image.
         :param y: The y-coordinate in an image.
-        :param topdown: Whether the coordinates are in a topdown image.
+        :param shape: The shape of the image (width, height).
         :return: The distance in meters.
         """
-        if not topdown:
-            x, y = self.transform_point(x, y)
-            if x < 0 or y < 0:
-                raise ValueError("Point is not on the ground plane.")
+        x, y = self.transform_point(x, y, shape)
+        return self.get_distance_to_transformed_point(x, y)
 
+    def get_distance_to_transformed_point(self, x: int, y: int) -> float:
+        """Get the distance in meters from a transformed point.
+
+        :param x: The x-coordinate in the topdown image.
+        :param y: The y-coordinate in the topdown image.
+        :return: The distance in meters.
+        """
         center = self.output_shape[0] // 2, self.output_shape[1]
         dist = euclidean_distance((x, y), center)
 
         return self.get_distance(int(dist))
+
+    def get_distance_to_y(self, x: int, y: int, shape: tuple[int, int]) -> float:
+        """Get the distance in meters from a coordinate, not considering the x-coordinate.
+
+        :param x: The x-coordinate in an image.
+        :param y: The y-coordinate in an image.
+        :param shape: The shape of the image (width, height).
+        :return: The distance in meters.
+        """
+        x, y = self.transform_point(x, y, shape)
+
+        dist = int(self.output_shape[1] - y)
+        return self.get_distance(dist)
 
     def get_pixels(self, meters: float) -> int:
         """Get the amount of pixels from a distance in meters.
