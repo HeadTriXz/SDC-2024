@@ -3,7 +3,7 @@ import numpy as np
 
 from config import config
 from telemetry.app import TelemetryServer
-from lane_assist.preprocessing.gamma import adjust_gamma
+from lane_assist.preprocessing.gamma import GammaAdjuster
 from utils.calibration_data import CalibrationData
 from utils.video_stream import VideoStream
 from typing import Callable, Generator
@@ -29,6 +29,7 @@ def td_stitched_image_generator(
     :param right_cam: The right camera.
     :param telemetry: The telemetry server.
     """
+    gamma_adjuster = GammaAdjuster()
 
     def __generator() -> Generator[np.ndarray, None, None]:
         """Generate a topdown image from the cameras."""
@@ -41,10 +42,10 @@ def td_stitched_image_generator(
             center_image = cv2.cvtColor(center_image, cv2.COLOR_BGR2GRAY)
             right_image = cv2.cvtColor(right_image, cv2.COLOR_BGR2GRAY)
 
-            if config.image_manipulation.gamma.adjust:
-                left_image = adjust_gamma(left_image, config.image_manipulation.gamma.left)
-                center_image = adjust_gamma(center_image, config.image_manipulation.gamma.center)
-                right_image = adjust_gamma(right_image, config.image_manipulation.gamma.right)
+            if config.image_manipulation.gamma.enabled:
+                left_image = gamma_adjuster.adjust(left_image, config.image_manipulation.gamma.left)
+                center_image = gamma_adjuster.adjust(center_image, config.image_manipulation.gamma.center)
+                right_image = gamma_adjuster.adjust(right_image, config.image_manipulation.gamma.right)
 
             topdown = calibration.transform([left_image, center_image, right_image])
 
