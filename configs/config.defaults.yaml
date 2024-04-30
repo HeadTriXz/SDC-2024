@@ -98,6 +98,11 @@ telemetry:
     host: 0.0.0.0
     root_url: 192.168.1.89
 
+braking:
+  margin: 1.0
+  max_force: 0.5
+  min_force: 0.3
+
 dynamic_speed:
   friction_coefficient: 0.9
   static: false

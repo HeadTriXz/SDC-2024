@@ -109,7 +109,7 @@ class SpeedController(ISpeedController):
 
         :return: The braking distance in meters.
         """
-        return (self.current_speed ** 2) / (250 * 0.8)  # TODO: calculate the braking distance
+        return (self.current_speed ** 2) / (250 * 0.8)
 
     def start(self) -> None:
         """Start the speed controller."""
@@ -133,11 +133,13 @@ class SpeedController(ISpeedController):
         """Adjust the speed of the kart."""
         if self.__state == SpeedControllerState.STOPPED:
             self.__can.set_throttle(0, Gear.NEUTRAL)
-            self.__can.set_brake(100)  # TODO: brake at the threshold
+            self.__can.set_brake(config.braking.max_force)
             return
 
         self.__can.set_throttle(self.__get_target_percentage(), self.__gear)
-        self.__can.set_brake(0 if self.current_speed <= self.__target_speed else 30)  # TODO: brake at threshold
+        self.__can.set_brake(
+            0 if self.current_speed <= (self.__target_speed + config.braking.margin) else config.braking.min_force
+        )
 
     def __get_target_percentage(self) -> int:
         """Get the target percentage of the throttle to apply."""
