@@ -21,13 +21,14 @@ class OvertakeHandler(BaseObjectHandler):
     __frames_lost: dict[int, int]
     __thread: Thread
 
-    def __init__(self, controller: ObjectController) -> None:
+    def __init__(self, controller: ObjectController, lidar: Lidar) -> None:
         """Initializes the overtaking handler.
 
         :param controller: The object controller.
+        :param lidar: The lidar sensor.
         """
         super().__init__(controller, [Label.CAR])
-        self.lidar = Lidar()
+        self.lidar = lidar
         self.__frames_seen = {}
         self.__frames_lost = {}
         self.__thread = Thread(target=self.__return_lane, daemon=True)
