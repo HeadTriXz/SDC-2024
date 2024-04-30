@@ -119,6 +119,19 @@ class CalibrationData(metaclass=SingletonMeta):
 
         return self.get_distance(int(dist))
 
+    def get_distance_to_y(self, x: int, y: int, shape: tuple[int, int]) -> float:
+        """Get the distance in meters from a coordinate, not considering the x-coordinate.
+
+        :param x: The x-coordinate in an image.
+        :param y: The y-coordinate in an image.
+        :param shape: The shape of the image (width, height).
+        :return: The distance in meters.
+        """
+        x, y = self.transform_point(x, y, shape)
+
+        dist = int(self.output_shape[1] - y)
+        return self.get_distance(dist)
+
     def get_pixels(self, meters: float) -> int:
         """Get the amount of pixels from a distance in meters.
 

@@ -26,10 +26,8 @@ class SpeedLimitHandler(BaseObjectHandler):
         if closest is None:
             return
 
-        new_y = self._get_sign_coords(closest, predictions.orig_shape[::-1])[1]
-
-        bottom = self.controller.calibration.output_shape[1]
-        distance = self.controller.calibration.get_distance(int(bottom - new_y))
+        x, y = self._get_sign_coords(closest)
+        distance = self.controller.calibration.get_distance_to_y(x, y, predictions.orig_shape[::-1])
 
         braking_distance = self.controller.get_braking_distance()
         total_distance = distance - braking_distance
@@ -40,16 +38,15 @@ class SpeedLimitHandler(BaseObjectHandler):
         speed = config.speed_limit.class_to_speed[int(closest[-1])]
         self.controller.set_max_speed(speed)
 
-    def _get_sign_coords(self, bbox: np.ndarray, shape: tuple[int, int]) -> tuple[int, int]:
+    def _get_sign_coords(self, bbox: np.ndarray) -> tuple[int, int]:
         """Get the coordinates of where the speed limit sign is on the ground.
 
         :param bbox: The bounding box of the speed limit sign.
-        :param shape: The shape of the image (width, height).
         :return: The coordinates of the speed limit sign.
         """
         height = (bbox[3] - bbox[1]) * config.speed_limit.height_ratio
 
-        max_y = bbox[1] + height
-        ctr_x = bbox[0] + bbox[2] // 2
+        x = bbox[0] + bbox[2] // 2
+        y = bbox[1] + height
 
-        return self.controller.calibration.transform_point(ctr_x, max_y, shape)
+        return x, y

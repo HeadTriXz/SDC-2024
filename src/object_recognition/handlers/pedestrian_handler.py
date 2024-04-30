@@ -134,15 +134,11 @@ class PedestrianHandler(BaseObjectHandler):
         :param shape: The shape of the image (width, height).
         :return: Whether the crosswalk is close enough to stop.
         """
-        max_y = int(crosswalk[3])
-        ctr_x = (crosswalk[0] + crosswalk[2]) // 2
-
-        # Transform the crosswalk to the topdown view.
-        new_y = self.controller.calibration.transform_point(ctr_x, max_y, shape)[1]
-        bottom = self.controller.calibration.output_shape[1]
+        x = (crosswalk[0] + crosswalk[2]) // 2
+        y = int(crosswalk[3])
 
         # Calculate the distance to the crosswalk.
-        distance = self.controller.calibration.get_distance(int(bottom - new_y))
+        distance = self.controller.calibration.get_distance_to_y(x, y, shape)
         braking_distance = self.controller.get_braking_distance()
         total_distance = distance - braking_distance
 
