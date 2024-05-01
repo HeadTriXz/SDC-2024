@@ -1,11 +1,10 @@
 import os
-import pickle
-import time
 
 from config import config
 from constants import Gear
 from driving.can import CANController, get_can_bus
 from driving.gamepad.driving_controller import BasicControllerDriving
+from driving.gamepad.gamepad import EventType, Gamepad, GamepadButton
 from driving.speed_controller import SpeedController, SpeedControllerState
 from lane_assist.helpers import td_stitched_image_generator
 from lane_assist.lane_assist import LaneAssist
@@ -21,7 +20,6 @@ from pathlib import Path
 from utils.calibration_data import CalibrationData
 from utils.video_stream import VideoStream
 from telemetry.app import TelemetryServer
-from driving.gamepad.gamepad import Gamepad, GamepadButton, EventType
 
 
 class Kart:
@@ -30,24 +28,6 @@ class Kart:
     This class initializes and orchestrates various components involved in controlling a kart, including camera streams,
     telemetry server, CAN bus communication, speed controller, driving controller, lane assist, object detector,
     and handlers for different objects like pedestrians, speed limits, traffic lights, and overtaking scenarios.
-
-    Attributes
-    ----------
-        cam_left (VideoStream): Instance representing the left camera stream.
-        cam_center (VideoStream): Instance representing the center camera stream.
-        cam_right (VideoStream): Instance representing the right camera stream.
-        telemetry_server (TelemetryServer): Instance representing the telemetry server.
-        can_controller (CANController): Instance representing the CAN bus controller.
-        speed_controller (SpeedController): Instance representing the speed controller.
-        path_follower (PathFollower): Instance representing the path follower.
-        calibration (CalibrationData): Instance representing the calibration data.
-        gamepad (Gamepad): Instance representing the gamepad controller.
-        driving_controller (BasicControllerDriving): Instance representing the driving controller.
-        stop_line_assist (StopLineAssist): Instance representing the stop line assist.
-        lane_assist (LaneAssist): Instance representing the lane assist system.
-        controller (ObjectController): Instance representing the object controller.
-        detector (ObjectDetector): Instance representing the object detector.
-
     """
 
     def __init__(self) -> None:
@@ -116,17 +96,12 @@ class Kart:
 
     def switch_driving_mode(self, input_type=None, event_type=None, value=None) -> None:
         """Switch the driving mode of the kart."""
-        if self.driving_controller.paused is False:
-            self.gamepad.vibrate(1000)
-            time.sleep(3)
-            self.driving_controller.paused = True
-            self.lane_assist.paused = False
-        else:
-            self.gamepad.vibrate(1000)
-            self.driving_controller.paused = False
-            self.lane_assist.paused = True
+        self.gamepad.vibrate(500)
+        current = self.driving_controller.paused
+        self.driving_controller.paused = not current
+        self.lane_assist.paused = current
 
-    def start_system(self) -> None:
+    def start(self) -> None:
         """Start the kart system."""
         try:
             # Listener to switch driving mode
@@ -148,19 +123,6 @@ class Kart:
         except KeyboardInterrupt:
             pass
 
-    def save_telemetry_data(self) -> None:
-        """Save telemetry data to files."""
-        # Write the pickled errors and fps into a file
-        folder_path = "../data/telemetry/"
-        os.makedirs(folder_path, exist_ok=True)
-
-        with open(f"{folder_path}{time.time()}-errors.pkl", "wb") as f:
-            pickle.dump(self.lane_assist.path_follower.errors, f)
-
-        # Write the fps into a file
-        with open(f"{folder_path}{time.time()}-frame_times.pkl", "wb") as f:
-            pickle.dump(self.lane_assist.frame_times, f)
-
 
 if __name__ == "__main__":
     if "ENVIRONMENT" in os.environ and os.environ["ENVIRONMENT"] == "simulator":
@@ -168,6 +130,5 @@ if __name__ == "__main__":
 
         start_simulator()
     else:
-        kart_system = Kart()
-        kart_system.start_system()
-        kart_system.save_telemetry_data()
+        kart = Kart()
+        kart.start()
