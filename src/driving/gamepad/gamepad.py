@@ -1,3 +1,5 @@
+import time
+
 import inputs
 import logging
 import math
@@ -100,6 +102,8 @@ class Gamepad:
         """
         try:
             self.gamepad.set_vibration(1, 1, duration)
+            time.sleep(duration / 1000)
+            self.gamepad.set_vibration(0, 0, 0)
         except NotImplementedError:
             logging.warning("Tried vibrating on an unsupported device")
         except Exception as e:
@@ -160,7 +164,7 @@ class Gamepad:
         if event.state:
             self._buttons[button] = True
             self._check_events(button, EventType.BUTTON_DOWN)
-            if button not in self._last_buttons:
+            if button not in self._last_buttons or not self._last_buttons[button]:
                 self._start_long_press_timer(button)
         else:
             self._buttons[button] = False

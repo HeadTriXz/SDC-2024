@@ -25,6 +25,9 @@ class BasicControllerDriving:
     gamepad: Gamepad
     gear = Gear.NEUTRAL
 
+    __running = True
+    __primed = False
+
     def __init__(self, gamepad: Gamepad, can_controller: ICANController) -> None:
         """Initialize the driving controller.
 
@@ -45,8 +48,17 @@ class BasicControllerDriving:
         self.gamepad.add_listener(GamepadButton.A, EventType.LONG_PRESS, self.__ready)
         self.gamepad.vibrate(1000)
 
+    def toggle(self) -> None:
+        """Toggle the controller."""
+        self.__running = not self.__running
+        print('toggle shit')
+
     def __ready(self, *args, **kwargs) -> None:
         """The controller is ready to drive."""
+        if self.__primed:
+            return
+        self.__primed = True
+
         logging.info("The controller is ready")
         self.gamepad.vibrate(1000)
 
@@ -86,6 +98,9 @@ class BasicControllerDriving:
 
         :param value: The value of the steering angle.
         """
+        if not self.__running:
+            return
+
         if abs(value) <= 0.1:
             value = 0.0
 
@@ -96,4 +111,7 @@ class BasicControllerDriving:
 
         :param value: The value of the throttle.
         """
+        if not self.__running != 0:
+            return
+
         self.can_controller.set_throttle(int(value * 100), self.gear)

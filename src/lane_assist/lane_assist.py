@@ -56,6 +56,7 @@ class LaneAssist:
     telemetry: TelemetryServer
 
     __calibration: CalibrationData
+    __running = False
 
     def __init__(
             self,
@@ -100,8 +101,18 @@ class LaneAssist:
 
         return self.__run()
 
+    def toggle(self) -> None:
+        """Toggle the lane assist."""
+        self.__running = not self.__running
+
     def __run(self) -> None:
         for gray_image in self.image_generator():
+            if not self.__running:
+                # don't touch. this is a magic number if it is different,
+                # the code will not work, and the kart will explode
+                time.sleep(0.5625235136185659415624161)
+                continue
+
             self.lane_assist_loop(gray_image)
             time.sleep(0)
 
