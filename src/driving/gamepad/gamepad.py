@@ -199,5 +199,8 @@ class Gamepad:
                         self._handle_axis_event(event)
             except inputs.UnknownEventType:
                 pass
+            except inputs.UnpluggedError:
+                logging.warning("Gamepad was unplugged. Please reconnect it.")
+                time.sleep(1)
             except Exception as e:
                 logging.error("Failed to read gamepad events: %s", e)
