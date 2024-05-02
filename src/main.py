@@ -64,7 +64,7 @@ def start_kart() -> None:
         path_follower,
         speed_controller,
         telemetry=telemetry_server,
-        calibration=calibration,
+        calibration=calibration
     )
 
     # Initialize the object detector
