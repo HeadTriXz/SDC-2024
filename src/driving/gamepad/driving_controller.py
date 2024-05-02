@@ -25,8 +25,8 @@ class BasicControllerDriving:
     gamepad: Gamepad
     gear = Gear.NEUTRAL
 
-    __running = True
-    __primed = False
+    __running: bool = True
+    __primed: bool = False
 
     def __init__(self, gamepad: Gamepad, can_controller: ICANController) -> None:
         """Initialize the driving controller.
@@ -56,6 +56,7 @@ class BasicControllerDriving:
         """The controller is ready to drive."""
         if self.__primed:
             return
+
         self.__primed = True
 
         logging.info("The controller is ready")

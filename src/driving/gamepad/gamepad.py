@@ -1,5 +1,3 @@
-import time
-
 import inputs
 import logging
 import math
@@ -102,8 +100,6 @@ class Gamepad:
         """
         try:
             self.gamepad.set_vibration(1, 1, duration)
-            time.sleep(duration / 1000)
-            self.gamepad.set_vibration(0, 0, 0)
         except NotImplementedError:
             logging.warning("Tried vibrating on an unsupported device")
         except Exception as e:

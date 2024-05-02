@@ -25,7 +25,17 @@ from src.utils.video_stream import VideoStream
 class Kart:
     """A class to represent the kart.
 
-    This class will represent the kart and all its components.
+    Attributes
+    ----------
+        can_controller (CANController): The CAN controller to use.
+        speed_controller (SpeedController): The speed controller to use.
+        cam_left (VideoStream): The left camera stream.
+        cam_center (VideoStream): The center camera stream.
+        cam_right (VideoStream): The right camera stream.
+        lane_assist (LaneAssist): The lane assist to use.
+        detector (ObjectDetector): The object detector to use.
+        gamepad (Gamepad): The gamepad to use.
+
     """
 
     can_controller: CANController
@@ -45,7 +55,7 @@ class Kart:
         self.init_autonomous_driving()
         self.init_manual_driving()
 
-    def start(self) -> None:
+    def start(self) -> "Kart":
         """Start the kart.
 
         This will start the kart and all its components.
@@ -54,7 +64,40 @@ class Kart:
         self.start_manual_driving()
         self.start_autonomous_driving()
 
-    def __init__kart_controll(self, calibration: CalibrationData) -> None:
+        return self
+
+    def init_manual_driving(self) -> None:
+        """Initialize the kart for manual driving."""
+        calibration_data = CalibrationData.load(config.calibration.calibration_file)
+        self.__init_cameras()
+        self.__init__kart_control(calibration_data)
+        self.__init_gamepad_driving()
+
+    def init_autonomous_driving(self) -> None:
+        """Initialize the kart for autonomous driving."""
+        calibration_data = CalibrationData.load(config.calibration.calibration_file)
+        self.telemetry_server = TelemetryServer()
+
+        self.__init_cameras()
+        self.__init__kart_control(calibration_data)
+        self.__init_object_detector(calibration_data)
+
+    def start_autonomous_driving(self) -> None:
+        """Start the autonomous driving."""
+        self.cam_left.start()
+        self.cam_center.start()
+        self.cam_right.start()
+
+        self.lane_assist.start()
+        self.detector.start()
+        self.telemetry_server.start()
+
+    def start_manual_driving(self) -> None:
+        """Start the manual driving."""
+        self.gamepad_driving.start()
+        self.gamepad.start()
+
+    def __init__kart_control(self, calibration: CalibrationData) -> None:
         self.can_controller = CANController(get_can_bus())
         self.speed_controller = SpeedController(self.can_controller)
 
@@ -74,9 +117,10 @@ class Kart:
             self.telemetry_server
         )
 
+        stopline = StopLineAssist(self.speed_controller, calibration),
         self.lane_assist = LaneAssist(
             image_gen,
-            StopLineAssist(self.speed_controller, calibration),
+            stopline,
             path_follower,
             self.speed_controller,
             telemetry=self.telemetry_server,
@@ -115,34 +159,3 @@ class Kart:
         self.gamepad.vibrate()
         self.gamepad_driving.toggle()
         self.lane_assist.toggle()
-
-    def init_manual_driving(self) -> None:
-        """Initialize the kart for manual driving."""
-        calibration_data = CalibrationData.load(config.calibration.calibration_file)
-        self.__init_cameras()
-        self.__init__kart_controll(calibration_data)
-        self.__init_gamepad_driving()
-
-    def init_autonomous_driving(self) -> None:
-        """Initialize the kart for autonomous driving."""
-        calibration_data = CalibrationData.load(config.calibration.calibration_file)
-        self.telemetry_server = TelemetryServer()
-
-        self.__init_cameras()
-        self.__init__kart_controll(calibration_data)
-        self.__init_object_detector(calibration_data)
-
-    def start_autonomous_driving(self) -> None:
-        """Start the autonomous driving."""
-        self.cam_left.start()
-        self.cam_center.start()
-        self.cam_right.start()
-
-        self.lane_assist.start()
-        self.detector.start()
-        self.telemetry_server.start()
-
-    def start_manual_driving(self) -> None:
-        """Start the manual driving."""
-        self.gamepad_driving.start()
-        self.gamepad.start()
