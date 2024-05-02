@@ -1,12 +1,13 @@
 import cv2
 import numpy as np
 
-from config import config
-from telemetry.app import TelemetryServer
-from lane_assist.preprocessing.gamma import GammaAdjuster
-from utils.calibration_data import CalibrationData
-from utils.video_stream import VideoStream
 from typing import Callable, Generator
+
+from src.config import config
+from src.lane_assist.preprocessing.gamma import GammaAdjuster
+from src.telemetry.app import TelemetryServer
+from src.utils.calibration_data import CalibrationData
+from src.utils.video_stream import VideoStream
 
 
 def td_stitched_image_generator(

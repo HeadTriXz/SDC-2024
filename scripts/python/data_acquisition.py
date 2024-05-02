@@ -2,11 +2,12 @@ import cv2
 import sys
 import time
 
-from config import config
 from datetime import datetime
 from pathlib import Path
-from constants import CameraResolution
-from utils.video_stream import VideoStream
+
+from src.config import config
+from src.constants import CameraResolution
+from src.utils.video_stream import VideoStream
 
 
 def main() -> None:

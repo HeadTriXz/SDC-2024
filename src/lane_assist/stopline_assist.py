@@ -1,10 +1,10 @@
 import numpy as np
 
-from config import config
-from driving.speed_controller import ISpeedController, SpeedControllerState
-from lane_assist.line_detection.line import Line
-from lane_assist.line_detection.line_detector import get_stoplines
-from utils.calibration_data import CalibrationData
+from src.config import config
+from src.driving.speed_controller import ISpeedController, SpeedControllerState
+from src.lane_assist.line_detection.line import Line
+from src.lane_assist.line_detection.line_detector import get_stoplines
+from src.utils.calibration_data import CalibrationData
 
 
 class StopLineAssist:

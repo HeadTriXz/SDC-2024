@@ -3,10 +3,10 @@ import logging
 import threading
 import time
 
-from config import config
-from constants import CANFeedbackIdentifier, Gear
-from driving.can import ICANController
-from driving.speed_controller import ISpeedController, SpeedControllerState
+from src.config import config
+from src.constants import CANFeedbackIdentifier, Gear
+from src.driving.can import ICANController
+from src.driving.speed_controller import ISpeedController, SpeedControllerState
 
 
 class SpeedController(ISpeedController):

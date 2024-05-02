@@ -1,10 +1,11 @@
 import cv2
 import numpy as np
 
-from lane_assist.preprocessing.stitching import stitch_images
-from lane_assist.preprocessing.utils.other import euclidean_distance
 from pathlib import Path
-from utils.singleton_meta import SingletonMeta
+
+from src.lane_assist.preprocessing.stitching import stitch_images
+from src.lane_assist.preprocessing.utils.other import euclidean_distance
+from src.utils.singleton_meta import SingletonMeta
 
 
 class CalibrationData(metaclass=SingletonMeta):

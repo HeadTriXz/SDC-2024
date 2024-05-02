@@ -31,14 +31,34 @@ pip --version
 git clone https://github.com/HeadTriXz/SDC-2024
 ```
 
-**Step 2: Install the Required Packages**
+**Step 2: Create a Virtual Environment**
+```bash
+python -m venv venv
+```
+
+**Step 3: Activate the Virtual Environment**
+```bash
+# On Windows
+venv\Scripts\activate
+
+# On macOS and Linux
+source venv/bin/activate
+```
+
+**Step 4: Install the Required Packages**
 ```bash
 pip install -r requirements.txt
 ```
 
-**Step 3: Run the Application**
+**Step 5: Run the Application**
 ```bash
-python src/main.py
+python -m src.main
+```
+
+### Execute a Script
+To execute a script, run the following command in your terminal:
+```bash
+python -m scripts.python.<script_name>
 ```
 
 ## License

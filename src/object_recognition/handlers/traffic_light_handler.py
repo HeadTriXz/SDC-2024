@@ -1,8 +1,9 @@
-from constants import Label
-from driving.speed_controller import SpeedControllerState
-from object_recognition.handlers.base_handler import BaseObjectHandler
-from object_recognition.object_controller import ObjectController
 from ultralytics.engine.results import Boxes
+
+from src.constants import Label
+from src.driving.speed_controller import SpeedControllerState
+from src.object_recognition.handlers.base_handler import BaseObjectHandler
+from src.object_recognition.object_controller import ObjectController
 
 
 class TrafficLightHandler(BaseObjectHandler):

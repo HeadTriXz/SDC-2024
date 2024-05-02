@@ -7,6 +7,7 @@ import threading
 from datetime import datetime
 from os import system
 from time import sleep
+
 from src.constants import CAN_SEND_PERIOD
 
 

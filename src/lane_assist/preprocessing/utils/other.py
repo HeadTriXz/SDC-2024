@@ -1,9 +1,10 @@
 import cv2
 import numpy as np
 
-from config import config
-from lane_assist.preprocessing.utils.corners import get_transformed_corners
 from typing import Optional
+
+from src.config import config
+from src.lane_assist.preprocessing.utils.corners import get_transformed_corners
 
 Coordinate = tuple[int, int] | np.ndarray
 

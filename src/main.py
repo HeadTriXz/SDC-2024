@@ -1,24 +1,25 @@
 import os
 
-from config import config
-from constants import Gear, CameraResolution
-from driving.can import CANController, get_can_bus
-from driving.speed_controller import SpeedController, SpeedControllerState
-from lane_assist.helpers import td_stitched_image_generator
-from lane_assist.lane_assist import LaneAssist
-from lane_assist.line_following.path_follower import PathFollower
-from lane_assist.stopline_assist import StopLineAssist
-from object_recognition.handlers.overtake_handler import OvertakeHandler
-from object_recognition.handlers.pedestrian_handler import PedestrianHandler
-from object_recognition.handlers.speed_limit_handler import SpeedLimitHandler
-from object_recognition.handlers.traffic_light_handler import TrafficLightHandler
-from object_recognition.object_controller import ObjectController
-from object_recognition.object_detector import ObjectDetector
 from pathlib import Path
-from utils.calibration_data import CalibrationData
-from utils.lidar import Lidar
-from utils.video_stream import VideoStream
-from telemetry.app import TelemetryServer
+
+from src.config import config
+from src.constants import Gear, CameraResolution
+from src.driving.can import CANController, get_can_bus
+from src.driving.speed_controller import SpeedController, SpeedControllerState
+from src.lane_assist.helpers import td_stitched_image_generator
+from src.lane_assist.lane_assist import LaneAssist
+from src.lane_assist.line_following.path_follower import PathFollower
+from src.lane_assist.stopline_assist import StopLineAssist
+from src.object_recognition.handlers.overtake_handler import OvertakeHandler
+from src.object_recognition.handlers.pedestrian_handler import PedestrianHandler
+from src.object_recognition.handlers.speed_limit_handler import SpeedLimitHandler
+from src.object_recognition.handlers.traffic_light_handler import TrafficLightHandler
+from src.object_recognition.object_controller import ObjectController
+from src.object_recognition.object_detector import ObjectDetector
+from src.utils.calibration_data import CalibrationData
+from src.utils.lidar import Lidar
+from src.utils.video_stream import VideoStream
+from src.telemetry.app import TelemetryServer
 
 
 def start_kart() -> None:
@@ -88,7 +89,7 @@ def start_kart() -> None:
 
 if __name__ == "__main__":
     if "ENVIRONMENT" in os.environ and os.environ["ENVIRONMENT"] == "simulator":
-        from simulation.main import start_simulator
+        from src.simulation.main import start_simulator
 
         start_simulator()
     else:

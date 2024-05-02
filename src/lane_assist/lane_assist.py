@@ -4,18 +4,19 @@ import threading
 import time
 
 from collections.abc import Callable, Generator
-from config import config
-from driving.can import ICANController
-from driving.speed_controller import ISpeedController
-from lane_assist.line_detection.line import Line, LineType
-from lane_assist.line_detection.line_detector import filter_lines, get_lines
-from lane_assist.line_following.dynamic_speed import get_max_path_speed
-from lane_assist.line_following.path_follower import PathFollower
-from lane_assist.line_following.path_generator import generate_driving_path
-from lane_assist.stopline_assist import StopLineAssist
-from telemetry.app import TelemetryServer
 from typing import Optional
-from utils.calibration_data import CalibrationData
+
+from src.config import config
+from src.driving.can import ICANController
+from src.driving.speed_controller import ISpeedController
+from src.lane_assist.line_detection.line import Line, LineType
+from src.lane_assist.line_detection.line_detector import filter_lines, get_lines
+from src.lane_assist.line_following.dynamic_speed import get_max_path_speed
+from src.lane_assist.line_following.path_follower import PathFollower
+from src.lane_assist.line_following.path_generator import generate_driving_path
+from src.lane_assist.stopline_assist import StopLineAssist
+from src.telemetry.app import TelemetryServer
+from src.utils.calibration_data import CalibrationData
 
 
 colours = {

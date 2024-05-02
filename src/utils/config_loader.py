@@ -3,7 +3,8 @@ import time
 
 from omegaconf import DictConfig, ListConfig, OmegaConf
 from pathlib import Path
-from utils.singleton_meta import SingletonMeta
+
+from src.utils.singleton_meta import SingletonMeta
 
 
 class ConfigLoader(metaclass=SingletonMeta):

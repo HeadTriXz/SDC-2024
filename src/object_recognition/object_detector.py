@@ -1,11 +1,12 @@
 import time
 
-from config import config
-from object_recognition.object_controller import ObjectController
 from pathlib import Path
 from threading import Thread
 from ultralytics import YOLO
-from utils.video_stream import VideoStream
+
+from src.config import config
+from src.object_recognition.object_controller import ObjectController
+from src.utils.video_stream import VideoStream
 
 
 class ObjectDetector:

@@ -3,8 +3,8 @@ import struct
 import threading
 import time
 
-from constants import CAN_SEND_PERIOD, CANControlIdentifier, CANFeedbackIdentifier, Gear
-from driving.can import ICANController
+from src.constants import CAN_SEND_PERIOD, CANControlIdentifier, CANFeedbackIdentifier, Gear
+from src.driving.can import ICANController
 
 
 def initialize_can_message(message_id: CANControlIdentifier) -> can.Message:

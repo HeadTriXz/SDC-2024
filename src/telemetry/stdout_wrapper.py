@@ -3,7 +3,7 @@ import sys
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from telemetry.app import TelemetryServer
+    from src.telemetry.app import TelemetryServer
 
 
 class StdoutWrapper:

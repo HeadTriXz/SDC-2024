@@ -3,13 +3,17 @@ import numpy as np
 import scipy
 
 from collections.abc import Iterable
-from config import config
-from lane_assist.line_detection.line import Line, LineType
-from lane_assist.line_detection.window import Window
+
+from src.config import config
+from src.lane_assist.line_detection.line import Line, LineType
+from src.lane_assist.line_detection.window import Window
 
 
 def window_search(
-        filtered_img: np.ndarray, window_count: int, windows: Iterable[Window], window_height: int,
+        filtered_img: np.ndarray,
+        window_count: int,
+        windows: Iterable[Window],
+        window_height: int,
         stopline: bool = False
 ) -> list[Line]:
     """Search for the windows in the image.

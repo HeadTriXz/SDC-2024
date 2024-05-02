@@ -1,6 +1,6 @@
 import numpy as np
 
-from lane_assist.preprocessing.utils.other import get_board_shape
+from src.lane_assist.preprocessing.utils.other import get_board_shape
 
 
 def corners_to_grid(corners: np.ndarray, ids: np.ndarray, shape: tuple[int, int]) -> np.ndarray:

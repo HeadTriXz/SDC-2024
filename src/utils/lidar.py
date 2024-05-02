@@ -1,11 +1,12 @@
 import logging
 import numpy as np
 
-from config import config
 from rplidar import RPLidar
 from math import floor
 from threading import Thread
 from typing import Optional
+
+from src.config import config
 
 
 class Lidar:

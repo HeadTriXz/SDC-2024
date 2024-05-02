@@ -1,12 +1,12 @@
 import numpy as np
 
-from driving.speed_controller import SpeedControllerState
-from driving.speed_controller.speed_controller_interface import ISpeedController
-from lane_assist.lane_assist import LaneAssist
-from object_recognition.handlers.base_handler import BaseObjectHandler
 from typing import Optional
 from ultralytics.engine.results import Boxes
-from utils.calibration_data import CalibrationData
+
+from src.driving.speed_controller import ISpeedController, SpeedControllerState
+from src.lane_assist.lane_assist import LaneAssist
+from src.object_recognition.handlers.base_handler import BaseObjectHandler
+from src.utils.calibration_data import CalibrationData
 
 
 class ObjectController:
