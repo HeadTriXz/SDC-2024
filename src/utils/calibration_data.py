@@ -157,7 +157,11 @@ class CalibrationData(metaclass=SingletonMeta):
         :param path: The path to the file.
         :return: The loaded calibration data.
         """
-        data = np.load(Path(path))
+        path = Path(path)
+        if not path.exists():
+            raise FileNotFoundError(f"Calibration file not found: {path}")
+
+        data = np.load(path)
 
         calibration_data = cls()
         calibration_data.input_shape = tuple(data["input_shape"])

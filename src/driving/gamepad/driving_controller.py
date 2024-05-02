@@ -25,6 +25,9 @@ class BasicControllerDriving:
     gamepad: Gamepad
     gear = Gear.NEUTRAL
 
+    __running: bool = True
+    __primed: bool = False
+
     def __init__(self, gamepad: Gamepad, can_controller: ICANController) -> None:
         """Initialize the driving controller.
 
@@ -43,12 +46,21 @@ class BasicControllerDriving:
         self.can_controller.set_brake(100)
 
         self.gamepad.add_listener(GamepadButton.A, EventType.LONG_PRESS, self.__ready)
-        self.gamepad.vibrate(1000)
+        self.gamepad.vibrate()
+
+    def toggle(self) -> None:
+        """Toggle the controller."""
+        self.__running = not self.__running
 
     def __ready(self, *args, **kwargs) -> None:
         """The controller is ready to drive."""
+        if self.__primed:
+            return
+
+        self.__primed = True
+
         logging.info("The controller is ready")
-        self.gamepad.vibrate(1000)
+        self.gamepad.vibrate()
 
         # gears
         self.gamepad.add_listener(GamepadButton.X, EventType.BUTTON_DOWN, self.__set_reverse)
@@ -67,18 +79,30 @@ class BasicControllerDriving:
 
         :param value: The value of the brake.
         """
+        if not self.__running:
+            return
+
         self.can_controller.set_brake(int(value * 100))
 
     def __set_forward(self, *args, **kwargs) -> None:
         """Set the gear to forward."""
+        if not self.__running:
+            return
+
         self.gear = Gear.DRIVE
 
     def __set_neutral(self, *args, **kwargs) -> None:
         """Set the gear to neutral."""
+        if not self.__running:
+            return
+
         self.gear = Gear.NEUTRAL
 
     def __set_reverse(self, *args, **kwargs) -> None:
         """Set the gear to reverse."""
+        if not self.__running:
+            return
+
         self.gear = Gear.REVERSE
 
     def __set_steering(self, _button: GamepadButton, _event: EventType, value: float) -> None:
@@ -86,6 +110,9 @@ class BasicControllerDriving:
 
         :param value: The value of the steering angle.
         """
+        if not self.__running:
+            return
+
         if abs(value) <= 0.1:
             value = 0.0
 
@@ -96,4 +123,7 @@ class BasicControllerDriving:
 
         :param value: The value of the throttle.
         """
+        if not self.__running:
+            return
+
         self.can_controller.set_throttle(int(value * 100), self.gear)

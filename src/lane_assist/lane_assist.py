@@ -56,6 +56,7 @@ class LaneAssist:
     telemetry: TelemetryServer
 
     __calibration: CalibrationData
+    __running: bool = False
 
     def __init__(
             self,
@@ -85,25 +86,6 @@ class LaneAssist:
         self.telemetry = telemetry
 
         self.__calibration = calibration
-
-    def start(self, multithreading: bool = False) -> Optional[threading.Thread]:
-        """Start the lane assist.
-
-        This function will start the lane assist. It will generate images and follow the path.
-
-        :param multithreading: If the lane assist should run on a separate thread.
-        """
-        if multithreading:  # TODO: investigate why multi threaded is extremely slow
-            thread = threading.Thread(target=self.__run, daemon=True)
-            thread.start()
-            return thread
-
-        return self.__run()
-
-    def __run(self) -> None:
-        for gray_image in self.image_generator():
-            self.lane_assist_loop(gray_image)
-            time.sleep(0)
 
     def lane_assist_loop(self, image: np.ndarray) -> None:
         """Lane assist loop.
@@ -135,6 +117,24 @@ class LaneAssist:
         self.lines = filtered_lines
         self.stopline_assist.detect_and_handle(image, filtered_lines)
 
+    def start(self, multithreading: bool = False) -> Optional[threading.Thread]:
+        """Start the lane assist.
+
+        This function will start the lane assist. It will generate images and follow the path.
+
+        :param multithreading: If the lane assist should run on a separate thread.
+        """
+        if multithreading:
+            thread = threading.Thread(target=self.__run, daemon=True)
+            thread.start()
+            return thread
+
+        return self.__run()
+
+    def toggle(self) -> None:
+        """Toggle the lane assist."""
+        self.__running = not self.__running
+
     def __follow_path(self, lines: list[Line], car_position: float, lane: int) -> None:
         """Follow the path.
 
@@ -152,3 +152,13 @@ class LaneAssist:
         # Steer the kart based on the path and its position.
         steering_fraction = self.path_follower.get_steering_fraction(path.points, car_position)
         self.can_controller.set_steering(steering_fraction)
+
+    def __run(self) -> None:
+        """Run the lane assist loop."""
+        for gray_image in self.image_generator():
+            if not self.__running:
+                time.sleep(0.5)
+                continue
+
+            self.lane_assist_loop(gray_image)
+            time.sleep(0)

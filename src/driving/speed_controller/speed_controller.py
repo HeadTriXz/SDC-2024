@@ -41,6 +41,7 @@ class SpeedController(ISpeedController):
 
         # FIXME: remove telemetry
         self.__thread = threading.Thread(target=self.__debug, daemon=True)
+        self.max_speed = config.speed_modes.selected
 
     @property
     def gear(self) -> Gear:

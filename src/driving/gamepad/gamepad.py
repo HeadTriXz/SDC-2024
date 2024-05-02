@@ -1,3 +1,5 @@
+import time
+
 import inputs
 import logging
 import math
@@ -93,13 +95,17 @@ class Gamepad:
         """Start listening for gamepad events."""
         self.__thread.start()
 
-    def vibrate(self, duration: int = 1000) -> None:
+    def vibrate(self, duration: int = 1000, block: bool = True) -> None:
         """Vibrate the gamepad.
 
         :param duration: The duration to vibrate in milliseconds.
+        :param block: Whether to block until the vibration is done.
         """
         try:
             self.gamepad.set_vibration(1, 1, duration)
+            if block:
+                time.sleep(duration / 1000)
+                self.gamepad.set_vibration(0, 0, 0)
         except NotImplementedError:
             logging.warning("Tried vibrating on an unsupported device")
         except Exception as e:
@@ -160,7 +166,7 @@ class Gamepad:
         if event.state:
             self._buttons[button] = True
             self._check_events(button, EventType.BUTTON_DOWN)
-            if button not in self._last_buttons:
+            if button not in self._last_buttons or not self._last_buttons[button]:
                 self._start_long_press_timer(button)
         else:
             self._buttons[button] = False
@@ -193,5 +199,8 @@ class Gamepad:
                         self._handle_axis_event(event)
             except inputs.UnknownEventType:
                 pass
+            except inputs.UnpluggedError:
+                logging.warning("Gamepad was unplugged. Please reconnect it.")
+                time.sleep(1)
             except Exception as e:
                 logging.error("Failed to read gamepad events: %s", e)
