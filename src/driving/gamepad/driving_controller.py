@@ -51,7 +51,6 @@ class BasicControllerDriving:
     def toggle(self) -> None:
         """Toggle the controller."""
         self.__running = not self.__running
-        print('toggle shit')
 
     def __ready(self, *args, **kwargs) -> None:
         """The controller is ready to drive."""
@@ -111,7 +110,7 @@ class BasicControllerDriving:
 
         :param value: The value of the throttle.
         """
-        if not self.__running != 0:
+        if not self.__running:
             return
 
         self.can_controller.set_throttle(int(value * 100), self.gear)
