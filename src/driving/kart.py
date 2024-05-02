@@ -3,6 +3,7 @@ import time
 from typing import Any
 
 from src.config import config
+from src.constants import CameraResolution
 from src.driving.can import get_can_bus, CANController
 from src.driving.gamepad.driving_controller import BasicControllerDriving
 from src.driving.gamepad.gamepad import Gamepad, GamepadButton, EventType
@@ -50,6 +51,8 @@ class Kart:
     speed_controller: SpeedController
     telemetry_server: TelemetryServer
 
+    __autonomous: bool = False
+
     def __init__(self) -> None:
         """Initialize the kart."""
         self.init_autonomous_driving()
@@ -66,14 +69,6 @@ class Kart:
 
         return self
 
-    def init_manual_driving(self) -> None:
-        """Initialize the kart for manual driving."""
-        calibration = CalibrationData.load(config.calibration.calibration_file)
-
-        self.__init_cameras()
-        self.__init_kart_control(calibration)
-        self.__init_gamepad_driving()
-
     def init_autonomous_driving(self) -> None:
         """Initialize the kart for autonomous driving."""
         calibration = CalibrationData.load(config.calibration.calibration_file)
@@ -83,6 +78,14 @@ class Kart:
         self.__init_cameras()
         self.__init_kart_control(calibration)
         self.__init_object_detector(calibration)
+
+    def init_manual_driving(self) -> None:
+        """Initialize the kart for manual driving."""
+        calibration = CalibrationData.load(config.calibration.calibration_file)
+
+        self.__init_cameras()
+        self.__init_kart_control(calibration)
+        self.__init_gamepad_driving()
 
     def start_autonomous_driving(self) -> None:
         """Start the autonomous driving."""
@@ -101,9 +104,9 @@ class Kart:
 
     def __init_cameras(self) -> None:
         """Initialize the camera streams."""
-        self.cam_left = VideoStream(config.camera_ids.left)
-        self.cam_center = VideoStream(config.camera_ids.center)
-        self.cam_right = VideoStream(config.camera_ids.right)
+        self.cam_left = VideoStream(config.camera_ids.left, resolution=CameraResolution.NHD)
+        self.cam_center = VideoStream(config.camera_ids.center, resolution=CameraResolution.HD)
+        self.cam_right = VideoStream(config.camera_ids.right, resolution=CameraResolution.NHD)
 
     def __init_gamepad_driving(self) -> None:
         """Initialize the driving controller."""
@@ -167,8 +170,11 @@ class Kart:
 
     def __toggle(self, *_args: Any, **_kwargs: Any) -> None:
         """Toggle the controller."""
-        self.gamepad.vibrate()
-        time.sleep(5)
+        if not self.__autonomous:
+            self.gamepad.vibrate()
+            time.sleep(5)
+
+        self.__autonomous = not self.__autonomous
 
         self.gamepad.vibrate()
         self.driving_controller.toggle()

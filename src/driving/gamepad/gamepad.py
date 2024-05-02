@@ -1,3 +1,5 @@
+import time
+
 import inputs
 import logging
 import math
@@ -93,13 +95,17 @@ class Gamepad:
         """Start listening for gamepad events."""
         self.__thread.start()
 
-    def vibrate(self, duration: int = 1000) -> None:
+    def vibrate(self, duration: int = 1000, block: bool = True) -> None:
         """Vibrate the gamepad.
 
         :param duration: The duration to vibrate in milliseconds.
+        :param block: Whether to block until the vibration is done.
         """
         try:
             self.gamepad.set_vibration(1, 1, duration)
+            if block:
+                time.sleep(duration / 1000)
+                self.gamepad.set_vibration(0, 0, 0)
         except NotImplementedError:
             logging.warning("Tried vibrating on an unsupported device")
         except Exception as e:
