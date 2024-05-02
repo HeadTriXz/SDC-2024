@@ -5,7 +5,7 @@ from typing import Optional, TYPE_CHECKING
 from ultralytics.engine.results import Boxes
 
 if TYPE_CHECKING:
-    from object_recognition.object_controller import ObjectController
+    from src.object_recognition.object_controller import ObjectController
 
 
 class BaseObjectHandler(ABC):

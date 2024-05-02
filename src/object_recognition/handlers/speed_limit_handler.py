@@ -1,9 +1,10 @@
 import numpy as np
 
-from config import config
-from object_recognition.handlers.base_handler import BaseObjectHandler
-from object_recognition.object_controller import ObjectController
 from ultralytics.engine.results import Boxes
+
+from src.config import config
+from src.object_recognition.handlers.base_handler import BaseObjectHandler
+from src.object_recognition.object_controller import ObjectController
 
 
 class SpeedLimitHandler(BaseObjectHandler):

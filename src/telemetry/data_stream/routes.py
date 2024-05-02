@@ -1,8 +1,9 @@
 import asyncio
 
 from fastapi import APIRouter, WebSocket
-from telemetry.data_stream.websocket_handler import WebsocketHandler
 from starlette.websockets import WebSocketDisconnect
+
+from src.telemetry.data_stream.websocket_handler import WebsocketHandler
 
 
 def create_router(websocket_handler: WebsocketHandler) -> APIRouter:

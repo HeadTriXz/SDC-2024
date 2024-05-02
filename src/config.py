@@ -1,3 +1,3 @@
-from utils.config_loader import ConfigLoader
+from src.utils.config_loader import ConfigLoader
 
 config = ConfigLoader()

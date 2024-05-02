@@ -1,5 +1,6 @@
 import socket
-from config import config
+
+from src.config import config
 
 
 def is_valid_ipv4(ip: str) -> bool:

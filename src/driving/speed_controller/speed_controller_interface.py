@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 
-from constants import Gear
-from driving.can import ICANController
-from driving.speed_controller import SpeedControllerState
+from src.constants import Gear
+from src.driving.can import ICANController
+from src.driving.speed_controller import SpeedControllerState
 
 
 class ISpeedController(ABC):

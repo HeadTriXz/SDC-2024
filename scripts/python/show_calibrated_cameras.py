@@ -3,11 +3,12 @@ import logging
 import numpy as np
 import requests
 
-from config import config
-from constants import CameraResolution
 from pathlib import Path
-from utils.calibration_data import CalibrationData
-from utils.video_stream import VideoStream
+
+from src.config import config
+from src.constants import CameraResolution
+from src.utils.calibration_data import CalibrationData
+from src.utils.video_stream import VideoStream
 
 WEBHOOK_URL = "https://discord.com/api/webhooks/1233031145357049866/a4-YT4xhy-pxlMx7-8XI2cvzlrWEXQlyjVvl0QKVaPbBvJv80jBJ4ThuDEmRIbyuev7O"
 

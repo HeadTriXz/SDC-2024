@@ -1,10 +1,11 @@
-from config import config
-from constants import Label
-from object_recognition.handlers.base_handler import BaseObjectHandler
-from object_recognition.object_controller import ObjectController
 from threading import Thread
 from ultralytics.engine.results import Boxes
-from utils.lidar import Lidar
+
+from src.config import config
+from src.constants import Label
+from src.object_recognition.handlers.base_handler import BaseObjectHandler
+from src.object_recognition.object_controller import ObjectController
+from src.utils.lidar import Lidar
 
 
 class OvertakeHandler(BaseObjectHandler):

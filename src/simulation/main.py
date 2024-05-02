@@ -2,15 +2,16 @@ import airsim
 import cv2
 import numpy as np
 
-from config import config
-from driving.speed_controller import SpeedController, SpeedControllerState
-from lane_assist.lane_assist import LaneAssist, PathFollower
-from lane_assist.stopline_assist import StopLineAssist
 from pathlib import Path
-from simulation.can_controller import SimCanController
-from telemetry.app import TelemetryServer
 from typing import Generator
-from utils.calibration_data import CalibrationData
+
+from src.config import config
+from src.driving.speed_controller import SpeedController, SpeedControllerState
+from src.lane_assist.lane_assist import LaneAssist, PathFollower
+from src.lane_assist.stopline_assist import StopLineAssist
+from src.simulation.can_controller import SimCanController
+from src.telemetry.app import TelemetryServer
+from src.utils.calibration_data import CalibrationData
 
 
 def start_simulator() -> None:
@@ -61,7 +62,6 @@ def start_simulator() -> None:
         stop_line_assist,
         path_follower,
         speed_controller,
-        adjust_speed=lambda _path: 15,
         telemetry=telemetry,
         calibration=calibration
     )

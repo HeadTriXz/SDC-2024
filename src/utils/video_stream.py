@@ -2,8 +2,9 @@ import cv2
 import numpy as np
 import sys
 
-from constants import CameraFramerate, CameraResolution
 from threading import Thread
+
+from src.constants import CameraFramerate, CameraResolution
 
 
 def get_camera_backend() -> int:

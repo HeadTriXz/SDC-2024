@@ -1,7 +1,4 @@
-src = ["src"]
-
-
-line-length=120
+line-length = 120
 
 [lint]
 select = [

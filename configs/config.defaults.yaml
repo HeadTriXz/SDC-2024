@@ -14,7 +14,7 @@ calibration:
   render_distance:
     front: 12.0
     side: 5.0
-  save_dir: "../data/calibration"
+  save_dir: "./data/calibration"
   square_length: 0.115
   vanishing_line_offset: 0.02
 
@@ -60,7 +60,7 @@ lane_assist:
     initial_speed: 5
 
 object_detection:
-  model_path: "../models/yolo8s.pt"
+  model_path: "./models/yolo8s.pt"
   min_confidence: 0.6
   verbose: false
   image_size: 1280

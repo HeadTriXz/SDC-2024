@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from config import config
+
+from src.config import config
 
 
 class ConfigUpdate(BaseModel):

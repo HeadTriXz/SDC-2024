@@ -1,8 +1,8 @@
 import airsim
 import can
 
-from constants import CANFeedbackIdentifier
-from driving.can.can_controller_interface import ICANController
+from src.constants import CANFeedbackIdentifier
+from src.driving.can import ICANController
 
 
 class SimCanController(ICANController):

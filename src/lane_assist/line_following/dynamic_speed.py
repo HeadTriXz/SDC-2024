@@ -1,7 +1,7 @@
 import numpy as np
 
-from config import config
-from lane_assist.line_following.path_generator import Path
+from src.config import config
+from src.lane_assist.line_following.path_generator import Path
 
 
 def get_max_corner_speed(radius: float, friction_coefficient: float = 0.9) -> float:
