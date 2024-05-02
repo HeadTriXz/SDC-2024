@@ -1,6 +1,7 @@
 import os
 
-from src.kart import Kart
+from src.driving.kart import Kart
+
 
 if __name__ == "__main__":
     if "ENVIRONMENT" in os.environ and os.environ["ENVIRONMENT"] == "simulator":
@@ -8,5 +9,4 @@ if __name__ == "__main__":
 
         start_simulator()
     else:
-        kart = Kart().start()
-
+        Kart().start()

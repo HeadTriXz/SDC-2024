@@ -28,28 +28,27 @@ class Kart:
 
     Attributes
     ----------
-        can_controller (CANController): The CAN controller to use.
-        speed_controller (SpeedController): The speed controller to use.
         cam_left (VideoStream): The left camera stream.
         cam_center (VideoStream): The center camera stream.
         cam_right (VideoStream): The right camera stream.
-        lane_assist (LaneAssist): The lane assist to use.
-        detector (ObjectDetector): The object detector to use.
+        can_controller (CANController): The CAN controller.
+        detector (ObjectDetector): The object detector.
         gamepad (Gamepad): The gamepad to use.
+        lane_assist (LaneAssist): The lane assist.
+        speed_controller (SpeedController): The speed controller.
+        telemetry_server (TelemetryServer): The telemetry server.
 
     """
-
-    can_controller: CANController
-    speed_controller: SpeedController
 
     cam_left: VideoStream
     cam_center: VideoStream
     cam_right: VideoStream
-
-    lane_assist: LaneAssist
+    can_controller: CANController
     detector: ObjectDetector
-
     gamepad: Gamepad
+    lane_assist: LaneAssist
+    speed_controller: SpeedController
+    telemetry_server: TelemetryServer
 
     def __init__(self) -> None:
         """Initialize the kart."""
@@ -69,19 +68,21 @@ class Kart:
 
     def init_manual_driving(self) -> None:
         """Initialize the kart for manual driving."""
-        calibration_data = CalibrationData.load(config.calibration.calibration_file)
+        calibration = CalibrationData.load(config.calibration.calibration_file)
+
         self.__init_cameras()
-        self.__init__kart_control(calibration_data)
+        self.__init_kart_control(calibration)
         self.__init_gamepad_driving()
 
     def init_autonomous_driving(self) -> None:
         """Initialize the kart for autonomous driving."""
-        calibration_data = CalibrationData.load(config.calibration.calibration_file)
+        calibration = CalibrationData.load(config.calibration.calibration_file)
+
         self.telemetry_server = TelemetryServer()
 
         self.__init_cameras()
-        self.__init__kart_control(calibration_data)
-        self.__init_object_detector(calibration_data)
+        self.__init_kart_control(calibration)
+        self.__init_object_detector(calibration)
 
     def start_autonomous_driving(self) -> None:
         """Start the autonomous driving."""
@@ -89,17 +90,35 @@ class Kart:
         self.cam_center.start()
         self.cam_right.start()
 
-        self.lane_assist.start()
         self.detector.start()
         self.telemetry_server.start()
+        self.lane_assist.start()
 
     def start_manual_driving(self) -> None:
         """Start the manual driving."""
-        self.gamepad_driving.start()
+        self.driving_controller.start()
         self.gamepad.start()
 
-    def __init__kart_control(self, calibration: CalibrationData) -> None:
-        self.can_controller = CANController(get_can_bus())
+    def __init_cameras(self) -> None:
+        """Initialize the camera streams."""
+        self.cam_left = VideoStream(config.camera_ids.left)
+        self.cam_center = VideoStream(config.camera_ids.center)
+        self.cam_right = VideoStream(config.camera_ids.right)
+
+    def __init_gamepad_driving(self) -> None:
+        """Initialize the driving controller."""
+        self.gamepad = Gamepad()
+        self.driving_controller = BasicControllerDriving(self.gamepad, self.can_controller)
+
+        self.gamepad.add_listener(GamepadButton.START, EventType.LONG_PRESS, self.__toggle)
+
+    def __init_kart_control(self, calibration: CalibrationData) -> None:
+        """Initialize the kart control.
+
+        :param calibration: The calibration data.
+        """
+        bus = get_can_bus()
+        self.can_controller = CANController(bus)
         self.speed_controller = SpeedController(self.can_controller)
 
         path_follower = PathFollower(
@@ -110,7 +129,7 @@ class Kart:
             max_steering_range=config.lane_assist.line_following.max_steering_range
         )
 
-        image_gen = td_stitched_image_generator(
+        generator = td_stitched_image_generator(
             calibration,
             self.cam_left,
             self.cam_center,
@@ -118,22 +137,21 @@ class Kart:
             self.telemetry_server
         )
 
-        stopline = StopLineAssist(self.speed_controller, calibration),
+        stop_line_assist = StopLineAssist(self.speed_controller, calibration)
         self.lane_assist = LaneAssist(
-            image_gen,
-            stopline,
+            generator,
+            stop_line_assist,
             path_follower,
             self.speed_controller,
             telemetry=self.telemetry_server,
             calibration=calibration
         )
 
-    def __init_cameras(self) -> None:
-        self.cam_left = VideoStream(config.camera_ids.left)
-        self.cam_center = VideoStream(config.camera_ids.center)
-        self.cam_right = VideoStream(config.camera_ids.right)
-
     def __init_object_detector(self, calibration: CalibrationData) -> None:
+        """Initialize the object detector.
+
+        :param calibration: The calibration data.
+        """
         controller = ObjectController(calibration, self.lane_assist, self.speed_controller)
         controller.add_handler(PedestrianHandler(controller))
         controller.add_handler(SpeedLimitHandler(controller))
@@ -143,20 +161,15 @@ class Kart:
         if lidar is not None:
             controller.add_handler(OvertakeHandler(controller, lidar))
 
-        self.detector = ObjectDetector.from_model(config.object_detection.model_path, controller,
-                                                  config.camera_ids.center)
-
-    def __init_gamepad_driving(self) -> None:
-        self.gamepad = Gamepad()
-        self.gamepad_driving = BasicControllerDriving(self.gamepad, self.can_controller)
-
-        self.gamepad.add_listener(GamepadButton.START, EventType.LONG_PRESS, self.__toggle)
+        self.detector = ObjectDetector.from_model(
+            config.object_detection.model_path, controller, config.camera_ids.center
+        )
 
     def __toggle(self, *_args: Any, **_kwargs: Any) -> None:
         """Toggle the controller."""
         self.gamepad.vibrate()
-        time.sleep(3)
+        time.sleep(5)
 
         self.gamepad.vibrate()
-        self.gamepad_driving.toggle()
+        self.driving_controller.toggle()
         self.lane_assist.toggle()
