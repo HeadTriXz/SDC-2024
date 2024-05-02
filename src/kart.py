@@ -1,5 +1,4 @@
 import time
-
 from typing import Any
 
 from src.config import config
@@ -17,10 +16,10 @@ from src.object_recognition.handlers.speed_limit_handler import SpeedLimitHandle
 from src.object_recognition.handlers.traffic_light_handler import TrafficLightHandler
 from src.object_recognition.object_controller import ObjectController
 from src.object_recognition.object_detector import ObjectDetector
-from src.utils.video_stream import VideoStream
 from src.telemetry.app import TelemetryServer
 from src.utils.calibration_data import CalibrationData
 from src.utils.lidar import Lidar
+from src.utils.video_stream import VideoStream
 
 
 class Kart:
@@ -55,7 +54,6 @@ class Kart:
         self.start_manual_driving()
         self.start_autonomous_driving()
 
-
     def __init__kart_controll(self, calibration: CalibrationData) -> None:
         self.can_controller = CANController(get_can_bus())
         self.speed_controller = SpeedController(self.can_controller)
@@ -68,8 +66,16 @@ class Kart:
             max_steering_range=config.lane_assist.line_following.max_steering_range
         )
 
+        image_gen = td_stitched_image_generator(
+            calibration,
+            self.cam_left,
+            self.cam_center,
+            self.cam_right,
+            self.telemetry_server
+        )
+
         self.lane_assist = LaneAssist(
-            td_stitched_image_generator(calibration, self.cam_left, self.cam_center, self.cam_right, self.telemetry_server),
+            image_gen,
             StopLineAssist(self.speed_controller, calibration),
             path_follower,
             self.speed_controller,
@@ -136,10 +142,7 @@ class Kart:
         self.detector.start()
         self.telemetry_server.start()
 
-
     def start_manual_driving(self) -> None:
         """Start the manual driving."""
         self.gamepad_driving.start()
         self.gamepad.start()
-
-
