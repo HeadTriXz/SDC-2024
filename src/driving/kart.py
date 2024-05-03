@@ -7,7 +7,7 @@ from src.constants import CameraResolution, Gear
 from src.driving.can import get_can_bus, CANController
 from src.driving.gamepad.driving_controller import BasicControllerDriving
 from src.driving.gamepad.gamepad import Gamepad, GamepadButton, EventType
-from src.driving.speed_controller import SpeedController, SpeedControllerState
+from src.driving.speed_controller import SpeedController
 from src.lane_assist.helpers import td_stitched_image_generator
 from src.lane_assist.lane_assist import LaneAssist
 from src.lane_assist.line_following.path_follower import PathFollower
