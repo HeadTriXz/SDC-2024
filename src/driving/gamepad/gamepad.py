@@ -62,6 +62,9 @@ class Gamepad:
 
     def __init__(self) -> None:
         """Initialize the controller."""
+        if len(inputs.devices.gamepads) == 0:
+            raise Exception("There are no gamepads connected")
+
         self.gamepad = inputs.devices.gamepads[0]
 
         self._buttons = {}
@@ -197,9 +200,13 @@ class Gamepad:
                         self._handle_button_event(event)
                     elif event.ev_type == "Absolute":
                         self._handle_axis_event(event)
-            except inputs.UnknownEventType:
+            except (inputs.UnknownEventType, inputs.UnknownEventCode):
                 pass
-            except inputs.UnpluggedError:
+            except (inputs.UnpluggedError, OSError):
+                # The 'inputs' library does not support hot-plugging for Linux.
+                self.gamepad._character_file = None
+                self.gamepad._write_file = None
+
                 logging.warning("Gamepad was unplugged. Please reconnect it.")
                 time.sleep(1)
             except Exception as e:

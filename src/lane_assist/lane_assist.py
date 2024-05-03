@@ -8,7 +8,7 @@ from typing import Optional
 
 from src.config import config
 from src.driving.can import ICANController
-from src.driving.speed_controller import ISpeedController
+from src.driving.speed_controller import ISpeedController, SpeedControllerState
 from src.lane_assist.line_detection.line import Line, LineType
 from src.lane_assist.line_detection.line_detector import filter_lines, get_lines
 from src.lane_assist.line_following.dynamic_speed import get_max_path_speed
@@ -134,6 +134,10 @@ class LaneAssist:
     def toggle(self) -> None:
         """Toggle the lane assist."""
         self.__running = not self.__running
+        if self.__running:
+            self.speed_controller.state = SpeedControllerState.DRIVING
+        else:
+            self.speed_controller.state = SpeedControllerState.STOPPED
 
     def __follow_path(self, lines: list[Line], car_position: float, lane: int) -> None:
         """Follow the path.
