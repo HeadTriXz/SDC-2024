@@ -1,16 +1,19 @@
 import logging
 
+from typing import Any
+
 from src.constants import Gear
 from src.driving.can import ICANController
-from src.driving.gamepad.gamepad import (
+from src.driving.gamepad import (
     EventType,
     Gamepad,
     GamepadAxis,
     GamepadButton,
 )
+from src.driving.modes import DrivingMode
 
 
-class BasicControllerDriving:
+class ManualDriving(DrivingMode):
     """A basic driving controller using a gamepad.
 
     Attributes
@@ -52,7 +55,7 @@ class BasicControllerDriving:
         """Toggle the controller."""
         self.__running = not self.__running
 
-    def __ready(self, *args, **kwargs) -> None:
+    def __ready(self, *_args: Any, **_kwargs: Any) -> None:
         """The controller is ready to drive."""
         if self.__primed:
             return
@@ -84,21 +87,21 @@ class BasicControllerDriving:
 
         self.can_controller.set_brake(int(value * 100))
 
-    def __set_forward(self, *args, **kwargs) -> None:
+    def __set_forward(self, *_args: Any, **_kwargs: Any) -> None:
         """Set the gear to forward."""
         if not self.__running:
             return
 
         self.gear = Gear.DRIVE
 
-    def __set_neutral(self, *args, **kwargs) -> None:
+    def __set_neutral(self, *_args: Any, **_kwargs: Any) -> None:
         """Set the gear to neutral."""
         if not self.__running:
             return
 
         self.gear = Gear.NEUTRAL
 
-    def __set_reverse(self, *args, **kwargs) -> None:
+    def __set_reverse(self, *_args: Any, **_kwargs: Any) -> None:
         """Set the gear to reverse."""
         if not self.__running:
             return
