@@ -3,7 +3,7 @@ import time
 from typing import Any
 
 from src.config import config
-from src.constants import CameraResolution
+from src.constants import CameraResolution, Gear
 from src.driving.can import get_can_bus, CANController
 from src.driving.gamepad.driving_controller import BasicControllerDriving
 from src.driving.gamepad.gamepad import Gamepad, GamepadButton, EventType
@@ -64,6 +64,8 @@ class Kart:
         This will start the kart and all its components.
         But it will only enable manual driving.
         """
+        self.can_controller.start()
+
         self.start_manual_driving()
         self.start_autonomous_driving()
 
@@ -93,6 +95,8 @@ class Kart:
         self.cam_center.start()
         self.cam_right.start()
 
+        self.speed_controller.start()
+
         self.detector.start()
         self.telemetry_server.start()
         self.lane_assist.start()
@@ -114,6 +118,7 @@ class Kart:
         self.driving_controller = BasicControllerDriving(self.gamepad, self.can_controller)
 
         self.gamepad.add_listener(GamepadButton.START, EventType.LONG_PRESS, self.__toggle)
+        self.gamepad.add_listener(GamepadButton.SELECT, EventType.LONG_PRESS, self.__toggle)
 
     def __init_kart_control(self, calibration: CalibrationData) -> None:
         """Initialize the kart control.
@@ -122,7 +127,9 @@ class Kart:
         """
         bus = get_can_bus()
         self.can_controller = CANController(bus)
+
         self.speed_controller = SpeedController(self.can_controller)
+        self.speed_controller.gear = Gear.DRIVE
 
         path_follower = PathFollower(
             config.lane_assist.line_following.pid.kp,
@@ -171,8 +178,9 @@ class Kart:
     def __toggle(self, *_args: Any, **_kwargs: Any) -> None:
         """Toggle the controller."""
         if not self.__autonomous:
-            self.gamepad.vibrate()
-            time.sleep(5)
+            for _ in range(3):
+                self.gamepad.vibrate(300)
+                time.sleep(2)
 
         self.__autonomous = not self.__autonomous
 
