@@ -4,13 +4,13 @@ import logging
 from os import system
 
 from src.driving.can import CANController
-from src.driving.modes import ManualDriving
 from src.driving.gamepad import (
     EventType,
     Gamepad,
     GamepadAxis,
     GamepadButton
 )
+from src.driving.modes import ManualDriving
 
 config = {
     "braking_force_min": 0,

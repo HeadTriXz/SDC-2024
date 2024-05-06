@@ -3,9 +3,8 @@ import time
 from typing import Any
 
 from src.driving.can import get_can_bus, CANController
-from src.driving.modes.manual import ManualDriving
 from src.driving.gamepad import Gamepad, GamepadButton, EventType
-from src.driving.modes import DrivingMode, AutonomousDriving
+from src.driving.modes import AutonomousDriving, DrivingMode, ManualDriving
 
 
 class Kart:
