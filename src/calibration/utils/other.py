@@ -3,8 +3,8 @@ import numpy as np
 
 from typing import Optional
 
+from src.calibration.utils.corners import get_transformed_corners
 from src.config import config
-from src.lane_assist.preprocessing.utils.corners import get_transformed_corners
 
 Coordinate = tuple[int, int] | np.ndarray
 

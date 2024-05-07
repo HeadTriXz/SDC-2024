@@ -5,13 +5,13 @@ import numpy as np
 from pathlib import Path
 from typing import Generator
 
+from src.calibration.data import CalibrationData
 from src.config import config
 from src.driving.speed_controller import SpeedController, SpeedControllerState
 from src.lane_assist.lane_assist import LaneAssist, PathFollower
 from src.lane_assist.stopline_assist import StopLineAssist
 from src.simulation.can_controller import SimCanController
 from src.telemetry.app import TelemetryServer
-from src.utils.calibration_data import CalibrationData
 
 
 def start_simulator() -> None:

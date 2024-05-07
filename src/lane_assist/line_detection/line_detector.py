@@ -5,13 +5,13 @@ import scipy
 from collections.abc import Callable
 from typing import Any
 
+from src.calibration.data import CalibrationData
+from src.calibration.utils.corners import get_border_of_points
 from src.config import config
 from src.lane_assist.line_detection.line import Line, LineType
 from src.lane_assist.line_detection.window import Window
 from src.lane_assist.line_detection.window_search import window_search
 from src.lane_assist.preprocessing.image_filters import basic_filter
-from src.lane_assist.preprocessing.utils.corners import get_border_of_points
-from src.utils.calibration_data import CalibrationData
 
 
 def filter_lines(lines: list[Line], starting_point: int) -> list[Line]:
