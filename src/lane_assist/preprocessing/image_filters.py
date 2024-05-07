@@ -3,8 +3,8 @@ import dataclasses
 import numpy as np
 import scipy
 
+from src.calibration.data import CalibrationData
 from src.config import config
-from src.utils.calibration_data import CalibrationData
 
 
 @dataclasses.dataclass

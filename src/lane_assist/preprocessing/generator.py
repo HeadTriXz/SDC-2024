@@ -3,10 +3,10 @@ import numpy as np
 
 from typing import Callable, Generator
 
+from src.calibration.data import CalibrationData
 from src.config import config
 from src.lane_assist.preprocessing.gamma import GammaAdjuster
 from src.telemetry.app import TelemetryServer
-from src.utils.calibration_data import CalibrationData
 from src.utils.video_stream import VideoStream
 
 

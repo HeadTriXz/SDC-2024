@@ -4,9 +4,9 @@ import logging
 from pathlib import Path
 
 from scripts.python.show_calibrated_cameras import send_discord_calibration
+from src.calibration.calibrate import CameraCalibrator
 from src.config import config
 from src.constants import CameraResolution
-from src.lane_assist.preprocessing.calibrate import CameraCalibrator
 from src.utils.video_stream import VideoStream
 
 

@@ -2,8 +2,8 @@ import numpy as np
 
 from scipy.signal import savgol_filter
 
+from src.calibration.data import CalibrationData
 from src.lane_assist.line_detection.line import Line
-from src.utils.calibration_data import CalibrationData
 
 
 class Path:

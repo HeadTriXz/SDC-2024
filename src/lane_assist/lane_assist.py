@@ -6,6 +6,7 @@ import time
 from collections.abc import Callable, Generator
 from typing import Optional
 
+from src.calibration.data import CalibrationData
 from src.config import config
 from src.driving.can import ICANController
 from src.driving.speed_controller import ISpeedController, SpeedControllerState
@@ -16,7 +17,6 @@ from src.lane_assist.line_following.path_follower import PathFollower
 from src.lane_assist.line_following.path_generator import generate_driving_path
 from src.lane_assist.stopline_assist import StopLineAssist
 from src.telemetry.app import TelemetryServer
-from src.utils.calibration_data import CalibrationData
 
 
 colours = {
