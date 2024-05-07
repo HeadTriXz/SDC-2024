@@ -4,13 +4,13 @@ import logging
 from os import system
 
 from src.driving.can import CANController
-from src.driving.gamepad.driving_controller import BasicControllerDriving
-from src.driving.gamepad.gamepad import (
+from src.driving.gamepad import (
     EventType,
     Gamepad,
     GamepadAxis,
     GamepadButton
 )
+from src.driving.modes import ManualDriving
 
 config = {
     "braking_force_min": 0,
@@ -157,7 +157,7 @@ if __name__ == "__main__":
     gamepad = Gamepad()
     gamepad.start()
 
-    controller_driving = BasicControllerDriving(gamepad, can_controller)
+    controller_driving = ManualDriving(gamepad, can_controller)
     controller_driving.start()
 
     brake_calibration = BrakeCalibrationProcedure(can_controller, gamepad)

@@ -1,9 +1,12 @@
+import logging
 import os
 
 from src.driving.kart import Kart
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+
     if "ENVIRONMENT" in os.environ and os.environ["ENVIRONMENT"] == "simulator":
         from src.simulation.main import start_simulator
 
