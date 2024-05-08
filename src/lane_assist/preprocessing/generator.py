@@ -15,7 +15,7 @@ def td_stitched_image_generator(
     left_cam: VideoStream,
     center_cam: VideoStream,
     right_cam: VideoStream,
-    telemetry: TelemetryServer,
+    telemetry: TelemetryServer
 ) -> Callable[[], Generator[np.ndarray, None, None]]:
     """Generate a picture from the cameras.
 
