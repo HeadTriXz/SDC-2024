@@ -1,7 +1,7 @@
-from typing import Callable, Generator
-
 import cv2
 import numpy as np
+
+from typing import Callable, Generator
 
 from src.calibration.data import CalibrationData
 from src.config import config
