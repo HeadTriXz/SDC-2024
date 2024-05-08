@@ -9,20 +9,7 @@ from src.config import config
 Coordinate = tuple[int, int] | np.ndarray
 
 
-def calculate_stitched_shape(offsets: np.ndarray, shapes: np.ndarray) -> tuple[int, int]:
-    """Calculate the output shape for the stitched image.
-
-    :param offsets: The offsets for the images.
-    :param shapes: The shapes of the images.
-    :return: The output shape for the stitched image (width, height).
-    """
-    width = max(shape[0] + offset[0] for shape, offset in zip(shapes, offsets))
-    height = max(shape[1] + offset[1] for shape, offset in zip(shapes, offsets))
-
-    return width, height
-
-
-def euclidean_distance(p1: np.ndarray | Coordinate, p2: np.ndarray | Coordinate) -> float:
+def euclidean_distance(p1: Coordinate, p2: Coordinate) -> float:
     """Calculate the Euclidean distance between two points.
 
     :param p1: The first point.
