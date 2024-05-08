@@ -9,7 +9,6 @@ from src.calibration.utils.charuco import find_corners
 from src.calibration.utils.corners import get_transformed_corners, get_border_of_points
 from src.calibration.utils.grid import get_dst_points, corners_to_grid, merge_grids
 from src.calibration.utils.other import (
-    calculate_stitched_shape,
     euclidean_distance,
     find_intersection,
     find_offsets,
@@ -26,9 +25,7 @@ class CameraCalibrator:
     Attributes
     ----------
         board: The ChArUco board.
-        camera_matrix: The camera matrix.
         detector: The ChArUco detector.
-        dist_coeffs: The distortion coefficients.
         images: The images to calibrate.
         matrices: The perspective matrices.
         offsets: The offsets.
@@ -41,9 +38,7 @@ class CameraCalibrator:
     """
 
     board: cv2.aruco.CharucoBoard
-    camera_matrix: Optional[np.ndarray]
     detector: cv2.aruco.CharucoDetector
-    dist_coeffs: Optional[np.ndarray]
     images: Optional[list[np.ndarray]]
     matrices: Optional[np.ndarray]
     offsets: Optional[np.ndarray]
@@ -85,35 +80,14 @@ class CameraCalibrator:
     def calibrate(self) -> None:
         """Calibrate the cameras."""
         self.detect_boards()
-        self.calibrate_cameras()
         self.calibrate_perspective_matrices()
         self.calibrate_offsets()
         self.calibrate_topdown_matrix()
         self.calibrate_angle()
         self.calibrate_region_of_interest()
 
-    def calibrate_cameras(self) -> None:
-        """Calibrate the cameras."""
-        if self.images is None:
-            raise ValueError("No images to calibrate")
-
-        if len(self._charuco_corners) == 0:
-            raise ValueError("The ChArUco boards must be detected first")
-
-        all_obj_points = []
-        all_img_points = []
-
-        for charuco_corners, charuco_ids in zip(self._charuco_corners, self._charuco_ids):
-            obj_points, img_points = self.board.matchImagePoints(charuco_corners, charuco_ids)
-            all_obj_points.append(obj_points)
-            all_img_points.append(img_points)
-
-        retval, self.camera_matrix, self.dist_coeffs, _, _ = cv2.calibrateCamera(
-            all_obj_points, all_img_points, self._input_shape, None, None
-        )
-
     def calibrate_offsets(self) -> None:
-        """Calibrate the offsets."""
+        """Calculate the offsets of the images in the stitched image."""
         if self.images is None:
             raise ValueError("No images to calibrate")
 
@@ -130,19 +104,15 @@ class CameraCalibrator:
             shapes[i] = get_transformed_shape(self.matrices[i], input_shape)
 
         self.offsets = find_offsets(self._dst_grids, shapes, self.ref_idx) - [0, self._vanishing_line]
-        self.stitched_shape = calculate_stitched_shape(self.offsets, shapes)
-
-        min_x = np.min(self.offsets[:, 0])
-        if min_x > 0:
-            self.stitched_shape = (self.stitched_shape[0] - min_x, self.stitched_shape[1])
+        self.stitched_shape = self._calculate_stitched_shape()
 
     def calibrate_perspective_matrices(self) -> None:
-        """Calibrate the matrices."""
+        """Calculate the matrices for stitching the images."""
         if self.images is None:
             raise ValueError("No images to calibrate")
 
-        if self.camera_matrix is None or self.dist_coeffs is None:
-            raise ValueError("The cameras have not been calibrated")
+        if self._src_grids is None:
+            raise ValueError("The ChArUco boards have not been detected")
 
         ref_grid = self._src_grids[self.ref_idx]
         flat_ref = ref_grid.reshape(-1, 2)
@@ -355,8 +325,6 @@ class CameraCalibrator:
         latest_file = save_dir / "latest.npz"
 
         arrays = dict(
-            camera_matrix=self.camera_matrix,
-            dist_coeffs=self.dist_coeffs,
             input_shape=self._input_shape,
             matrices=self.matrices,
             offsets=self.offsets,
@@ -430,6 +398,67 @@ class CameraCalibrator:
         vanishing_line *= 1 + config.calibration.vanishing_line_offset
 
         return vanishing_line
+
+    def _calculate_stitched_shape(self) -> tuple[int, int]:
+        """Calculates the shape of the stitched image.
+
+        :return: The shape of the stitched image.
+        """
+        if self.images is None:
+            raise ValueError("No images to calibrate")
+
+        if self.offsets is None:
+            raise ValueError("The offsets have not been calibrated")
+
+        height = self._input_shape[1] - self._vanishing_line
+
+        # Calculate the corners of each part of the stitched image.
+        corners = np.zeros((len(self.images), 4, 2), dtype=np.float32)
+        for i in range(len(self.images)):
+            if i == self.ref_idx:
+                offset = self.offsets[i]
+                corners[i] = np.array([
+                    [offset[0], offset[1]],
+                    [offset[0] + self._input_shape[0], offset[1]],
+                    [offset[0] + self._input_shape[0], offset[1] + height],
+                    [offset[0], offset[1] + height]
+                ])
+                continue
+
+            h, w = self._input_shape[::-1]
+            src_points = np.array([[[0, 0]], [[w, 0]], [[w, h]], [[0, h]]], dtype=np.float32)
+            dst_points = cv2.perspectiveTransform(src_points, self.matrices[i])
+
+            corners[i] = dst_points[:, 0] + self.offsets[i]
+
+        # Get the leftmost and rightmost corners
+        leftmost_idx = np.argmin([np.min(corners[i][:, 0]) for i in range(len(corners))])
+        rightmost_idx = np.argmax([np.max(corners[i][:, 0]) for i in range(len(corners))])
+
+        leftmost = corners[leftmost_idx]
+        rightmost = corners[rightmost_idx]
+
+        left_line = (leftmost[0], leftmost[1])
+        right_line = (rightmost[0], rightmost[1])
+
+        # Find the point where the top edge intersects with the bottom of the stitched image.
+        min_x = 0
+        max_x = rightmost[1][0]
+
+        y_line = np.array([(min_x, height), (max_x, height)], dtype=np.float32)
+
+        left_intersection = find_intersection(left_line, y_line)
+        right_intersection = find_intersection(right_line, y_line)
+
+        # Calculate the new width of the image.
+        if left_intersection is not None:
+            min_x = int(left_intersection[0])
+            self.offsets -= [min_x, 0]
+
+        if right_intersection is not None:
+            max_x = int(right_intersection[0])
+
+        return max_x - min_x, height
 
     def _calculate_vanishing_line(self) -> None:
         """Calculate the vanishing line."""
