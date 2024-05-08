@@ -49,7 +49,6 @@ def td_stitched_image_generator(
                 right_image = gamma_adjuster.adjust(right_image, config.image_manipulation.gamma.right)
 
             topdown = calibration.transform([left_image, center_image, right_image])
-
             thresholded = cv2.threshold(
                 topdown, config.image_manipulation.white_threshold, 255, cv2.THRESH_BINARY
             )[1]

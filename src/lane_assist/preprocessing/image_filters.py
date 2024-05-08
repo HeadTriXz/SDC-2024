@@ -37,9 +37,7 @@ def basic_filter(img: np.ndarray, calibration: CalibrationData) -> tuple[np.ndar
     hpx = calibration.pixels_per_meter * zebra_height_m
 
     width = calibration.pixels_per_meter * 0.5
-    peaks = scipy.signal.find_peaks(
-        histogram, height=hpx, width=width
-    )[0]
+    peaks = scipy.signal.find_peaks(histogram, height=hpx, width=width)[0]
 
     widths, _, lefts, rights = scipy.signal.peak_widths(
         histogram, peaks, rel_height=config.lane_assist.line_detection.filtering.rel_height
