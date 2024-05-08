@@ -1,5 +1,6 @@
 import cv2
 import logging
+import numpy as np
 
 from pathlib import Path
 
@@ -8,6 +9,31 @@ from src.calibration.calibrate import CameraCalibrator
 from src.config import config
 from src.constants import CameraResolution
 from src.utils.video_stream import VideoStream
+
+
+def calibrate_images(images: list[np.ndarray]) -> None:
+    """Calibrate the cameras using the images.
+
+    :param images The images to use for the calibration.
+    """
+    calibrator = CameraCalibrator(images, input_shape=CameraResolution.NHD)
+    calibrator.calibrate()
+
+    save_dir = Path(config.calibration.save_dir)
+    history_file = calibrator.save(save_dir)
+
+    logging.info("Saved the calibration results to %s. Output shape: %s", history_file, calibrator.output_shape)
+
+    # Save the used images to the images dir.
+    images_dir = save_dir / "images" / history_file.stem
+    images_dir.mkdir(exist_ok=True, parents=True)
+
+    cv2.imwrite(str(images_dir / "left.png"), images[0])
+    cv2.imwrite(str(images_dir / "center.png"), images[1])
+    cv2.imwrite(str(images_dir / "right.png"), images[2])
+
+    # Send an example to Discord.
+    send_discord_calibration()
 
 
 def calibrate_cameras() -> None:
@@ -32,26 +58,9 @@ def calibrate_cameras() -> None:
     center_image = cam_center.next()
     right_image = cam_right.next()
 
-    calibrator = CameraCalibrator([left_image, center_image, right_image], input_shape=CameraResolution.NHD)
-    calibrator.calibrate()
+    calibrate_images([left_image, center_image, right_image])
 
-    save_dir = Path(config.calibration.save_dir)
-    history_file = calibrator.save(save_dir)
-
-    # Save the used images to the images dir.
-    images_dir = save_dir / "images" / history_file.stem
-    images_dir.mkdir(exist_ok=True, parents=True)
-
-    cv2.imwrite(str(images_dir / "left.png"), left_image)
-    cv2.imwrite(str(images_dir / "center.png"), center_image)
-    cv2.imwrite(str(images_dir / "right.png"), right_image)
-
-    # Send an example to Discord.
-    send_discord_calibration()
-
-    # Clean up the resources.
-    logging.info("Saved the calibration results to %s. Output shape: %s", history_file, calibrator.output_shape)
-
+    # Stop the camera streams.
     cam_left.stop()
     cam_center.stop()
     cam_right.stop()
