@@ -46,18 +46,15 @@ def get_lines(image: np.ndarray, calibration: CalibrationData) -> list[Line]:
     :param calibration: The calibration data of the stitching, used for calculating the window sizes.
     :return: The lines in the image.
     """
-    # Dilate the image to make the lines thicker and more solid. Then threshold the image.
-    cv2.dilate(image, np.ones((3, 3), np.uint8), image)
-    cv2.threshold(image, config.image_manipulation.white_threshold, 255, cv2.THRESH_BINARY, image)
-
     # Filter the image. This is done in place and will be used to remove zebra crossings.
     if config.lane_assist.line_detection.filtering.active:
         basic_filter(image, calibration)
         # filter_small_clusters(image)  # noqa: ERA001
 
-    # create histogram to find the start of the lines
+    # Create histogram to find the start of the lines.
+    # This is done by weighting the pixels using a logspace.
     pixels = image[image.shape[0] // 2 :, :]
-    pixels = np.multiply(pixels, np.linspace(0, 1, pixels.shape[0])[:, np.newaxis])
+    pixels = np.multiply(pixels, np.logspace(0, 1, pixels.shape[0])[:, np.newaxis])
     histogram = np.sum(pixels, axis=0)
 
     # Window search options
