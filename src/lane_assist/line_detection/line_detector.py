@@ -79,10 +79,10 @@ def get_stoplines(image: np.ndarray, lines: list[Line], calibration: Calibration
     """
     # Get the bounding box of the lines.
     points = __lines_to_points(lines)
-    x_min, x_max, y_min, y_max = get_border_of_points(points)
+    min_x, min_y, max_x, max_y = get_border_of_points(points)
 
     # Create a new image. This is the bounding box rotated 90 degrees clockwise.
-    new_img = image[y_min:y_max, x_min:x_max]
+    new_img = image[min_y:max_y, min_x:max_x]
     new_img = cv2.rotate(new_img, cv2.ROTATE_90_CLOCKWISE)
 
     # Get the lines in the image.
@@ -93,8 +93,8 @@ def get_stoplines(image: np.ndarray, lines: list[Line], calibration: Calibration
     # rotate the lines to its original position
     for line in rotated_lines:
         points = np.flip(line.points, axis=1)
-        points[:, 0] = x_min + points[:, 0]
-        points[:, 1] = y_max - points[:, 1]
+        points[:, 0] = min_x + points[:, 0]
+        points[:, 1] = max_y - points[:, 1]
 
         lines.append(Line(points, line_type=LineType.STOP))
 
