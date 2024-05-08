@@ -1,6 +1,11 @@
+import time
 import numpy as np
 
 from simple_pid import PID
+
+from src.calibration.data import CalibrationData
+from src.config import config
+from src.driving.speed_controller import ISpeedController
 
 
 class PathFollower:
@@ -8,40 +13,64 @@ class PathFollower:
 
     Attributes
     ----------
-        errors: A list of errors.
-        look_ahead_distance: The distance to look ahead.
+        look_ahead_padding: The minimum distance to look ahead in meters
         max_steering_range: The max steering range.
-        pid: The PID controller.
 
     """
 
-    errors: list[float]
-    look_ahead_distance: int
+    look_ahead_padding: int
     max_steering_range: float
-    pid: PID
+    __calibration: CalibrationData
+    __speed_controller: ISpeedController
+    __pid: PID
 
     def __init__(
         self,
-        kp: float,
-        ki: float,
-        kd: float,
-        setpoint: float = 0,
-        look_ahead_distance: int = 10,
-        max_steering_range: float = 40.0,
+        calibration: CalibrationData,
+        speed_controller: ISpeedController,
     ) -> None:
         """Initialize the LineFollowing class.
 
-        :param kp: The proportional gain.
-        :param ki: The integral gain.
-        :param kd: The derivative gain.
-        :param setpoint: The setpoint of the PID controller.
-        :param look_ahead_distance: The distance to look ahead.
-        :param max_steering_range: The max steering range.
+        :param calibration: The calibration data.
+        :param speed_controller: The speed controller.
         """
-        self.pid = PID(Kp=kp, Ki=ki, Kd=kd, setpoint=setpoint)
-        self.look_ahead_distance = look_ahead_distance
-        self.max_steering_range = max_steering_range
-        self.errors = []
+        self.max_steering_range = config.kart.max_steering_angle
+        self.__calibration = calibration
+        self.__speed_controller = speed_controller
+
+        self.__pid = PID(
+            Kp=config.lane_assist.line_following.pid.kp,
+            Ki=config.lane_assist.line_following.pid.ki,
+            Kd=config.lane_assist.line_following.pid.kd,
+            setpoint=0,
+            output_limits=(-config.kart.max_steering_angle, config.kart.max_steering_angle),
+        )
+
+    def __calc_lookahead_padding(self) -> int:
+        """Get time since last pid update."""
+        lt = self.__pid._last_time
+        if lt is None:
+            return 0
+
+        # get the distance we have traveled + the look ahead distance in meters
+        dt = time.monotonic() - lt
+        speed = self.__speed_controller.current_speed / 3.6
+        distance = (speed * dt) + config.lane_assist.line_following.look_ahead_distance
+
+        # convert distance + padding to to pixels
+        return distance * self.__calibration.pixels_per_meter
+
+    def __get_path_point(self, path: np.ndarray) -> np.ndarray:
+        """Get the point on the path to follow.
+
+        :param path: The path to follow.
+        :return: The point on the path to follow.
+        """
+        look_ahead = self.__calc_lookahead_padding()
+        cum_distance = np.cumsum(np.linalg.norm(np.diff(path, axis=0), axis=1))
+        intersect_id = np.argmax(cum_distance >= look_ahead)
+        return path[intersect_id]
+
 
     def get_steering_fraction(self, path: np.ndarray, car_position: float) -> float:
         """Get the steering percentage to follow the path.
@@ -51,8 +80,6 @@ class PathFollower:
         :return: The steering angle remapped to the range of -1.25 to 1.25.
         """
         angle = self.get_steering_angle(path, car_position)
-        angle = np.clip(angle, -self.max_steering_range, self.max_steering_range)
-
         return angle / self.max_steering_range * 1.25
 
     def get_steering_angle(self, path: np.ndarray, car_position: float) -> float:
@@ -69,27 +96,7 @@ class PathFollower:
         if path.shape[0] == 0:
             return 0
 
-        target_point = path[-1] if path.shape[0] < self.look_ahead_distance else path[self.look_ahead_distance]
-
-        # Get the distance to the target point
+        # get the target point on the path
+        target_point = self.__get_path_point(path)
         x_distance_to_target = target_point[0] - car_position
-        self.errors.append(x_distance_to_target)
-
-        return -self.pid(x_distance_to_target)
-
-    def update_pid(self, kp: float = None, ki: float = None, kd: float = None, setpoint: float = None) -> None:
-        """Update the PID controller.
-
-        :param kp: The proportional gain.
-        :param ki: The integral gain.
-        :param kd: The derivative gain.
-        :param setpoint: The setpoint of the PID controller.
-        """
-        if kp is not None:
-            self.pid.Kp = kp
-        if ki is not None:
-            self.pid.Ki = ki
-        if kd is not None:
-            self.pid.Kd = kd
-        if setpoint is not None:
-            self.pid.setpoint = setpoint
+        return -self.__pid(x_distance_to_target)

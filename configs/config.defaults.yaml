@@ -1,3 +1,21 @@
+req_lane: 0
+
+kart:
+  max_steering_angle: 40
+
+  speed_modes:
+    selected: ${.options.slow}
+    options:
+      slow: 20
+      normal: 40
+      fast: 60
+      very_fast: 80
+
+  braking:
+    margin: 1.0
+    max_force: 50
+    min_force: 30
+
 camera_ids:
   left: 0
   center: 0
@@ -18,13 +36,6 @@ calibration:
   square_length: 0.115
   vanishing_line_offset: 0.02
 
-speed_modes:
-  selected: ${.options.slow}
-  options:
-    slow: 20
-    normal: 40
-    fast: 60
-    very_fast: 80
 
 image_manipulation:
   gamma:
@@ -37,31 +48,30 @@ image_manipulation:
 lane_assist:
   line_detection:
     pixels_in_window: 1
-    window_margin_growth: 0.25
+    window_margin_growth: 0.25 # pixels
 
     window_sizing:
-      height: 0.2
-      width: 0.5
+      height: 0.2 # meters
+      width: 0.5 # meters
 
     thresholds:
-      zebra_crossing: 1.0
+      zebra_crossing: 1.0 # meters
 
     filtering:
       active: true
-      rel_height: 0.9
+      rel_height: 0.9  # percentage
 
   line_following:
     requested_lane: 0
-    initial_speed: 5
+    initial_speed: 5  # km/h
 
-    max_steering_range: 40
-    look_ahead_distance: 10
+    max_steering_range: 40 # degrees
+    look_ahead_distance: .5  # meters
 
     pid:
       kp: 1
       ki: 0.1
       kd: 0.05
-
 
 object_detection:
   model_path: "./models/yolo8s.pt"
@@ -102,14 +112,10 @@ telemetry:
     host: 0.0.0.0
     root_url: 192.168.1.89
 
-braking:
-  margin: 1.0
-  max_force: 50
-  min_force: 30
 
 dynamic_speed:
-  friction_coefficient: 0.9
-  static: false
+  friction_coefficient: 0.3
+  static: true
   static_speed: 10
 
 lidar:

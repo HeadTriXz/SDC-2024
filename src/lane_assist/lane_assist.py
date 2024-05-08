@@ -38,10 +38,8 @@ class LaneAssist:
         can_controller: The can controller.
         image_generator: A function that generates images.
         lines: The lines on the road.
-        path_follower: The line follower class.
         requested_lane: The lane to follow.
         speed_controller: The speed controller.
-        stopline_assist: The stopline assist class.
         telemetry: The telemetry server.
 
     """
@@ -49,12 +47,12 @@ class LaneAssist:
     can_controller: ICANController
     image_generator: Callable[[], Generator[np.ndarray, None, None]]
     lines: list[Line]
-    path_follower: PathFollower
     requested_lane: int
     speed_controller: ISpeedController
-    stopline_assist: StopLineAssist
     telemetry: TelemetryServer
 
+    __path_follower: PathFollower
+    __stopline_assist: StopLineAssist
     __calibration: CalibrationData
     __running: bool = False
 
@@ -62,7 +60,6 @@ class LaneAssist:
             self,
             image_generation: Callable[[], Generator[np.ndarray, None, None]],
             stopline_assist: StopLineAssist,
-            path_follower: PathFollower,
             speed_controller: ISpeedController,
             telemetry: TelemetryServer,
             calibration: CalibrationData,
@@ -77,14 +74,14 @@ class LaneAssist:
         :param calibration: The calibration data.
         """
         self.can_controller = speed_controller.can_controller
+        self.speed_controller = speed_controller
         self.image_generator = image_generation
         self.lines = []
-        self.path_follower = path_follower
         self.requested_lane = config.lane_assist.line_following.requested_lane
-        self.speed_controller = speed_controller
-        self.stopline_assist = stopline_assist
         self.telemetry = telemetry
 
+        self.__stopline_assist = stopline_assist
+        self.__path_follower = PathFollower(calibration, speed_controller)
         self.__calibration = calibration
 
     def lane_assist_loop(self, image: np.ndarray) -> None:
@@ -115,7 +112,7 @@ class LaneAssist:
         self.__follow_path(filtered_lines, image.shape[1] // 2, self.requested_lane)
 
         self.lines = filtered_lines
-        self.stopline_assist.detect_and_handle(image, filtered_lines)
+        self.__stopline_assist.detect_and_handle(image, filtered_lines)
 
     def start(self, multithreading: bool = False) -> Optional[threading.Thread]:
         """Start the lane assist.
@@ -154,7 +151,7 @@ class LaneAssist:
         self.speed_controller.target_speed = speed
 
         # Steer the kart based on the path and its position.
-        steering_fraction = self.path_follower.get_steering_fraction(path.points, car_position)
+        steering_fraction = self.__path_follower.get_steering_fraction(path.points, car_position)
         self.can_controller.set_steering(steering_fraction)
 
     def __run(self) -> None:

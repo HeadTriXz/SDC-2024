@@ -1,13 +1,14 @@
+kart:
+  max_steering_angle: 30
+
+  braking:
+    margin: 1.0
+    max_force: 100
+
 image_manipulation:
   white_threshold: 185
 
-lane_assist:
-  line_detection:
-    thresholds:
-      zebra_crossing: 20000
 
-  line_following:
-    initial_speed: 15
-
-telemetry:
-  enabled: true
+dynamic_speed:
+  friction_coefficient: 0.5
+  static_speed: 40

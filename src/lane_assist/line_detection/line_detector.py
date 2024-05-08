@@ -64,7 +64,7 @@ def get_lines(image: np.ndarray, calibration: CalibrationData) -> list[Line]:
     # For example, the start of the line (done for detection of stoplines)
     # or on a different line in a turn.
     for line in lines:
-        line.points = line.points[1:-1]
+        line.points = line.points[1:-3]
 
     return lines
 
