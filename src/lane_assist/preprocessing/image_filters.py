@@ -32,21 +32,17 @@ def basic_filter(img: np.ndarray, calibration: CalibrationData) -> tuple[np.ndar
     :param img: The image to filter.
     :return: The filtered image and the peaks.
     """
-    third = img.shape[0] // 3
-    pixels = img[:, third : 2 * third]
+    histogram = np.sum(img, axis=1) / 255
+    zebra_height_m = config.lane_assist.line_detection.thresholds.zebra_crossing
+    hpx = calibration.pixels_per_meter * zebra_height_m
 
-    histogram = np.sum(pixels, axis=1)
     width = calibration.pixels_per_meter * 0.5
     peaks = scipy.signal.find_peaks(
-        histogram,
-        height=config.lane_assist.line_detection.thresholds.zebra_crossing,
-        width=width
+        histogram, height=hpx, width=width
     )[0]
 
     widths, _, lefts, rights = scipy.signal.peak_widths(
-        histogram,
-        peaks,
-        rel_height=config.lane_assist.line_detection.filtering.rel_height
+        histogram, peaks, rel_height=config.lane_assist.line_detection.filtering.rel_height
     )
 
     histogram_peaks = list(map(lambda params: HistogramPeak(*params), zip(peaks, widths, lefts, rights)))

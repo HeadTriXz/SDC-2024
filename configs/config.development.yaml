@@ -1,7 +1,0 @@
-image_manipulation:
-  white_threshold: 185
-
-lane_assist:
-  line_detection:
-    thresholds:
-      zebra_crossing: 5000
