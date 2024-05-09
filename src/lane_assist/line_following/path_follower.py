@@ -71,7 +71,6 @@ class PathFollower:
         intersect_id = np.argmax(cum_distance >= look_ahead)
         return path[intersect_id]
 
-
     def get_steering_fraction(self, path: np.ndarray, car_position: float) -> float:
         """Get the steering percentage to follow the path.
 

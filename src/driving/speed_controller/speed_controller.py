@@ -126,7 +126,7 @@ class SpeedController(ISpeedController):
                 self.current_speed,
                 self.__target_speed,
                 self.__max_speed,
-                self.state.name,
+                self.state.name
             )
             time.sleep(1)
 
