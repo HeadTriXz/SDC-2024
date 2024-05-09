@@ -6,6 +6,7 @@ from typing import Optional
 from src.calibration.utils.corners import get_transformed_corners
 from src.config import config
 
+
 Coordinate = tuple[int, int] | np.ndarray
 
 
@@ -37,10 +38,7 @@ def get_charuco_detector() -> cv2.aruco.CharucoDetector:
     charuco_params = cv2.aruco.CharucoParameters()
 
     board = cv2.aruco.CharucoBoard(
-        get_board_shape(),
-        config.calibration.square_length,
-        config.calibration.marker_length,
-        dictionary
+        get_board_shape(), config.calibration.square_length, config.calibration.marker_length, dictionary
     )
 
     return cv2.aruco.CharucoDetector(board, charuco_params, detector_params)
@@ -62,9 +60,7 @@ def get_transformed_shape(matrix: np.ndarray, shape: tuple[int, int]) -> tuple[i
 
 
 def find_intersection(
-        line1: tuple[Coordinate, Coordinate],
-        line2: tuple[Coordinate, Coordinate],
-        segments: bool = True
+    line1: tuple[Coordinate, Coordinate], line2: tuple[Coordinate, Coordinate], segments: bool = True
 ) -> Optional[Coordinate]:
     """Find the intersection between two lines.
 

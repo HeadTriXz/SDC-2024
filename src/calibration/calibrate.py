@@ -6,15 +6,15 @@ from pathlib import Path
 from typing import Optional
 
 from src.calibration.utils.charuco import find_corners
-from src.calibration.utils.corners import get_transformed_corners, get_border_of_points
-from src.calibration.utils.grid import get_dst_points, corners_to_grid, merge_grids
+from src.calibration.utils.corners import get_border_of_points, get_transformed_corners
+from src.calibration.utils.grid import corners_to_grid, get_dst_points, merge_grids
 from src.calibration.utils.other import (
     euclidean_distance,
     find_intersection,
     find_offsets,
     get_board_shape,
     get_charuco_detector,
-    get_transformed_shape
+    get_transformed_shape,
 )
 from src.config import config
 
@@ -153,7 +153,7 @@ class CameraCalibrator:
             if i != self.ref_idx:
                 dst_points = cv2.perspectiveTransform(dst_points, self.matrices[i])
 
-            src_corners[i * 4:i * 4 + 4] = dst_points + self.offsets[i]
+            src_corners[i * 4 : i * 4 + 4] = dst_points + self.offsets[i]
 
         # Find the new location of the corners
         dst_corners = cv2.perspectiveTransform(src_corners, self.topdown_matrix)
@@ -175,9 +175,7 @@ class CameraCalibrator:
         angle = -np.arctan2(rmat[1, 0], rmat[0, 0])
 
         # Adjust the top-down matrix
-        rotation_matrix = np.array([[np.cos(angle), -np.sin(angle), 0],
-                                    [np.sin(angle), np.cos(angle), 0],
-                                    [0, 0, 1]])
+        rotation_matrix = np.array([[np.cos(angle), -np.sin(angle), 0], [np.sin(angle), np.cos(angle), 0], [0, 0, 1]])
 
         self.topdown_matrix = np.dot(rotation_matrix, self.topdown_matrix)
 
@@ -207,7 +205,7 @@ class CameraCalibrator:
 
                 self.shapes[i] = width, height
 
-            src_corners[i * 4:i * 4 + 4] = dst_points + self.offsets[i]
+            src_corners[i * 4 : i * 4 + 4] = dst_points + self.offsets[i]
 
         # Find the new location of the corners
         src_corners = np.clip(src_corners, 0, None)
@@ -236,7 +234,7 @@ class CameraCalibrator:
         max_x = min(max_x, max_x + diff)
 
         # Find the new top of the image
-        lines = [dst_corners[i * 4:i * 4 + 2, 0] for i in range(len(self.images))]
+        lines = [dst_corners[i * 4 : i * 4 + 2, 0] for i in range(len(self.images))]
         min_x_line = np.array([(min_x, min_y), (min_x, max_y)])
         max_x_line = np.array([(max_x, min_y), (max_x, max_y)])
 
@@ -251,10 +249,7 @@ class CameraCalibrator:
         width = int(max_x - min_x)
         height = int(max_y - min_y)
 
-        scale_factor = min(
-            config.calibration.max_image_width / width,
-            config.calibration.max_image_height / height
-        )
+        scale_factor = min(config.calibration.max_image_width / width, config.calibration.max_image_height / height)
 
         min_x *= scale_factor
         min_y *= scale_factor
@@ -333,7 +328,7 @@ class CameraCalibrator:
             ref_idx=self.ref_idx,
             shapes=self.shapes,
             stitched_shape=self.stitched_shape,
-            topdown_matrix=self.topdown_matrix
+            topdown_matrix=self.topdown_matrix,
         )
 
         np.savez(history_file, **arrays)
@@ -385,9 +380,11 @@ class CameraCalibrator:
         lines = [(line[0], line[-1]) for line in lines if len(line) > 1]
 
         # Find the intersections of the lines
-        intersections = [find_intersection(lines[i], lines[j], False)
-                         for i in range(len(lines) - 1)
-                         for j in range(i + 1, len(lines))]
+        intersections = [
+            find_intersection(lines[i], lines[j], False)
+            for i in range(len(lines) - 1)
+            for j in range(i + 1, len(lines))
+        ]
         intersections = [point for point in intersections if point is not None]
         intersections = np.array(intersections)
 
@@ -417,12 +414,14 @@ class CameraCalibrator:
         for i in range(len(self.images)):
             if i == self.ref_idx:
                 offset = self.offsets[i]
-                corners[i] = np.array([
-                    [offset[0], offset[1]],
-                    [offset[0] + self._input_shape[0], offset[1]],
-                    [offset[0] + self._input_shape[0], offset[1] + height],
-                    [offset[0], offset[1] + height]
-                ])
+                corners[i] = np.array(
+                    [
+                        [offset[0], offset[1]],
+                        [offset[0] + self._input_shape[0], offset[1]],
+                        [offset[0] + self._input_shape[0], offset[1] + height],
+                        [offset[0], offset[1] + height],
+                    ]
+                )
                 continue
 
             h, w = self._input_shape[::-1]

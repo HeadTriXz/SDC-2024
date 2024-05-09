@@ -11,9 +11,9 @@ from starlette.staticfiles import StaticFiles
 from src.config import config
 from src.telemetry.data_stream.routes import create_router
 from src.telemetry.data_stream.websocket_handler import WebsocketHandler
-from src.telemetry.update_config.routes import create_config_router
 from src.telemetry.logging_handler import LoggingHandler
 from src.telemetry.stdout_wrapper import StdoutWrapper
+from src.telemetry.update_config.routes import create_config_router
 from src.utils.ip_loader import get_ip
 
 

@@ -4,12 +4,7 @@ from typing import Any
 
 from src.constants import Gear
 from src.driving.can import ICANController
-from src.driving.gamepad import (
-    EventType,
-    Gamepad,
-    GamepadAxis,
-    GamepadButton,
-)
+from src.driving.gamepad import EventType, Gamepad, GamepadAxis, GamepadButton
 from src.driving.modes import DrivingMode
 
 

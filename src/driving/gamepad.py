@@ -1,11 +1,11 @@
-import time
-
 import inputs
 import logging
 import math
+import time
 
 from enum import Enum
 from threading import Thread, Timer
+
 
 MAX_TRIG_VAL = math.pow(2, 8)
 MAX_JOY_VAL = math.pow(2, 15)
@@ -74,12 +74,7 @@ class Gamepad:
         self._long_press_timers = {}
         self.__thread = Thread(target=self.__listen, daemon=True)
 
-    def add_listener(
-            self,
-            input_type: GamepadButton | GamepadAxis,
-            event_type: EventType,
-            callback: callable
-    ) -> None:
+    def add_listener(self, input_type: GamepadButton | GamepadAxis, event_type: EventType, callback: callable) -> None:
         """Add a listener for an event.
 
         :param input_type: The type of input to listen on.
@@ -123,10 +118,7 @@ class Gamepad:
             self._long_press_timers[button].cancel()
 
     def _check_events(
-            self,
-            input_type: GamepadButton | GamepadAxis,
-            event_type: EventType,
-            value: float = None
+        self, input_type: GamepadButton | GamepadAxis, event_type: EventType, value: float = None
     ) -> None:
         """Check if any listeners are waiting for an event.
 
@@ -183,6 +175,7 @@ class Gamepad:
         :param button: The button to start the timer for.
         :param timeout: The time to wait before the event occurs.
         """
+
         def timer_callback() -> None:
             if self._buttons[button]:
                 self._check_events(button, EventType.LONG_PRESS)
