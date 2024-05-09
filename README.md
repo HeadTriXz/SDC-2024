@@ -66,6 +66,19 @@ To execute a script, run the following command in your terminal:
 python -m scripts.python.<script_name>
 ```
 
+## Development
+For development purposes, you can install the development packages by running the following command:
+```bash
+pip install -r requirements/dev.txt
+```
+
+there is also a script included for windows to create and activate a virtual environment,
+install required packages and install the commit hooks.
+You can run the following command:
+```bash
+scripts/setup-dev-windows.ps1
+```
+
 ## License
 This project is licensed under the **MIT License**.
 
