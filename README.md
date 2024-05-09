@@ -50,6 +50,11 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+if you want to install the packeges for the simulator you can run the following command:
+```bash
+pip install -r requirements/sim.txt
+```
+
 **Step 5: Run the Application**
 ```bash
 python -m src.main

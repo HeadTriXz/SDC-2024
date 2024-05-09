@@ -1,0 +1,13 @@
+fastapi==0.111.0
+inputs==0.5
+numpy==1.26.4
+omegaconf==2.3.0
+opencv_contrib_python==4.9.0.80
+opencv_python==4.9.0.80
+pydantic==2.7.1
+rplidar_roboticia==0.9.5
+scipy==1.13.0
+simple_pid==2.0.0
+starlette==0.37.2
+ultralytics==8.2.3
+uvicorn==0.29.0
