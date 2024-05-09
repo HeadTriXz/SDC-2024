@@ -7,8 +7,8 @@ from typing import Generator
 
 from src.calibration.data import CalibrationData
 from src.config import config
-from src.driving.speed_controller import SpeedController, SpeedControllerState
-from src.lane_assist.lane_assist import LaneAssist, PathFollower
+from src.driving.speed_controller import SpeedController
+from src.lane_assist.lane_assist import LaneAssist
 from src.lane_assist.stopline_assist import StopLineAssist
 from src.simulation.can_controller import SimCanController
 from src.telemetry.app import TelemetryServer
@@ -34,6 +34,8 @@ def start_simulator() -> None:
                 continue
 
             grayscale = cv2.cvtColor(img_rotated[:-20, :], cv2.COLOR_BGR2GRAY)
+            grayscale = cv2.threshold(grayscale, config.image_manipulation.white_threshold, 255, cv2.THRESH_BINARY)[1]
+
             if config.telemetry.enabled:
                 telemetry.websocket_handler.send_image("topdown", grayscale)
 
@@ -42,7 +44,6 @@ def start_simulator() -> None:
     can_controller = SimCanController()
     speed_controller = SpeedController(can_controller)
     speed_controller.max_speed = 50
-    speed_controller.state = SpeedControllerState.DRIVING
 
     # Load the calibration data
     calibration_file = Path(config.calibration.calibration_file)
@@ -50,17 +51,13 @@ def start_simulator() -> None:
         raise FileNotFoundError(f"Calibration file not found: {calibration_file}")
 
     calibration = CalibrationData.load(calibration_file)
-
-    # Initialize the path follower
-    path_follower = PathFollower(1, 0.01, 0.05, look_ahead_distance=10)
-    path_follower.max_steering_range = 30.0
+    calibration.pixels_per_meter *= 2
 
     # Initialize the lane assist
     stop_line_assist = StopLineAssist(speed_controller, calibration)
     lane_assist = LaneAssist(
         get_sim_image_generator,
         stop_line_assist,
-        path_follower,
         speed_controller,
         telemetry=telemetry,
         calibration=calibration
@@ -68,4 +65,6 @@ def start_simulator() -> None:
 
     telemetry.start()
     speed_controller.start()
+
+    lane_assist.toggle()
     lane_assist.start()

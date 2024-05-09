@@ -8,6 +8,8 @@ from src.driving.speed_controller import SpeedControllerState
 class ISpeedController(ABC):
     """An interface for a speed controller."""
 
+    current_speed: float = 0
+
     @property
     @abstractmethod
     def gear(self) -> Gear:

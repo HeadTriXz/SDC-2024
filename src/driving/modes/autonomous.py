@@ -5,7 +5,6 @@ from src.driving.can import CANController
 from src.driving.modes import DrivingMode
 from src.driving.speed_controller import SpeedController
 from src.lane_assist.lane_assist import LaneAssist
-from src.lane_assist.line_following.path_follower import PathFollower
 from src.lane_assist.preprocessing.generator import td_stitched_image_generator
 from src.lane_assist.stopline_assist import StopLineAssist
 from src.object_recognition.handlers.overtake_handler import OvertakeHandler
@@ -81,14 +80,6 @@ class AutonomousDriving(DrivingMode):
 
         :param calibration: The calibration data to use.
         """
-        path_follower = PathFollower(
-            config.lane_assist.line_following.pid.kp,
-            config.lane_assist.line_following.pid.ki,
-            config.lane_assist.line_following.pid.kd,
-            look_ahead_distance=config.lane_assist.line_following.look_ahead_distance,
-            max_steering_range=config.lane_assist.line_following.max_steering_range
-        )
-
         generator = td_stitched_image_generator(
             calibration,
             self.cam_left,
@@ -101,7 +92,6 @@ class AutonomousDriving(DrivingMode):
         self.lane_assist = LaneAssist(
             generator,
             stop_line_assist,
-            path_follower,
             self.speed_controller,
             telemetry=self.telemetry,
             calibration=calibration
