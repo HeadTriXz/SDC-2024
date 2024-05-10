@@ -3,7 +3,7 @@ from src.config import config
 from src.constants import CameraResolution, Gear
 from src.driving.can import CANController
 from src.driving.modes import DrivingMode
-from src.driving.speed_controller import SpeedController
+from src.driving.speed_controller import SpeedController, SpeedControllerState
 from src.lane_assist.lane_assist import LaneAssist
 from src.lane_assist.preprocessing.generator import td_stitched_image_generator
 from src.lane_assist.stopline_assist import StopLineAssist
@@ -54,7 +54,6 @@ class AutonomousDriving(DrivingMode):
 
         self.telemetry = TelemetryServer()
         self.speed_controller = SpeedController(can_controller)
-        self.speed_controller.gear = Gear.DRIVE
 
         self.__init_lane_assist(calibration)
         self.__init_object_detection(calibration)
@@ -66,6 +65,8 @@ class AutonomousDriving(DrivingMode):
         self.cam_right.start()
 
         self.speed_controller.start()
+        self.speed_controller.gear = Gear.DRIVE
+        self.speed_controller.state = SpeedControllerState.DRIVING
 
         self.detector.start()
         self.telemetry.start()
