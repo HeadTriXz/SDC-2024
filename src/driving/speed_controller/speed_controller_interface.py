@@ -72,3 +72,8 @@ class ISpeedController(ABC):
     def start(self) -> None:
         """Start the speed controller."""
         pass
+
+    @abstractmethod
+    def toggle(self) -> None:
+        """Toggle the speed controller."""
+        pass

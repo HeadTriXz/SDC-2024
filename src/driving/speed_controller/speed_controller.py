@@ -7,6 +7,7 @@ from src.config import config
 from src.constants import CANFeedbackIdentifier, Gear
 from src.driving.can import ICANController
 from src.driving.speed_controller import ISpeedController, SpeedControllerState
+from src.utils.decorators import check_if
 
 
 class SpeedController(ISpeedController):
@@ -15,6 +16,7 @@ class SpeedController(ISpeedController):
     Attributes
     ----------
         current_speed (float): The current speed of the go-kart.
+        enabled (bool): Whether the speed controller is enabled.
         gear (Gear): The gear of the go-kart.
         max_speed (int): The maximum speed of the go-kart.
         target_speed (int): The target speed of the go-kart.
@@ -23,6 +25,7 @@ class SpeedController(ISpeedController):
     """
 
     current_speed: float = 0
+    enabled: bool = False
 
     __gear: Gear = Gear.NEUTRAL
     __can: ICANController
@@ -38,10 +41,10 @@ class SpeedController(ISpeedController):
         """
         self.__can = can_bus
         self.logger = logging.getLogger(__name__)
+        self.max_speed = config.kart.speed_modes.selected
 
         # FIXME: remove telemetry
         self.__thread = threading.Thread(target=self.__debug, daemon=True)
-        self.max_speed = config.kart.speed_modes.selected
 
     @property
     def gear(self) -> Gear:
@@ -118,6 +121,13 @@ class SpeedController(ISpeedController):
         if config.telemetry.enabled:
             self.__thread.start()
 
+    def toggle(self) -> None:
+        """Toggle the speed controller."""
+        self.enabled = not self.enabled
+        if not self.enabled:
+            self.__can.set_throttle(0, Gear.NEUTRAL)
+            self.__can.set_brake(config.kart.braking.max_force)
+
     def __debug(self) -> None:
         """Print debug information."""
         while True:
@@ -130,6 +140,7 @@ class SpeedController(ISpeedController):
             )
             time.sleep(1)
 
+    @check_if("enabled")
     def __adjust_speed(self) -> None:
         """Adjust the speed of the kart."""
         if self.__state == SpeedControllerState.STOPPED:

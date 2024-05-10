@@ -74,6 +74,7 @@ class AutonomousDriving(DrivingMode):
     def toggle(self) -> None:
         """Toggle the autonomous driving."""
         self.lane_assist.toggle()
+        self.speed_controller.toggle()
 
     def __init_lane_assist(self, calibration: CalibrationData) -> None:
         """Initialize the lane assist system.
@@ -93,8 +94,8 @@ class AutonomousDriving(DrivingMode):
             generator,
             stop_line_assist,
             self.speed_controller,
-            telemetry=self.telemetry,
-            calibration=calibration
+            self.telemetry,
+            calibration
         )
 
     def __init_object_detection(self, calibration: CalibrationData) -> None:

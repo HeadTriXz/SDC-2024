@@ -36,6 +36,7 @@ class LaneAssist:
     Attributes
     ----------
         can_controller: The can controller.
+        enabled: Whether lane assist is enabled.
         image_generator: A function that generates images.
         lines: The lines on the road.
         requested_lane: The lane to follow.
@@ -45,6 +46,7 @@ class LaneAssist:
     """
 
     can_controller: ICANController
+    enabled: bool = False
     image_generator: Callable[[], Generator[np.ndarray, None, None]]
     lines: list[Line]
     requested_lane: int
@@ -54,7 +56,6 @@ class LaneAssist:
     __path_follower: PathFollower
     __stopline_assist: StopLineAssist
     __calibration: CalibrationData
-    __running: bool = False
 
     def __init__(
             self,
@@ -68,7 +69,6 @@ class LaneAssist:
 
         :param image_generation: A function that generates images.
         :param stopline_assist: The stopline assist instance.
-        :param path_follower: The line follower class.
         :param speed_controller: The speed controller.
         :param telemetry: The telemetry server.
         :param calibration: The calibration data.
@@ -130,11 +130,7 @@ class LaneAssist:
 
     def toggle(self) -> None:
         """Toggle the lane assist."""
-        self.__running = not self.__running
-        if self.__running:
-            self.speed_controller.state = SpeedControllerState.DRIVING
-        else:
-            self.speed_controller.state = SpeedControllerState.STOPPED
+        self.enabled = not self.enabled
 
     def __follow_path(self, lines: list[Line], car_position: float, lane: int) -> None:
         """Follow the path.
@@ -157,7 +153,7 @@ class LaneAssist:
     def __run(self) -> None:
         """Run the lane assist loop."""
         for gray_image in self.image_generator():
-            if not self.__running:
+            if not self.enabled:
                 time.sleep(0.5)
                 continue
 
