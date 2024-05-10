@@ -8,7 +8,6 @@ kart:
 image_manipulation:
   white_threshold: 185
 
-
 dynamic_speed:
   friction_coefficient: 0.5
   static_speed: 40

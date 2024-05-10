@@ -47,7 +47,7 @@ def get_lines(image: np.ndarray, calibration: CalibrationData) -> list[Line]:
     :return: The lines in the image.
     """
     # Filter the image. This is done in place and will be used to remove zebra crossings.
-    if config.lane_assist.line_detection.filtering.active:
+    if config.line_detection.filtering.active:
         basic_filter(image, calibration)
         # filter_small_clusters(image)  # noqa: ERA001
 
@@ -138,8 +138,8 @@ def __get_lines(
     :return: The lines in the image and the height of the windows.
     """
     std = np.std(histogram)
-    window_width = int(calibration.pixels_per_meter * config.lane_assist.line_detection.window_sizing.width)
-    window_height = int(calibration.pixels_per_meter * config.lane_assist.line_detection.window_sizing.height)
+    window_width = int(calibration.pixels_per_meter * config.line_detection.window_sizing.width)
+    window_height = int(calibration.pixels_per_meter * config.line_detection.window_sizing.height)
     window_count = image.shape[0] // window_height
 
     peaks = scipy.signal.find_peaks(histogram, height=std, distance=window_width * 2)[0]

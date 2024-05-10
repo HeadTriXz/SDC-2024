@@ -42,7 +42,7 @@ def window_search(
             right = min(max(window.x + int(window.margin), 0), filtered_img.shape[1])
 
             non_zero_count = np.sum(filtered_img[top:bottom, left:right]) // 255
-            if non_zero_count < config.lane_assist.line_detection.pixels_in_window:
+            if non_zero_count < config.line_detection.pixels_in_window:
                 window.move(window.x, top, False)
                 continue
 

@@ -34,7 +34,7 @@ def start_simulator() -> None:
                 continue
 
             grayscale = cv2.cvtColor(img_rotated[:-20, :], cv2.COLOR_BGR2GRAY)
-            grayscale = cv2.threshold(grayscale, config.image_manipulation.white_threshold, 255, cv2.THRESH_BINARY)[1]
+            grayscale = cv2.threshold(grayscale, config.preprocessing.white_threshold, 255, cv2.THRESH_BINARY)[1]
 
             if config.telemetry.enabled:
                 telemetry.websocket_handler.send_image("topdown", grayscale)

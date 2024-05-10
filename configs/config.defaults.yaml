@@ -1,3 +1,4 @@
+# Kart
 kart:
   max_steering_angle: 40
 
@@ -19,6 +20,7 @@ camera_ids:
   center: 0
   right: 0
 
+# Camera Calibration
 calibration:
   aruco_dict: 1  # DICT_4X4_100
   board_height: 8
@@ -34,8 +36,8 @@ calibration:
   square_length: 0.115
   vanishing_line_offset: 0.02
 
-
-image_manipulation:
+# Lane Assist
+preprocessing:
   gamma:
     enabled: true
     left: 0.62
@@ -43,34 +45,34 @@ image_manipulation:
     right: 0.62
   white_threshold: 180
 
-lane_assist:
-  line_detection:
-    pixels_in_window: 1
-    window_margin_growth: 0.25 # pixels
+line_detection:
+  pixels_in_window: 1
+  window_margin_growth: 0.25 # pixels
 
-    window_sizing:
-      height: 0.2 # meters
-      width: 0.5 # meters
+  window_sizing:
+    height: 0.2 # meters
+    width: 0.5 # meters
 
-    thresholds:
-      zebra_crossing: 1.0 # meters
+  thresholds:
+    zebra_crossing: 1.0 # meters
 
-    filtering:
-      active: true
-      rel_height: 0.9  # percentage
+  filtering:
+    active: true
+    rel_height: 0.9  # percentage
 
-  line_following:
-    requested_lane: 0
-    initial_speed: 5  # km/h
+line_following:
+  requested_lane: 0
+  initial_speed: 5  # km/h
 
-    max_steering_range: 40 # degrees
-    look_ahead_distance: .5  # meters
+  max_steering_range: 40 # degrees
+  look_ahead_distance: .5  # meters
 
-    pid:
-      kp: 1
-      ki: 0.1
-      kd: 0.05
+  pid:
+    kp: 1
+    ki: 0.1
+    kd: 0.05
 
+# Object Detection
 object_detection:
   model_path: "./models/yolo8s.pt"
   min_confidence: 0.6
@@ -103,6 +105,7 @@ crosswalk:
   safe_zone_margin: 0.1
   min_distance: 3
 
+# Other
 telemetry:
   enabled: true
   server:
@@ -110,13 +113,12 @@ telemetry:
     host: 0.0.0.0
     root_url: 192.168.1.89
 
-
 dynamic_speed:
   friction_coefficient: 0.3
-  static: true
+  static: false
   static_speed: 10
 
 lidar:
-  port_name: "COM4"
+  port_name: "/dev/ttyUSB0"
   min_distance: 500
   max_distance_between_points: 1000

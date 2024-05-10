@@ -1,0 +1,2 @@
+lidar:
+  port_name: "COM4"
