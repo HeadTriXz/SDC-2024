@@ -12,7 +12,7 @@ def get_can_bus(channel: str = "can0", bitrate: int = 500000) -> can.ThreadSafeB
     :param bitrate: The bitrate to use.
     :return: The created CAN bus.
     """
-    if os.path.exists(f"/dev/{channel}"):
+    if os.system(f"ip link show {channel}") == 0:
         os.system(f"ip link set {channel} type can bitrate {bitrate}")
         os.system(f"ip link set {channel} up")
 
