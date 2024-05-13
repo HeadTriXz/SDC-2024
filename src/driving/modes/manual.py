@@ -11,6 +11,7 @@ from src.driving.gamepad import (
     GamepadButton,
 )
 from src.driving.modes import DrivingMode
+from src.utils.decorators import check_if
 
 
 class ManualDriving(DrivingMode):
@@ -18,17 +19,18 @@ class ManualDriving(DrivingMode):
 
     Attributes
     ----------
+        enabled (bool): Whether the controller is enabled.
         can_controller (CANController): The CAN controller to use.
         gamepad (Controller): The gamepad to use.
         gear (Gear): The current gear of the vehicle.
 
     """
 
+    enabled: bool = True
     can_controller: ICANController
     gamepad: Gamepad
     gear = Gear.NEUTRAL
 
-    __running: bool = True
     __primed: bool = False
 
     def __init__(self, gamepad: Gamepad, can_controller: ICANController) -> None:
@@ -53,7 +55,7 @@ class ManualDriving(DrivingMode):
 
     def toggle(self) -> None:
         """Toggle the controller."""
-        self.__running = not self.__running
+        self.enabled = not self.enabled
 
     def __ready(self, *_args: Any, **_kwargs: Any) -> None:
         """The controller is ready to drive."""
@@ -65,68 +67,55 @@ class ManualDriving(DrivingMode):
         logging.info("The controller is ready")
         self.gamepad.vibrate()
 
-        # gears
+        # Gears
         self.gamepad.add_listener(GamepadButton.X, EventType.BUTTON_DOWN, self.__set_reverse)
         self.gamepad.add_listener(GamepadButton.Y, EventType.BUTTON_DOWN, self.__set_neutral)
         self.gamepad.add_listener(GamepadButton.B, EventType.BUTTON_DOWN, self.__set_forward)
 
-        # throttle and brake
+        # Throttle and brake
         self.gamepad.add_listener(GamepadAxis.RT, EventType.AXIS_CHANGED, self.__set_throttle)
         self.gamepad.add_listener(GamepadAxis.LT, EventType.AXIS_CHANGED, self.__set_brake)
 
-        # steering
+        # Steering
         self.gamepad.add_listener(GamepadAxis.LS_X, EventType.AXIS_CHANGED, self.__set_steering)
 
+    @check_if("enabled")
     def __set_brake(self, _button: GamepadButton, _event: EventType, value: float) -> None:
         """Update the brake value.
 
         :param value: The value of the brake.
         """
-        if not self.__running:
-            return
+        self.can_controller.set_brake(round(value * 100))
 
-        self.can_controller.set_brake(int(value * 100))
-
+    @check_if("enabled")
     def __set_forward(self, *_args: Any, **_kwargs: Any) -> None:
-        """Set the gear to forward."""
-        if not self.__running:
-            return
-
         self.gear = Gear.DRIVE
 
+    @check_if("enabled")
     def __set_neutral(self, *_args: Any, **_kwargs: Any) -> None:
         """Set the gear to neutral."""
-        if not self.__running:
-            return
-
         self.gear = Gear.NEUTRAL
 
+    @check_if("enabled")
     def __set_reverse(self, *_args: Any, **_kwargs: Any) -> None:
         """Set the gear to reverse."""
-        if not self.__running:
-            return
-
         self.gear = Gear.REVERSE
 
+    @check_if("enabled")
     def __set_steering(self, _button: GamepadButton, _event: EventType, value: float) -> None:
         """Update the steering angle.
 
         :param value: The value of the steering angle.
         """
-        if not self.__running:
-            return
-
         if abs(value) <= 0.1:
             value = 0.0
 
         self.can_controller.set_steering(value)
 
+    @check_if("enabled")
     def __set_throttle(self, _button: GamepadButton, _event: EventType, value: float) -> None:
         """Update the throttle value.
 
         :param value: The value of the throttle.
         """
-        if not self.__running:
-            return
-
-        self.can_controller.set_throttle(int(value * 100), self.gear)
+        self.can_controller.set_throttle(round(value * 100), self.gear)
