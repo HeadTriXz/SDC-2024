@@ -7,7 +7,8 @@ from typing import Generator
 
 from src.calibration.data import CalibrationData
 from src.config import config
-from src.driving.speed_controller import SpeedController
+from src.constants import Gear
+from src.driving.speed_controller import SpeedController, SpeedControllerState
 from src.lane_assist.lane_assist import LaneAssist
 from src.lane_assist.stopline_assist import StopLineAssist
 from src.simulation.can_controller import SimCanController
@@ -43,6 +44,8 @@ def start_simulator() -> None:
 
     can_controller = SimCanController()
     speed_controller = SpeedController(can_controller)
+    speed_controller.gear = Gear.DRIVE
+    speed_controller.state = SpeedControllerState.DRIVING
     speed_controller.max_speed = 50
 
     # Load the calibration data
@@ -65,6 +68,7 @@ def start_simulator() -> None:
 
     telemetry.start()
     speed_controller.start()
+    speed_controller.toggle()
 
     lane_assist.toggle()
     lane_assist.start()

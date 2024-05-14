@@ -46,19 +46,23 @@ class PathFollower:
             output_limits=(-config.kart.max_steering_angle, config.kart.max_steering_angle),
         )
 
-    def __calc_lookahead_padding(self) -> int:
-        """Get time since last pid update."""
+    def __calc_lookahead_padding(self) -> float:
+        """Get distance traveled since last PID update.
+
+        :return: The distance traveled in pixels.
+        """
+        min_dist = config.line_following.look_ahead_distance * self.__calibration.pixels_per_meter
+
         lt = self.__pid._last_time
         if lt is None:
-            return 0
+            return min_dist
 
-        # get the distance we have traveled + the look ahead distance in meters
+        # Get the distance we have traveled
         dt = time.monotonic() - lt
         speed = self.__speed_controller.current_speed / 3.6
-        distance = (speed * dt) + config.line_following.look_ahead_distance
+        distance = speed * dt * self.__calibration.pixels_per_meter
 
-        # convert distance + padding to to pixels
-        return distance * self.__calibration.pixels_per_meter
+        return min_dist + distance
 
     def __get_path_point(self, path: np.ndarray) -> np.ndarray:
         """Get the point on the path to follow.
@@ -67,8 +71,10 @@ class PathFollower:
         :return: The point on the path to follow.
         """
         look_ahead = self.__calc_lookahead_padding()
+
         cum_distance = np.cumsum(np.linalg.norm(np.diff(path, axis=0), axis=1))
         intersect_id = np.argmax(cum_distance >= look_ahead)
+
         return path[intersect_id]
 
     def get_steering_fraction(self, path: np.ndarray, car_position: float) -> float:
@@ -98,4 +104,10 @@ class PathFollower:
         # get the target point on the path
         target_point = self.__get_path_point(path)
         x_distance_to_target = target_point[0] - car_position
+        x_distance_to_target /= self.__calibration.pixels_per_meter
+
         return -self.__pid(x_distance_to_target)
+
+    def reset(self) -> None:
+        """Reset the PID controller."""
+        self.__pid.reset()
