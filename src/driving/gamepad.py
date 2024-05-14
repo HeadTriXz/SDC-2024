@@ -1,14 +1,11 @@
 import inputs
 import logging
-import math
 import time
 
 from enum import Enum
 from threading import Thread, Timer
 
-
-MAX_TRIG_VAL = math.pow(2, 8)
-MAX_JOY_VAL = math.pow(2, 15)
+from src.constants import BTN_ALIAS, MAX_JOY_VAL, MAX_TRIG_VAL
 
 
 class GamepadButton(str, Enum):
@@ -122,6 +119,14 @@ class Gamepad:
         if button in self._long_press_timers:
             self._long_press_timers[button].cancel()
 
+    def _check_alias(self, code: str) -> str:
+        """Check if the code is an alias and return the correct code.
+
+        :param code: The code to check.
+        :return: The correct code.
+        """
+        return BTN_ALIAS.get(code, code)
+
     def _check_events(
             self,
             input_type: GamepadButton | GamepadAxis,
@@ -196,6 +201,7 @@ class Gamepad:
             try:
                 events = inputs.get_gamepad()
                 for event in events:
+                    event.code = self._check_alias(event.code)
                     if event.ev_type == "Key":
                         self._handle_button_event(event)
                     elif event.ev_type == "Absolute":

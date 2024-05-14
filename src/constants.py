@@ -1,9 +1,19 @@
+import math
+
 from enum import Enum, IntEnum
 
 
 # Constants
+#   CAN
 CAN_SEND_PERIOD = 0.04
 
+#   Gamepad
+BTN_ALIAS = {
+    "ABS_BRAKE": "ABS_Z",
+    "ABS_GAS": "ABS_RZ"
+}
+MAX_TRIG_VAL = math.pow(2, 8)
+MAX_JOY_VAL = math.pow(2, 15)
 
 # Enums
 class CANControlIdentifier(IntEnum):
