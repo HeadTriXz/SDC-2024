@@ -131,6 +131,7 @@ class LaneAssist:
     def toggle(self) -> None:
         """Toggle the lane assist."""
         self.enabled = not self.enabled
+        self.__path_follower.reset()
 
     def __follow_path(self, lines: list[Line], car_position: float, lane: int) -> None:
         """Follow the path.

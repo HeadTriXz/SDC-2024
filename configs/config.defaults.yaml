@@ -68,9 +68,9 @@ line_following:
   look_ahead_distance: .5  # meters
 
   pid:
-    kp: 1
-    ki: 0.1
-    kd: 0.05
+    kp: 20.0
+    ki: 1.0
+    kd: 0.5
 
 # Object Detection
 object_detection:
