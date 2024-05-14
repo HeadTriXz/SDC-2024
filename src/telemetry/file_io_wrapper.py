@@ -1,20 +1,18 @@
-import sys
-
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TextIO
 
 if TYPE_CHECKING:
     from src.telemetry.app import TelemetryServer
 
 
-class StdoutWrapper:
+class FileIOWrapper:
     """A class to represent a log handler."""
 
-    def __init__(self, telemetry_server: "TelemetryServer") -> None:
+    def __init__(self, telemetry_server: "TelemetryServer", buffer: TextIO) -> None:
         """Initialize the log handler.
 
         :param telemetry_server: The telemetry server.
         """
-        self.stdout = sys.stdout
+        self.buffer = buffer
         self.telemetry_server = telemetry_server
 
     def write(self, message: str) -> None:
@@ -24,15 +22,15 @@ class StdoutWrapper:
         """
         if message != "\n":
             self.telemetry_server.websocket_handler.send_text("logs", message)
-        self.stdout.write(message)
+        self.buffer.write(message)
 
     def flush(self) -> None:
         """Flush the log."""
-        self.stdout.flush()
+        self.buffer.flush()
 
     def isatty(self) -> bool:
         """Check if the log is a tty."""
-        return self.stdout.isatty()
+        return self.buffer.isatty()
 
     def __getattr__(self, attr: str) -> Any:
         """Get an attribute.
@@ -40,4 +38,4 @@ class StdoutWrapper:
         :param attr: The attribute to get.
         :return: The attribute.
         """
-        return getattr(self.stdout, attr)
+        return getattr(self.buffer, attr)
