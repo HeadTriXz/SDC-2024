@@ -5,7 +5,7 @@ kart:
     margin: 1.0
     max_force: 100
 
-image_manipulation:
+preprocessing:
   white_threshold: 185
 
 dynamic_speed:
