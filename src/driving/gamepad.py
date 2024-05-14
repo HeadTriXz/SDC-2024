@@ -1,11 +1,11 @@
-import time
-
 import inputs
 import logging
 import math
+import time
 
 from enum import Enum
 from threading import Thread, Timer
+
 
 MAX_TRIG_VAL = math.pow(2, 8)
 MAX_JOY_VAL = math.pow(2, 15)

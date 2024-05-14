@@ -4,6 +4,7 @@ import os
 from src.driving.kart import Kart
 from src.telemetry.logging_handler import LoggingHandler
 
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, handlers=[LoggingHandler()])
 

@@ -1,8 +1,8 @@
 import logging
 import numpy as np
 
-from rplidar import RPLidar
 from math import floor
+from rplidar import RPLidar
 from threading import Thread
 from typing import Optional
 

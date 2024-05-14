@@ -1,8 +1,9 @@
 import numpy as np
 
 from abc import ABC, abstractmethod
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from ultralytics.engine.results import Boxes
+
 
 if TYPE_CHECKING:
     from src.object_recognition.object_controller import ObjectController

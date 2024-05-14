@@ -12,8 +12,8 @@ from typing import Any
 from src.config import config
 from src.telemetry.data_stream.routes import create_router
 from src.telemetry.data_stream.websocket_handler import WebsocketHandler
-from src.telemetry.update_config.routes import create_config_router
 from src.telemetry.file_io_wrapper import FileIOWrapper
+from src.telemetry.update_config.routes import create_config_router
 from src.utils.ip_loader import get_ip
 
 

@@ -2,8 +2,8 @@ import time
 
 from typing import Any
 
-from src.driving.can import get_can_bus, CANController
-from src.driving.gamepad import Gamepad, GamepadButton, EventType
+from src.driving.can import CANController, get_can_bus
+from src.driving.gamepad import EventType, Gamepad, GamepadButton
 from src.driving.modes import AutonomousDriving, DrivingMode, ManualDriving
 
 

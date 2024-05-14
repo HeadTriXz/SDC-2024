@@ -1,4 +1,4 @@
-from typing import Callable, Any
+from typing import Any, Callable
 
 
 def check_if(prop: str) -> Callable:

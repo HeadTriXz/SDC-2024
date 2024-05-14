@@ -6,6 +6,7 @@ from typing import Optional
 from src.calibration.utils.corners import get_transformed_corners
 from src.config import config
 
+
 Coordinate = tuple[int, int] | np.ndarray
 
 

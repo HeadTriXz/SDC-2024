@@ -6,15 +6,15 @@ from pathlib import Path
 from typing import Optional
 
 from src.calibration.utils.charuco import find_corners
-from src.calibration.utils.corners import get_transformed_corners, get_border_of_points
-from src.calibration.utils.grid import get_dst_points, corners_to_grid, merge_grids
+from src.calibration.utils.corners import get_border_of_points, get_transformed_corners
+from src.calibration.utils.grid import corners_to_grid, get_dst_points, merge_grids
 from src.calibration.utils.other import (
     euclidean_distance,
     find_intersection,
     find_offsets,
     get_board_shape,
     get_charuco_detector,
-    get_transformed_shape
+    get_transformed_shape,
 )
 from src.config import config
 

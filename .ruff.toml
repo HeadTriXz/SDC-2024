@@ -4,6 +4,7 @@ line-length = 120
 select = [
     "B",    # flake8-bugbear
     "E",    # pycodestyle
+    "W",
     "F",    # Pyflakes
     "SIM",  # flake8-simplify
     "UP",   # pyupgrade
@@ -24,6 +25,9 @@ select = [
     "ERA",  # flake8-eradicate
     "PERF", # perflint
     "E501", # line to long
+    "COM818", # trailing comma on bare tuple
+    "COM819", # trailing comma prohibited
+    "I",
 ]
 
 ignore = [
@@ -43,18 +47,26 @@ ignore = [
     "PERF203",
 ]
 
-exclude = [
-    "scripts/**",
-    "src/driving/gamepad/driving_controller.py",
-    "tests/**/test_data.py",
-    "src/libs/external/**",
-]
+exclude = ["scripts/**"]
 
 # Ignore unused imports in __init__.py files (would need __all__ otherwise)
 [lint.per-file-ignores]
-"__init__.py" = ["F401"]
-
+"__init__.py" = ["F401", "I"]
 
 [format]
 quote-style = "double"
 docstring-code-line-length = 80
+skip-magic-trailing-comma = true
+
+[lint.isort]
+default-section = "third-party"
+known-first-party = ["src"]
+section-order = [
+    "future",
+    "third-party",
+    "first-party",
+    "local-folder"
+]
+lines-after-imports = 2
+lines-between-types = 1
+split-on-trailing-comma = false
