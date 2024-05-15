@@ -25,9 +25,9 @@ def filter_lines(lines: list[Line], starting_point: int) -> list[Line]:
     j = 0
 
     while i < len(lines):
-        # check if we are after the starting point
+        # Check if we are after the starting point
         if lines[i].points[0][0] >= starting_point and lines[i].line_type == LineType.SOLID:
-            # back up until we find a solid line
+            # Back up until we find a solid line
             j = i
             while j > 0:
                 j -= 1
@@ -49,7 +49,7 @@ def get_lines(image: np.ndarray, calibration: CalibrationData) -> list[Line]:
     # Filter the image. This is done in place and will be used to remove zebra crossings.
     if config.line_detection.filtering.active:
         basic_filter(image, calibration)
-        # filter_small_clusters(image)  # noqa: ERA001
+        # Filter_small_clusters(image)  # noqa: ERA001
 
     # Create histogram to find the start of the lines.
     # This is done by weighting the pixels using a logspace.
@@ -61,7 +61,7 @@ def get_lines(image: np.ndarray, calibration: CalibrationData) -> list[Line]:
     lines = __get_lines(image, histogram, calibration)[0]
 
     # Remove the first and last point. These can be in non-useful locations.
-    # For example, the start of the line (done for detection of stoplines)
+    # For example, the start of the line (done for detection of stop lines)
     # or on a different line in a turn.
     for line in lines:
         line.points = line.points[1:-3]
@@ -69,7 +69,7 @@ def get_lines(image: np.ndarray, calibration: CalibrationData) -> list[Line]:
     return lines
 
 
-def get_stoplines(image: np.ndarray, lines: list[Line], calibration: CalibrationData) -> list[Line]:
+def get_stop_lines(image: np.ndarray, lines: list[Line], calibration: CalibrationData) -> list[Line]:
     """Get the stop lines in the image.
 
     :param lines: The lines in the image.
@@ -90,7 +90,7 @@ def get_stoplines(image: np.ndarray, lines: list[Line], calibration: Calibration
     rotated_lines, window_height = __get_lines(new_img, histogram, calibration, True)
 
     lines = []
-    # rotate the lines to its original position
+    # Rotate the lines to its original position
     for line in rotated_lines:
         points = np.flip(line.points, axis=1)
         points[:, 0] = min_x + points[:, 0]
@@ -98,20 +98,20 @@ def get_stoplines(image: np.ndarray, lines: list[Line], calibration: Calibration
 
         lines.append(Line(points, line_type=LineType.STOP))
 
-    # get the number of windows needed to be at least 2.5 meters long. a stopline will be 3 meters long
+    # Get the number of windows needed to be at least 2.5 meters long. a stop line will be 3 meters long
     min_windows = int(2.5 * calibration.pixels_per_meter) // window_height
     max_windows = int(3.5 * calibration.pixels_per_meter) // window_height
-    return filter_stoplines(lines, window_height, min_windows, max_windows)
-    # return filter_stoplines(lines, window_height, 8, 999)  # noqa: ERA001 Simulator has no real calibration
+    return filter_stop_lines(lines, window_height, min_windows, max_windows)
+    # return filter_stop_lines(lines, window_height, 8, 999)  # noqa: ERA001 Simulator has no real calibration
 
 
-def filter_stoplines(lines: list[Line], window_height: int, minimum_points: int, max_points: int) -> list[Line]:
-    """Filter the stoplines to be actual stoplines.
+def filter_stop_lines(lines: list[Line], window_height: int, minimum_points: int, max_points: int) -> list[Line]:
+    """Filter the stop lines to be actual stop lines.
 
     :param lines: The lines to filter.
     :param window_height: The height of the window.
-    :param minimum_points: The minimum number of points needed to be considered a stopline.
-    :param max_points: The maximum number of points needed to be considered a stopline.
+    :param minimum_points: The minimum number of points needed to be considered a stop line.
+    :param max_points: The maximum number of points needed to be considered a stop line.
     :return: The filtered lines.
     """
     filtered_lines = []
@@ -125,7 +125,7 @@ def filter_stoplines(lines: list[Line], window_height: int, minimum_points: int,
 
 
 def __get_lines(
-    image: np.ndarray, histogram: np.ndarray, calibration: CalibrationData, stopline: bool = False
+    image: np.ndarray, histogram: np.ndarray, calibration: CalibrationData, stop_line: bool = False
 ) -> tuple[list[Line], int]:
     """Get the lines in the image.
 
@@ -144,7 +144,7 @@ def __get_lines(
 
     peaks = scipy.signal.find_peaks(histogram, height=std, distance=window_width * 2)[0]
     windows = [Window(int(center), image.shape[0], window_width // 2, window_count) for center in peaks]
-    lines = window_search(image, window_count, windows, image.shape[0] // window_count, stopline)
+    lines = window_search(image, window_count, windows, image.shape[0] // window_count, stop_line)
     return lines, window_height
 
 
@@ -155,7 +155,6 @@ def __longest_sequence(items: np.ndarray, condition: Callable[[Any], bool]) -> t
     :param condition: The condition to satisfy.
     :return: The start and end index of the subsequence.
     """
-    # use numpy to get the start and end of the longest consecutive True sequence
     bools = np.array([condition(item) for item in items])
     idx = np.where(np.diff(np.hstack(([False], bools, [False]))))[0].reshape(-1, 2)
     if len(idx) == 0:

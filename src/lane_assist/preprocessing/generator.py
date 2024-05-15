@@ -53,7 +53,6 @@ def td_stitched_image_generator(
                 topdown, config.preprocessing.white_threshold, 255, cv2.THRESH_BINARY
             )[1]
 
-            # FIXME: remove telemetry
             if config.telemetry.enabled:
                 telemetry.websocket_handler.send_image("left", left_image)
                 telemetry.websocket_handler.send_image("center", center_image)

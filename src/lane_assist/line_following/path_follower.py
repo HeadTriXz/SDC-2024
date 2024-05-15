@@ -101,7 +101,7 @@ class PathFollower:
         if path.shape[0] == 0:
             return 0
 
-        # get the target point on the path
+        # Get the target point on the path
         target_point = self.__get_path_point(path)
         x_distance_to_target = target_point[0] - car_position
         x_distance_to_target /= self.__calibration.pixels_per_meter

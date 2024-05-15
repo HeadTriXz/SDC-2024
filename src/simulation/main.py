@@ -10,7 +10,7 @@ from src.config import config
 from src.constants import Gear
 from src.driving.speed_controller import SpeedController, SpeedControllerState
 from src.lane_assist.lane_assist import LaneAssist
-from src.lane_assist.stopline_assist import StopLineAssist
+from src.lane_assist.stop_line_assist import StopLineAssist
 from src.simulation.can_controller import SimCanController
 from src.telemetry.app import TelemetryServer
 
