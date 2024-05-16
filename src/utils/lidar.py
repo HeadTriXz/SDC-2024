@@ -29,7 +29,7 @@ class Lidar:
 
     def __init__(self) -> None:
         """Initializes the lidar."""
-        self.lidar = RPLidar(config.lidar.port_name, timeout=3)
+        self.lidar = RPLidar(config.lidar.port_name, timeout=5)
         self.thread = Thread(target=self.capture, daemon=True)
         self.scan_data = np.full(360, np.inf)
 
@@ -50,8 +50,8 @@ class Lidar:
 
         :param angle_min: The minimum angle to check. (180 is the front of the car)
         :param angle_max: The maximum angle to check. (180 is the front of the car)
-        :param distance: The minimum distance to consider the side free.
-        :return: True if the side is free, False otherwise.
+        :param distance: The minimum distance to check.
+        :return: Whether the side is free.
         """
         return self.find_obstacle_distance(angle_min, angle_max) > distance
 
@@ -61,18 +61,8 @@ class Lidar:
             if not self.running:
                 return
 
-            for i, (_, angle, distance) in enumerate(scan, 1):
+            for _, angle, distance in scan:
                 if distance < config.lidar.min_distance:
-                    self.scan_data[floor(angle)] = np.inf
-                    continue
-
-                prev_diff = abs(self.scan_data[i] - self.scan_data[i - 1])
-                next_diff = abs(self.scan_data[i] - self.scan_data[i + 1])
-
-                prev_larger = prev_diff > config.lidar.max_distance_between_points
-                next_larger = next_diff > config.lidar.max_distance_between_points
-
-                if (i > 0 and prev_larger) or ((len(scan) - i) > 0 and next_larger):
                     self.scan_data[floor(angle)] = np.inf
                     continue
 
@@ -81,6 +71,7 @@ class Lidar:
     def start(self) -> None:
         """Start the lidar."""
         self.running = True
+        self.lidar.reset()
         if not self.thread.is_alive():
             self.thread.start()
 
