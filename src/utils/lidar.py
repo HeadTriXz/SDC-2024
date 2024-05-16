@@ -4,7 +4,6 @@ import numpy as np
 from math import floor
 from rplidar import RPLidar
 from threading import Thread
-from typing import Optional
 
 from src.config import config
 
@@ -90,7 +89,7 @@ class Lidar:
         self.running = False
 
     @classmethod
-    def safe_init(cls) -> Optional["Lidar"]:
+    def safe_init(cls) -> "Lidar" | None:
         """Get the lidar sensor.
 
         :return: The lidar sensor.

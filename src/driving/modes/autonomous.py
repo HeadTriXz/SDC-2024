@@ -6,7 +6,7 @@ from src.driving.modes import DrivingMode
 from src.driving.speed_controller import SpeedController, SpeedControllerState
 from src.lane_assist.lane_assist import LaneAssist
 from src.lane_assist.preprocessing.generator import td_stitched_image_generator
-from src.lane_assist.stopline_assist import StopLineAssist
+from src.lane_assist.stop_line_assist import StopLineAssist
 from src.object_recognition.handlers.overtake_handler import OvertakeHandler
 from src.object_recognition.handlers.pedestrian_handler import PedestrianHandler
 from src.object_recognition.handlers.speed_limit_handler import SpeedLimitHandler

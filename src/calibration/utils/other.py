@@ -1,8 +1,6 @@
 import cv2
 import numpy as np
 
-from typing import Optional
-
 from src.calibration.utils.corners import get_transformed_corners
 from src.config import config
 
@@ -66,7 +64,7 @@ def find_intersection(
         line1: tuple[Coordinate, Coordinate],
         line2: tuple[Coordinate, Coordinate],
         segments: bool = True
-) -> Optional[Coordinate]:
+) -> Coordinate | None:
     """Find the intersection between two lines.
 
     :param line1: The first line.

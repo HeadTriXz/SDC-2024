@@ -4,7 +4,6 @@ import threading
 import time
 
 from collections.abc import Callable, Generator
-from typing import Optional
 
 from src.calibration.data import CalibrationData
 from src.config import config
@@ -15,7 +14,7 @@ from src.lane_assist.line_detection.line_detector import filter_lines, get_lines
 from src.lane_assist.line_following.dynamic_speed import get_max_path_speed
 from src.lane_assist.line_following.path_follower import PathFollower
 from src.lane_assist.line_following.path_generator import generate_driving_path
-from src.lane_assist.stopline_assist import StopLineAssist
+from src.lane_assist.stop_line_assist import StopLineAssist
 from src.telemetry.app import TelemetryServer
 
 
@@ -54,13 +53,13 @@ class LaneAssist:
     telemetry: TelemetryServer
 
     __path_follower: PathFollower
-    __stopline_assist: StopLineAssist
+    __stop_line_assist: StopLineAssist
     __calibration: CalibrationData
 
     def __init__(
             self,
             image_generation: Callable[[], Generator[np.ndarray, None, None]],
-            stopline_assist: StopLineAssist,
+            stop_line_assist: StopLineAssist,
             speed_controller: ISpeedController,
             telemetry: TelemetryServer,
             calibration: CalibrationData,
@@ -68,7 +67,7 @@ class LaneAssist:
         """Initialize the lane assist.
 
         :param image_generation: A function that generates images.
-        :param stopline_assist: The stopline assist instance.
+        :param stop_line_assist: The stop line assist instance.
         :param speed_controller: The speed controller.
         :param telemetry: The telemetry server.
         :param calibration: The calibration data.
@@ -80,7 +79,7 @@ class LaneAssist:
         self.requested_lane = config.line_following.requested_lane
         self.telemetry = telemetry
 
-        self.__stopline_assist = stopline_assist
+        self.__stop_line_assist = stop_line_assist
         self.__path_follower = PathFollower(calibration, speed_controller)
         self.__calibration = calibration
 
@@ -94,7 +93,6 @@ class LaneAssist:
         lines = get_lines(image, calibration=self.__calibration)
         filtered_lines = filter_lines(lines, image.shape[1] // 2)
 
-        # FIXME: remove telemetry
         if config.telemetry.enabled:
             rgb = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
 
@@ -112,9 +110,9 @@ class LaneAssist:
         self.__follow_path(filtered_lines, image.shape[1] // 2, self.requested_lane)
 
         self.lines = filtered_lines
-        self.__stopline_assist.detect_and_handle(image, filtered_lines)
+        self.__stop_line_assist.detect_and_handle(image, filtered_lines)
 
-    def start(self, multithreading: bool = False) -> Optional[threading.Thread]:
+    def start(self, multithreading: bool = False) -> threading.Thread | None:
         """Start the lane assist.
 
         This function will start the lane assist. It will generate images and follow the path.
@@ -139,7 +137,7 @@ class LaneAssist:
         This function will follow the path based on the lines in the image.
         If the lane is not available, it will throw an error
 
-        :param lines: the lines in the image.
+        :param lines: The lines in the image.
         :param lane: The lane to follow.
         """
         # Generate the driving path.

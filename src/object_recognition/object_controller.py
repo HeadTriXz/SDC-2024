@@ -1,6 +1,5 @@
 import numpy as np
 
-from typing import Optional
 from ultralytics.engine.results import Boxes
 
 from src.calibration.data import CalibrationData
@@ -66,7 +65,7 @@ class ObjectController:
         """
         return self.lane_assist.requested_lane
 
-    def get_object_lane(self, x: int, y: int, shape: tuple[int, int]) -> Optional[int]:
+    def get_object_lane(self, x: int, y: int, shape: tuple[int, int]) -> int | None:
         """Gets the lane the object is in.
 
         :param x: The x-coordinate of the object.

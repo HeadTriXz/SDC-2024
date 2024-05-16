@@ -1,10 +1,8 @@
 import cv2
 import numpy as np
 
-from typing import Optional
 
-
-def find_largest_rectangle(matrix: np.ndarray) -> Optional[np.ndarray]:
+def find_largest_rectangle(matrix: np.ndarray) -> np.ndarray | None:
     """Find the largest rectangle in a binary matrix.
 
     :param matrix: The binary matrix.

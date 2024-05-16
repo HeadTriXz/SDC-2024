@@ -1,7 +1,7 @@
 import numpy as np
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 from ultralytics.engine.results import Boxes
 
 
@@ -41,7 +41,7 @@ class BaseObjectHandler(ABC):
 
         return Boxes(data, predictions.orig_shape)
 
-    def get_closest_prediction(self, predictions: Boxes) -> Optional[np.ndarray]:
+    def get_closest_prediction(self, predictions: Boxes) -> np.ndarray | None:
         """Gets the closest prediction to the go-kart. We assume the largest bounding box is the closest.
 
         :param predictions: The predictions to search.

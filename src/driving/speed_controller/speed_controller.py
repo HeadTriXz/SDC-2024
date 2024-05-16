@@ -43,7 +43,6 @@ class SpeedController(ISpeedController):
         self.logger = logging.getLogger(__name__)
         self.max_speed = config.kart.speed_modes.selected
 
-        # FIXME: remove telemetry
         self.__thread = threading.Thread(target=self.__debug, daemon=True)
 
     @property

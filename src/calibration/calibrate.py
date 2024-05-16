@@ -3,7 +3,6 @@ import numpy as np
 
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from src.calibration.utils.charuco import find_corners
 from src.calibration.utils.corners import get_border_of_points, get_transformed_corners
@@ -39,15 +38,15 @@ class CameraCalibrator:
 
     board: cv2.aruco.CharucoBoard
     detector: cv2.aruco.CharucoDetector
-    images: Optional[list[np.ndarray]]
-    matrices: Optional[np.ndarray]
-    offsets: Optional[np.ndarray]
-    output_shape: Optional[tuple[int, int]]
-    pixels_per_meter: Optional[float]
+    images: list[np.ndarray] | None
+    matrices: np.ndarray | None
+    offsets: np.ndarray | None
+    output_shape: tuple[int, int] | None
+    pixels_per_meter: float | None
     ref_idx: int
-    shapes: Optional[np.ndarray]
-    stitched_shape: Optional[tuple[int, int]]
-    topdown_matrix: Optional[np.ndarray]
+    shapes: np.ndarray | None
+    stitched_shape: tuple[int, int] | None
+    topdown_matrix: np.ndarray | None
 
     _charuco_corners: list[np.ndarray]
     _charuco_ids: list[np.ndarray]

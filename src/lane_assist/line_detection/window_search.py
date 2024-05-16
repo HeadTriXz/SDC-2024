@@ -14,7 +14,7 @@ def window_search(
         window_count: int,
         windows: Iterable[Window],
         window_height: int,
-        stopline: bool = False
+        stop_line: bool = False
 ) -> list[Line]:
     """Search for the windows in the image.
 
@@ -22,7 +22,7 @@ def window_search(
     :param window_count: The number of windows to search for.
     :param windows: The windows to search for.
     :param window_height: The height of the windows.
-    :param stopline: Whether we are searching for a stopline.
+    :param stop_line: Whether we are searching for a stop line.
     :return: The lines in the image.
     """
     img_center = filtered_img.shape[1] // 2
@@ -58,11 +58,11 @@ def window_search(
 
             window.move(int(center_masses[1]) + left, top)
 
-    line_type = LineType.STOP if stopline else None
+    line_type = LineType.STOP if stop_line else None
     return [
         Line(window.points, window_height, line_type=line_type)
         for window in windows
-        if window.point_index >= 5 or stopline
+        if window.point_index >= 5 or stop_line
     ]
 
 

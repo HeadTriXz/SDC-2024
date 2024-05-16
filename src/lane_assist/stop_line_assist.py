@@ -4,18 +4,13 @@ from src.calibration.data import CalibrationData
 from src.config import config
 from src.driving.speed_controller import ISpeedController, SpeedControllerState
 from src.lane_assist.line_detection.line import Line
-from src.lane_assist.line_detection.line_detector import get_stoplines
+from src.lane_assist.line_detection.line_detector import get_stop_lines
 
 
 class StopLineAssist:
     """Class to assist stopping at stop lines.
 
     This class will assist in stopping at stop lines.
-
-    TODOS:
-    ------
-      - TODO: creep towards the stop line if stopped short of it.
-      - TODO: take into account the speed of the kart.
 
     Attributes
     ----------
@@ -52,14 +47,13 @@ class StopLineAssist:
         if len(filtered_lines) == 0:
             return
 
-        # get stoplines
-        stoplines = get_stoplines(img, filtered_lines, self.__calibration)
-        if len(stoplines) == 0:
+        stop_lines = get_stop_lines(img, filtered_lines, self.__calibration)
+        if len(stop_lines) == 0:
             return
 
         braking_distance = self.speed_controller.get_braking_distance()
 
-        for line in stoplines:
+        for line in stop_lines:
             line_height = np.average(line.points[:, 1])
             distance = self.__calibration.get_distance(img.shape[1] - line_height)
             total_distance = distance - braking_distance

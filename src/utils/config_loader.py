@@ -22,15 +22,15 @@ class ConfigLoader(metaclass=SingletonMeta):
     --------
     ```python
     config = ConfigLoader()
-    config.speed_modes.selected = "${.options.fast}" # set the selected speed mode to the fast option
-    config.speed_modes.options.fast = 100 # set the fast option to 100
+    config.speed_modes.selected = "${.options.fast}" # Set the selected speed mode to the fast option
+    config.speed_modes.options.fast = 100 # Set the fast option to 100
 
     print(config.speed_modes.selected) # prints 100.
 
 
-    config.save_changes() # save the changes to the configuration file without making a backup
-    config.save_changes(True) # save the changes to the configuration file and make a backup
-    config.rollback() # rollback to the previous configuration
+    config.save_changes() # Save the changes to the configuration file without making a backup
+    config.save_changes(True) # Save the changes to the configuration file and make a backup
+    config.rollback() # Rollback to the previous configuration
     ```
 
     """
@@ -103,7 +103,7 @@ class ConfigLoader(metaclass=SingletonMeta):
             # Move the original file to the backup location
             file_path.rename(backup_path)
 
-        # get the differences between the loaded config and the default config and store them
+        # Get the differences between the loaded config and the default config and store them
         diff = self.get_changes()
         OmegaConf.save(diff, file_path)
 
