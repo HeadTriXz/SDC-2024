@@ -59,7 +59,7 @@ def start_simulator() -> None:
     speed_controller = SpeedController(can_controller)
     speed_controller.gear = Gear.DRIVE
     speed_controller.state = SpeedControllerState.DRIVING
-    speed_controller.max_speed = 50
+    speed_controller.max_speed = 12
 
     # Initialize the lane assist
     stop_line_assist = StopLineAssist(speed_controller, calibration)

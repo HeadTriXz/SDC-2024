@@ -25,19 +25,18 @@ class HistogramPeak:
     right: int
 
 
-def basic_filter(img: np.ndarray, calibration: CalibrationData) -> tuple[np.ndarray, list[HistogramPeak]]:
+def basic_filter(image: np.ndarray, calibration: CalibrationData) -> tuple[np.ndarray, list[HistogramPeak]]:
     """Filter the image based on the axis.
 
-    :param img: The image to filter.
+    :param image: The image to filter.
+    :param calibration: The calibration data.
     :return: The filtered image and the peaks.
     """
-    histogram = np.sum(img, axis=1) / 255
-    zebra_height_m = config.line_detection.thresholds.zebra_crossing
-    hpx = calibration.pixels_per_meter * zebra_height_m
+    histogram = np.sum(image, axis=1) / 255
+    hpx = calibration.get_pixels(config.line_detection.thresholds.zebra_crossing)
+    width = calibration.get_pixels(0.5)
 
-    width = calibration.pixels_per_meter * 0.5
     peaks = scipy.signal.find_peaks(histogram, height=hpx, width=width)[0]
-
     widths, _, lefts, rights = scipy.signal.peak_widths(
         histogram, peaks, rel_height=config.line_detection.filtering.rel_height
     )
@@ -46,12 +45,12 @@ def basic_filter(img: np.ndarray, calibration: CalibrationData) -> tuple[np.ndar
     margin = calibration.get_pixels(config.line_detection.filtering.margin)
 
     for peak in histogram_peaks:
-        if peak.width > calibration.pixels_per_meter * 6:
+        if peak.width > calibration.get_pixels(6):
             continue
 
-        left = max(int(peak.left - margin), 0)
-        right = min(int(peak.right + margin), img.shape[1])
+        min_y = max(int(peak.left - margin), 0)
+        max_y = min(int(peak.right + margin), image.shape[0])
 
-        img[left:right] = 0
+        image[min_y:max_y] = 0
 
-    return img, histogram_peaks
+    return image, histogram_peaks

@@ -51,7 +51,7 @@ class PathFollower:
 
         :return: The distance traveled in pixels.
         """
-        min_dist = config.line_following.look_ahead_distance * self.__calibration.pixels_per_meter
+        min_dist = self.__calibration.get_pixels(config.line_following.look_ahead_distance)
 
         lt = self.__pid._last_time
         if lt is None:
@@ -60,7 +60,7 @@ class PathFollower:
         # Get the distance we have traveled
         dt = time.monotonic() - lt
         speed = self.__speed_controller.current_speed / 3.6
-        distance = speed * dt * self.__calibration.pixels_per_meter
+        distance = self.__calibration.get_pixels(speed * dt)
 
         return min_dist + distance
 
@@ -98,10 +98,8 @@ class PathFollower:
         :param car_position: The current x position.
         :return: The steering angle to follow the path.
         """
-        x_distance_to_target = target_point[0] - car_position
-        x_distance_to_target /= self.__calibration.pixels_per_meter
-
-        return -self.__pid(x_distance_to_target)
+        distance = self.__calibration.get_distance(target_point[0] - car_position)
+        return -self.__pid(distance)
 
     def reset(self) -> None:
         """Reset the PID controller."""

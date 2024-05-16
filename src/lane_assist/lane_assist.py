@@ -117,7 +117,7 @@ class LaneAssist:
                     cv2.circle(rgb, (point[0], point[1]), 3, colours[line.line_type], -1)
 
             # Draw the target point on the image.
-            cv2.circle(rgb, (int(target_point[0]), int(target_point[1])), 10, (0, 0, 255), -1)
+            cv2.circle(rgb, (int(target_point[0]), int(target_point[1])), 4, (0, 0, 255), -1)
 
             # Send the image to the telemetry server.
             self.telemetry.websocket_handler.send_image("laneassist", rgb)
