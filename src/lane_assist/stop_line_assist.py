@@ -47,7 +47,7 @@ class StopLineAssist:
         if len(filtered_lines) == 0:
             return
 
-        # Get stop lines
+        # Get stop lines  
         stop_lines = get_stop_lines(img, filtered_lines, self.__calibration)
         if len(stop_lines) == 0:
             return

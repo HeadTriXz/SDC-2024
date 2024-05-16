@@ -49,7 +49,7 @@ def get_lines(image: np.ndarray, calibration: CalibrationData) -> list[Line]:
     # Filter the image. This is done in place and will be used to remove zebra crossings.
     if config.line_detection.filtering.active:
         basic_filter(image, calibration)
-        # Filter_small_clusters(image)  # noqa: ERA001
+        # filter_small_clusters(image)  # noqa: ERA001
 
     # Create histogram to find the start of the lines.
     # This is done by weighting the pixels using a logspace.
@@ -98,7 +98,7 @@ def get_stop_lines(image: np.ndarray, lines: list[Line], calibration: Calibratio
 
         lines.append(Line(points, line_type=LineType.STOP))
 
-    # Get the number of windows needed to be at least 2.5 meters long. a stop line will be 3 meters long
+    # Get the number of windows needed to be at least 2.5 meters long. A stop line will be 3 meters long
     min_windows = int(2.5 * calibration.pixels_per_meter) // window_height
     max_windows = int(3.5 * calibration.pixels_per_meter) // window_height
     return filter_stop_lines(lines, window_height, min_windows, max_windows)
