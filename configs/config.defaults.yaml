@@ -46,7 +46,7 @@ preprocessing:
   white_threshold: 180
 
 line_detection:
-  pixels_in_window: 10
+  pixels_in_window: 3
   window_margin_growth: 0.75  # pixels
 
   window_sizing:

@@ -67,7 +67,9 @@ class SimCanController(ICANController):
 
         self.updating = True
 
-        msg_bytes = int(speed * 36).to_bytes(2, byteorder="big")
+        speed = max(0, int(speed * 36))
+        msg_bytes = speed.to_bytes(2, byteorder="big")
+
         can_msg = can.Message(arbitration_id=CANFeedbackIdentifier.SPEED_SENSOR, data=msg_bytes)
         if CANFeedbackIdentifier.SPEED_SENSOR in self.__listeners:
             for listener in self.__listeners[CANFeedbackIdentifier.SPEED_SENSOR]:

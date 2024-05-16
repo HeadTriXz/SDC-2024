@@ -31,11 +31,13 @@ def process_window(image: np.ndarray, window: Window, window_height: int, stop_l
         left = max(0, min(window.x - int(window.margin), image.shape[1]))
         right = max(0, min(window.x + int(window.margin), image.shape[1]))
 
+        # We should go up if there are no pixels in the window.
         non_zero = np.argwhere(image[top:bottom, left:right])
         if len(non_zero) < config.line_detection.pixels_in_window:
             window.move(window.x, top, False)
             continue
 
+        # Kill the window if we suddenly change direction.
         if window.not_found >= 3:
             x_diff, y_diff = np.mean(window.directions, axis=0)
 
@@ -45,7 +47,10 @@ def process_window(image: np.ndarray, window: Window, window_height: int, stop_l
                 continue
 
         y_shift, x_shift = np.mean(non_zero, axis=0).astype(int)
-        if stop_line:
+
+        # We should go up if we are stuck somewhere.
+        is_stuck = x_shift > window.margin // 2 and y_shift < window_height // 10
+        if is_stuck or stop_line:
             y_shift = 0
 
         window.move(left + x_shift, top + y_shift)
