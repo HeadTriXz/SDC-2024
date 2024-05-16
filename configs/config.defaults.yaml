@@ -47,14 +47,14 @@ preprocessing:
 
 line_detection:
   pixels_in_window: 10
-  window_margin_growth: 0.25 # pixels
+  window_margin_growth: 0.75  # pixels
 
   window_sizing:
-    height: 0.5 # meters
-    width: 1 # meters
+    height: 0.5  # meters
+    width: 1  # meters
 
   thresholds:
-    zebra_crossing: 1.0 # meters
+    zebra_crossing: 1.0  # meters
 
   filtering:
     active: true
@@ -66,7 +66,7 @@ line_following:
   requested_lane: 0
   initial_speed: 5  # km/h
 
-  max_steering_range: 40 # degrees
+  max_steering_range: 40  # degrees
   look_ahead_distance: .5  # meters
 
   pid:

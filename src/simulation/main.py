@@ -2,7 +2,6 @@ import airsim
 import cv2
 import numpy as np
 
-from pathlib import Path
 from typing import Generator
 
 from src.calibration.data import CalibrationData
@@ -23,6 +22,15 @@ def start_simulator() -> None:
     client = airsim.CarClient()
     client.confirmConnection()
 
+    # Load the calibration data
+    calibration = CalibrationData.load(config.calibration.calibration_file)
+
+    factor = 2.0
+    height = calibration.output_shape[1]
+    width = calibration.output_shape[0]
+
+    mx, my = int(width * factor / 2), int(height * factor)
+
     def get_sim_image_generator() -> Generator[np.ndarray, None, None]:
         while True:
             responses = client.simGetImages([airsim.ImageRequest("0", airsim.ImageType.Scene, False, False)])
@@ -37,6 +45,11 @@ def start_simulator() -> None:
             grayscale = cv2.cvtColor(img_rotated[:-20, :], cv2.COLOR_BGR2GRAY)
             grayscale = cv2.threshold(grayscale, config.preprocessing.white_threshold, 255, cv2.THRESH_BINARY)[1]
 
+            cx, cy = grayscale.shape[1] // 2, grayscale.shape[0]
+
+            grayscale = grayscale[cy - my:cy + my, cx - mx:cx + mx]
+            grayscale = cv2.resize(grayscale, (width, height))
+
             if config.telemetry.enabled:
                 telemetry.websocket_handler.send_image("topdown", grayscale)
 
@@ -47,14 +60,6 @@ def start_simulator() -> None:
     speed_controller.gear = Gear.DRIVE
     speed_controller.state = SpeedControllerState.DRIVING
     speed_controller.max_speed = 50
-
-    # Load the calibration data
-    calibration_file = Path(config.calibration.calibration_file)
-    if not calibration_file.exists():
-        raise FileNotFoundError(f"Calibration file not found: {calibration_file}")
-
-    calibration = CalibrationData.load(calibration_file)
-    calibration.pixels_per_meter *= 2
 
     # Initialize the lane assist
     stop_line_assist = StopLineAssist(speed_controller, calibration)

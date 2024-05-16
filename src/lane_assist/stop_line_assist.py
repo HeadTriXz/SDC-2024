@@ -55,7 +55,7 @@ class StopLineAssist:
 
         for line in stop_lines:
             line_height = np.average(line.points[:, 1])
-            distance = self.__calibration.get_distance(img.shape[1] - line_height)
+            distance = self.__calibration.get_distance(img.shape[0] - line_height)
             total_distance = distance - braking_distance
 
             if total_distance > config.traffic_light.min_distance:
