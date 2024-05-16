@@ -61,7 +61,7 @@ class Lidar:
             if not self.running:
                 return
 
-            for _, (_, angle, distance) in enumerate(scan, 1):
+            for _, angle, distance in scan:
                 if distance < config.lidar.min_distance:
                     self.scan_data[floor(angle)] = np.inf
                     continue
