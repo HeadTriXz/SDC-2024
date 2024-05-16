@@ -51,7 +51,7 @@ class Lidar:
 
         :param angle_min: The minimum angle to check. (180 is the front of the car)
         :param angle_max: The maximum angle to check. (180 is the front of the car)
-        :parame to consider the  free, False otherwise.
+        :param distance: The minimum distance to check.
         """
         return self.find_obstacle_distance(angle_min, angle_max) > distance
 
