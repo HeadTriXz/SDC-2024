@@ -63,6 +63,7 @@ class Lidar:
                 return
 
             for _, angle, distance in scan:
+                angle = int(angle % 360)
                 if distance < config.lidar.min_distance:
                     self.scan_data[floor(angle)] = np.inf
                     continue
