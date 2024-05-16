@@ -6,6 +6,10 @@
 </head>
 <body>
     <h1>Dashboard</h1>
+    <div id="controls">
+        <button class="remote_func" id="toggle_driving_mode">Toggle mode</button>
+    </div>
+
     <div id="cameraContainer">
         <websocket-image id="left" root-url="$root-url"></websocket-image>
         <websocket-image id="center" root-url="$root-url"></websocket-image>
@@ -16,8 +20,6 @@
     <websocket-text id="logs" append="true" root-url="$root-url"></websocket-text>
 
     <config-editor root-url="$root-url"></config-editor>
-
-    <button class="remote_func" id="quit"></button>
 
     <script src="js/execute_function.js"></script>
     <script src="js/websocket_text_component.js"></script>

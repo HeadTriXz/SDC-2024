@@ -17,7 +17,7 @@ class Kart:
 
     """
 
-    autonomous: DrivingMode
+    autonomous: AutonomousDriving
     manual: DrivingMode
 
     __autonomous: bool = False
@@ -33,8 +33,10 @@ class Kart:
         self.autonomous = AutonomousDriving(self.__can)
         self.manual = ManualDriving(self.__gamepad, self.__can)
 
-        self.__gamepad.add_listener(GamepadButton.START, EventType.LONG_PRESS, self.__toggle)
-        self.__gamepad.add_listener(GamepadButton.SELECT, EventType.LONG_PRESS, self.__toggle)
+        self.__gamepad.add_listener(GamepadButton.START, EventType.LONG_PRESS, self.__toggle_delayed)
+        self.__gamepad.add_listener(GamepadButton.SELECT, EventType.LONG_PRESS, self.__toggle_delayed)
+
+        self.autonomous.telemetry.add_callback_function("toggle_driving_mode", self.__toggle)
 
     def start(self) -> "Kart":
         """Start the kart and all its components."""
@@ -46,13 +48,17 @@ class Kart:
 
         return self
 
-    def __toggle(self, *_args: Any, **_kwargs: Any) -> None:
-        """Toggle between autonomous and manual driving."""
+    def __toggle_delayed(self, *_args: Any, **_kwargs: Any) -> None:
+        """Toggle between autonomous and manual driving with a delay."""
         if not self.__autonomous:
             for _ in range(3):
                 self.__gamepad.vibrate(300)
                 time.sleep(2)
 
+        self.__toggle()
+
+    def __toggle(self, *_args: Any, **_kwargs: Any) -> None:
+        """Toggle between autonomous and manual driving."""
         self.__autonomous = not self.__autonomous
 
         self.__gamepad.vibrate()
