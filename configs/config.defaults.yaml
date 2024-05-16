@@ -96,8 +96,8 @@ traffic_light:
 overtake:
   consecutive_frames: 3
   min_distance: 6
-  min_angle: 250
-  max_angle: 300
+  min_angle: 230
+  max_angle: 280
   range_threshold: 3000
 
 crosswalk:
