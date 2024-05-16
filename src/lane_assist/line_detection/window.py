@@ -42,7 +42,7 @@ class Window:
         self.collided = False
         self.directions = np.zeros((3, 2), dtype=np.uint8)
         self.found_in_previous = False
-        self.__points = [(x, y)]
+        self.__points = []
 
     @property
     def points(self) -> np.ndarray:
