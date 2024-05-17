@@ -18,9 +18,9 @@ class Window:
 
     """
 
-    collided: bool
+    collided: bool = False
     directions: np.ndarray
-    found_in_previous: bool
+    found_in_previous: bool = False
     margin: int
     not_found: int = 0
     x: int
@@ -39,9 +39,7 @@ class Window:
         self.y = y
         self.margin = margin
 
-        self.collided = False
         self.directions = np.zeros((3, 2), dtype=np.uint8)
-        self.found_in_previous = False
         self.__points = []
 
     @property
@@ -56,18 +54,18 @@ class Window:
         :param y: The new y position.
         :param points: Whether we found points in the window.
         """
-        margin = config.line_detection.window_margin_growth
+        margin = 1 + config.line_detection.window_margin_growth / 100
         if points:
             self.__points.append((x, y))
 
-            self.margin -= margin * self.not_found
+            self.margin //= margin ** self.not_found
             self.found_in_previous = True
             self.not_found = 0
 
             self.directions = np.roll(self.directions, 1, axis=0)
             self.directions[0] = [self.x - x, self.y - y]
         else:
-            self.margin += margin
+            self.margin *= margin
             if self.found_in_previous:
                 self.not_found += 1
 

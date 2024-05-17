@@ -47,13 +47,14 @@ preprocessing:
 
 line_detection:
   pixels_in_window: 3
-  window_margin_growth: 0.75  # pixels
+  window_margin_growth: 45  # percentage
 
   window_sizing:
     height: 0.5  # meters
     width: 1  # meters
 
   thresholds:
+    max_angle_difference: 45  # degrees
     zebra_crossing: 1.0  # meters
 
   filtering:

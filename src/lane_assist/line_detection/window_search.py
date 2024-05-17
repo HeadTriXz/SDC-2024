@@ -41,16 +41,13 @@ def process_window(image: np.ndarray, window: Window, window_height: int, stop_l
         if window.not_found >= 3:
             x_diff, y_diff = np.mean(window.directions, axis=0)
 
-            direction = abs(np.arctan2(y_diff, x_diff) - np.pi / 2)
-            if direction > np.pi / 4:
+            prev_direction = abs(np.arctan2(y_diff, x_diff) * 180 / np.pi - 90)
+            if prev_direction > config.line_detection.thresholds.max_angle_difference:
                 window.collided = True
                 continue
 
         y_shift, x_shift = np.mean(non_zero, axis=0).astype(int)
-
-        # We should go up if we are stuck somewhere.
-        is_stuck = x_shift > window.margin // 2 and y_shift < window_height // 10
-        if is_stuck or stop_line:
+        if stop_line:
             y_shift = 0
 
         window.move(left + x_shift, top + y_shift)
