@@ -57,7 +57,7 @@ def td_stitched_image_generator(
                 telemetry.websocket_handler.send_image("left", left_image)
                 telemetry.websocket_handler.send_image("center", center_image)
                 telemetry.websocket_handler.send_image("right", right_image)
-                telemetry.websocket_handler.send_image("topdown", topdown)
+                telemetry.websocket_handler.send_image("topdown", thresholded)
 
             yield thresholded
 

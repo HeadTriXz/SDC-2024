@@ -46,25 +46,28 @@ preprocessing:
   white_threshold: 180
 
 line_detection:
-  pixels_in_window: 1
-  window_margin_growth: 0.25 # pixels
+  pixels_in_window: 3
+  window_margin_growth: 45  # percentage
 
   window_sizing:
-    height: 0.2 # meters
-    width: 0.5 # meters
+    height: 0.5  # meters
+    width: 1  # meters
 
   thresholds:
-    zebra_crossing: 1.0 # meters
+    max_angle_difference: 45  # degrees
+    zebra_crossing: 1.0  # meters
 
   filtering:
     active: true
     rel_height: 0.9  # percentage
+    min_distance: 1.0  # meters
+    margin: 0.05  # meters
 
 line_following:
   requested_lane: 0
   initial_speed: 5  # km/h
 
-  max_steering_range: 40 # degrees
+  max_steering_range: 40  # degrees
   look_ahead_distance: .5  # meters
 
   pid:

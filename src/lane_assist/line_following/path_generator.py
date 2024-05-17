@@ -36,7 +36,7 @@ class Path:
         self.__fit = np.polyfit(self.points[:, 1], self.points[:, 0], 2)
 
         # Fit polynomial curve to points in real-world coordinates
-        meters_per_pixel = 1 / self.__calibration.pixels_per_meter
+        meters_per_pixel = self.__calibration.get_distance(1)
         fit_cr = np.polyfit(self.points[:, 1] * meters_per_pixel, self.points[:, 0] * meters_per_pixel, 2)[:2]
         y_eval = np.max(self.points[:, 1])
         a, b = fit_cr

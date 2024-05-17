@@ -1,13 +1,13 @@
 kart:
   max_steering_angle: 30
-
   braking:
-    margin: 1.0
     max_force: 100
+    min_force: 10
 
 preprocessing:
   white_threshold: 185
 
 dynamic_speed:
   friction_coefficient: 0.5
+  static: false
   static_speed: 40
