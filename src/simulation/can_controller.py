@@ -14,12 +14,14 @@ class SimCanController(ICANController):
     throttle = 0
     steering = 0
 
-    def __init__(self) -> None:
+    def __init__(self, self_driving: bool = True) -> None:
         """Initialize the can controller."""
         self.update_client = airsim.CarClient()
         self.update_client.confirmConnection()
-        self.update_client.enableApiControl(True)
-        self.update_client.reset()
+
+        self.update_client.enableApiControl(self_driving)
+        if self_driving:
+            self.update_client.reset()
 
         self.get_client = airsim.CarClient()
         self.get_client.confirmConnection()

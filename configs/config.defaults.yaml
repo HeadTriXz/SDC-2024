@@ -47,7 +47,7 @@ preprocessing:
 
 line_detection:
   pixels_in_window: 3
-  window_margin_growth: 45  # percentage
+  window_margin_growth: 0  # percentage
 
   window_sizing:
     height: 0.5  # meters

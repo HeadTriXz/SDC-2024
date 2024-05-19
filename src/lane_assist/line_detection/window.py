@@ -62,8 +62,9 @@ class Window:
             self.found_in_previous = True
             self.not_found = 0
 
-            self.directions = np.roll(self.directions, 1, axis=0)
-            self.directions[0] = [self.x - x, self.y - y]
+            if len(self.__points) > 1:
+                self.directions = np.roll(self.directions, 1, axis=0)
+                self.directions[0] = [self.x - x, self.y - y]
         else:
             self.margin *= margin
             if self.found_in_previous:
