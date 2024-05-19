@@ -105,7 +105,7 @@ class ManualDriving(DrivingMode):
         if abs(value) <= 0.1:
             value = 0.0
 
-        self.can_controller.set_steering(value)
+        self.can_controller.set_steering(value * 1.25)
 
     @check_if("enabled")
     def __set_throttle(self, _button: GamepadButton, _event: EventType, value: float) -> None:

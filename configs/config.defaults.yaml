@@ -1,14 +1,14 @@
 # Kart
 kart:
-  max_steering_angle: 40
+  max_steering_angle: 20
 
   speed_modes:
     selected: ${.options.slow}
     options:
-      slow: 20
-      normal: 40
-      fast: 60
-      very_fast: 80
+      slow: 10
+      normal: 20
+      fast: 30
+      very_fast: 40
 
   braking:
     margin: 1.0
@@ -47,11 +47,11 @@ preprocessing:
 
 line_detection:
   pixels_in_window: 3
-  window_margin_growth: 45  # percentage
+  window_margin_growth: 0  # percentage
 
   window_sizing:
     height: 0.5  # meters
-    width: 1  # meters
+    width: 0.5  # meters
 
   thresholds:
     max_angle_difference: 45  # degrees
@@ -71,7 +71,7 @@ line_following:
   look_ahead_distance: .5  # meters
 
   pid:
-    kp: 20.0
+    kp: 40.0
     ki: 1.0
     kd: 0.5
 

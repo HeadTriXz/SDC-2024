@@ -26,6 +26,7 @@ class Window:
     x: int
     y: int
 
+    __original_margin: int
     __points: list[tuple[int, int]]
 
     def __init__(self, x: int, y: int, margin: int) -> None:
@@ -40,6 +41,7 @@ class Window:
         self.margin = margin
 
         self.directions = np.zeros((3, 2), dtype=np.uint8)
+        self.__original_margin = margin
         self.__points = []
 
     @property
@@ -58,7 +60,7 @@ class Window:
         if points:
             self.__points.append((x, y))
 
-            self.margin //= margin ** self.not_found
+            self.margin = self.__original_margin
             self.found_in_previous = True
             self.not_found = 0
 
@@ -71,15 +73,6 @@ class Window:
 
         self.x = x
         self.y = y
-
-    def collides(self, other: "Window") -> bool:
-        """Check if the window collides with another window.
-
-        :param other: The other window.
-        :return: Whether the window collides with the other window.
-        """
-        return (self.x - self.margin < other.x + other.margin and
-                self.x + self.margin > other.x - other.margin)
 
     def __eq__(self, other: object) -> bool:
         """Check if the windows are equal."""
