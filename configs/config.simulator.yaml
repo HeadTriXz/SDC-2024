@@ -1,8 +1,14 @@
 kart:
-  max_steering_angle: 30
+  max_steering_angle: 20
   braking:
     max_force: 100
-    min_force: 10
+    min_force: 0
+
+line_following:
+  pid:
+    kp: 20.0
+    ki: 1.0
+    kd: 0.5
 
 preprocessing:
   white_threshold: 185

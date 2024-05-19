@@ -41,8 +41,8 @@ def process_window(image: np.ndarray, window: Window, window_height: int, stop_l
         if window.not_found >= 3:
             x_diff, y_diff = np.mean(window.directions, axis=0)
 
-            prev_direction = abs(np.arctan2(y_diff, x_diff) * 180 / np.pi - 90)
-            if prev_direction > config.line_detection.thresholds.max_angle_difference:
+            direction = abs(abs(np.arctan2(y_diff, x_diff) * 180 / np.pi) - 90)
+            if direction > config.line_detection.thresholds.max_angle_difference:
                 window.collided = True
                 continue
 
