@@ -18,8 +18,8 @@ class SimCanController(ICANController):
         """Initialize the can controller."""
         self.update_client = airsim.CarClient()
         self.update_client.confirmConnection()
-        self.update_client.enableApiControl(True)
-        self.update_client.reset()
+        self.update_client.enableApiControl(False)
+        # self.update_client.reset()
 
         self.get_client = airsim.CarClient()
         self.get_client.confirmConnection()

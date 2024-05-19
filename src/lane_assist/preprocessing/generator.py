@@ -39,6 +39,10 @@ def td_stitched_image_generator(
             center_image = center_cam.next()
             right_image = right_cam.next()
 
+            # left_image = cv2.imread("./data/images/unstitched/latest/left.jpg")
+            # center_image = cv2.imread("./data/images/unstitched/latest/center.jpg")
+            # right_image = cv2.imread("./data/images/unstitched/latest/right.jpg")
+
             left_image = __transform_img(left_image)
             center_image = __transform_img(center_image)
             right_image = __transform_img(right_image)
@@ -52,6 +56,8 @@ def td_stitched_image_generator(
             thresholded = cv2.threshold(
                 topdown, config.preprocessing.white_threshold, 255, cv2.THRESH_BINARY
             )[1]
+
+            thresholded = cv2.imread("./download.jpg", cv2.IMREAD_GRAYSCALE)
 
             if config.telemetry.enabled:
                 telemetry.websocket_handler.send_image("left", left_image)
