@@ -18,7 +18,6 @@ class Window:
 
     """
 
-    collided: bool = False
     directions: np.ndarray
     found_in_previous: bool = False
     margin: int
@@ -39,13 +38,18 @@ class Window:
         self.y = y
         self.margin = margin
 
-        self.directions = np.zeros((3, 2), dtype=np.uint8)
+        self.directions = np.zeros((4, 2), dtype=np.int8)
         self.__points = []
 
     @property
     def points(self) -> np.ndarray:
         """Get the points in the window."""
         return np.array(self.__points)
+
+    @property
+    def point_count(self) -> int:
+        """Get the number of points in the window."""
+        return len(self.__points)
 
     def move(self, x: int, y: int, points: bool = True) -> None:
         """Move the window to a new position.
@@ -73,18 +77,3 @@ class Window:
         self.x = x
         self.y = y
 
-    def collides(self, other: "Window") -> bool:
-        """Check if the window collides with another window.
-
-        :param other: The other window.
-        :return: Whether the window collides with the other window.
-        """
-        return (self.x - self.margin < other.x + other.margin and
-                self.x + self.margin > other.x - other.margin)
-
-    def __eq__(self, other: object) -> bool:
-        """Check if the windows are equal."""
-        if not isinstance(other, Window):
-            return NotImplemented
-
-        return self.x == other.x and self.y == other.y
