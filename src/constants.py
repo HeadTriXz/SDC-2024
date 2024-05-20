@@ -71,12 +71,11 @@ class Label(IntEnum):
     CROSSWALK = 2
     TRAFFIC_LIGHT_RED = 3
     TRAFFIC_LIGHT_GREEN = 4
-    SPEED_LIMIT_5 = 5
-    SPEED_LIMIT_10 = 6
-    SPEED_LIMIT_15 = 7
-    SPEED_LIMIT_20 = 8
-    SPEED_LIMIT_30 = 9
-    SPEED_LIMIT_40 = 10
+    PARKING_SPACE = 5
+    SPEED_LIMIT_5 = 6
+    SPEED_LIMIT_10 = 7
+    SPEED_LIMIT_15 = 8
+    SPEED_LIMIT_20 = 9
 
 
 class SpeedMode(IntEnum):
