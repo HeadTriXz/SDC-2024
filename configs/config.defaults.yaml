@@ -26,7 +26,8 @@ preprocessing:
 
 line_detection:
   pixels_in_window: 3
-  window_margin_growth: 0  # percentage
+  window_margin_growth: 0  # Percentage, relative to the window width.
+  min_window_shift: 0.6 # Percentage, relative to the window height.
 
   window_sizing:
     height: 0.5  # meters
