@@ -8,7 +8,13 @@ from src.lane_assist.line_detection.line import Line, LineType
 from src.lane_assist.line_detection.window import Window
 
 
-def process_window(image: np.ndarray, window: Window, window_height: int, stop_line: bool, rgb_image) -> Line | None:
+def process_window(
+        image: np.ndarray,
+        window: Window,
+        window_height: int,
+        stop_line: bool,
+        rgb_image: np.ndarray
+) -> Line | None:
     """Process the window.
 
     :param image: The image to process.
@@ -18,78 +24,44 @@ def process_window(image: np.ndarray, window: Window, window_height: int, stop_l
     :return: The processed window.
     """
     while True:
-        top = max(0, min(window.y - window_height, image.shape[0]))
-        bottom = max(0, min(window.y, image.shape[0]))
-        left = max(0, min(window.x - int(window.margin), image.shape[1]))
-        right = max(0, min(window.x + int(window.margin), image.shape[1]))
+        top = max(0, min(int(window.y) - window_height, image.shape[0]))
+        bottom = max(0, min(int(window.y), image.shape[0]))
+        left = max(0, min(int(window.x) - int(window.margin), image.shape[1]))
+        right = max(0, min(int(window.x) + int(window.margin), image.shape[1]))
 
-        if window.y - window_height < 0:
-            # draw a red box if the window is out of bounds
-            cv2.rectangle(rgb_image, (left, top), (right, bottom), (0, 0, 255), 1)
-            break
-
-        if window.x - window.margin // 3 < 0:
-            cv2.rectangle(rgb_image, (left, top), (right, bottom), (0, 0, 255), 1)
-            break
-
-        if window.x + window.margin // 3 >= image.shape[1]:
-            cv2.rectangle(rgb_image, (left, top), (right, bottom), (0, 0, 255), 1)
+        # check if the  window is at the edge of the image
+        if __window_at_bounds(image, window, window_height):
+            cv2.rectangle(rgb_image, (left, top), (right, bottom), (0, 0, 255), 1)  # FIXME: remove debug
             break
 
         # We should go up if there are no pixels in the window.
         non_zero = np.argwhere(image[top:bottom, left:right])
         if len(non_zero) < config.line_detection.pixels_in_window:
-            # get the difference of the last 3 points in each axis
-            if len(window.points) >= 3:
-                # get the latest move of the window
-                x_diff, y_diff = np.diff(window.points, axis=0).mean(axis=0)
-                x_shift = int(x_diff)
-                y_shift = int(y_diff)
-
-                cv2.line(rgb_image, (window.x, window.y), (window.x + x_shift, window.y + y_shift), (255, 0, 255), 1)
-                window.move(window.x + x_shift, window.y + y_shift, False)
-
-            else:
-                window.move(window.x, top, False)
-
+            __shift_no_points(window, window_height, rgb_image)
             continue
 
         y_shift, x_shift = np.mean(non_zero, axis=0).astype(int)
 
         # check if we move at least 2 px
-        if np.linalg.norm([x_shift, y_shift]) < 5 and len(window.points) >= 2:
-            try:
-                diffs = np.diff(window.points[-2:], axis=0)
-                x_diff, y_diff = diffs[:, 0], diffs[:, 1]
-
-                x_diff = x_diff.mean()
-                y_diff = y_diff.mean()
-
-                x_shift = int(x_diff)
-                y_shift = int(y_diff)
-
-                cv2.line(rgb_image, (window.x, window.y), (window.x + x_shift, window.y + y_shift), (255, 0, 255), 1)
-                window.move(window.x + x_shift, window.y + y_shift, False)
-                continue
-
-            except Exception as e:
-                pass
+        if np.linalg.norm([x_shift, y_shift]) < window_height * 0.5:
+            __shift_no_points(window, window_height, rgb_image)
+            continue
 
         # Kill the window if we suddenly change direction.
-        if window.not_found >= 3 and len(window.points) >= 3:
+        if window.not_found >= 3 and window.point_count > len(window.directions):
             # get the angle from the last known point to the current point
-            last_point = window.points[-2]
+            last_point = window.points[-1]
             current_point = [window.x, window.y]
-            x_diff, y_diff = current_point - last_point
-            current_direction = abs(np.arctan2(y_diff, x_diff) * 180 / np.pi - 90)
+            x_diff, y_diff = np.subtract(last_point, current_point)
+            current_direction = abs(np.arctan2(y_diff, x_diff) * 180 / np.pi)
 
             # get the angle of the line
-            prev_point = window.points[-3]
-            x_diff, y_diff = np.diff([prev_point, last_point], axis=0).mean(axis=0)
-            prev_direction = abs(np.arctan2(y_diff, x_diff) * 180 / np.pi - 90)
+            x_diff, y_diff = window.directions.mean(axis=0)
+            prev_direction = abs(np.arctan2(y_diff, x_diff) * 180 / np.pi)
 
             angle_diff = abs(prev_direction - current_direction)
             if angle_diff > config.line_detection.thresholds.max_angle_difference:
+                # FIXME: remove debug
                 # draw pink box if the window is killed
                 cv2.rectangle(rgb_image, (left, top), (right, bottom), (255, 0, 255), 1)
                 # write the angle difference
@@ -98,21 +70,20 @@ def process_window(image: np.ndarray, window: Window, window_height: int, stop_l
                 )
                 break
 
-
         if stop_line:
             y_shift = 0
 
+        # FIXME: remove debug
         # draw a blue line segment if we found pixels in the window
-        cv2.line(rgb_image, (window.x, window.y), (left + x_shift, top + y_shift), (255, 0, 0), 1)
+        cv2.line(rgb_image, (int(window.x), int(window.y)), (left + x_shift, top + y_shift), (255, 0, 0), 1)
 
         window.move(left + x_shift, top + y_shift)
 
-    points = window.points
-    if len(points) < 5 and not stop_line:
+    if window.point_count < 5 and not stop_line:
         return None
 
     line_type = LineType.STOP if stop_line else None
-    return Line(points, window_height, line_type)
+    return Line(window.points, window_height, line_type)
 
 
 def window_search(
@@ -126,6 +97,7 @@ def window_search(
     :param stop_line: Whether we are searching for a stop line.
     :return: The lines in the image.
     """
+    # FIXME: remove debug
     rgb_image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
 
     lines = []
@@ -134,8 +106,44 @@ def window_search(
         if line is not None:
             lines.append(line)
 
+    # FIXME: remove debug
     # save the image with the windows drawn on it
     cv2.imshow("stop" if stop_line else "driving", rgb_image)
     cv2.waitKey(1)
 
     return lines
+
+
+def __get_avg_window_shift(window: Window) -> tuple[int, int]:
+    """Get the average shift of the window."""
+    if window.point_count < 2:
+        return 0, 0
+
+    return np.diff(window.points, axis=0).mean(axis=0)
+
+
+def __shift_no_points(window: Window, window_height: int, rgb_image: np.ndarray) -> None:
+    if window.point_count >= 3:
+        x_shift, y_shift = window.directions.mean(axis=0)
+        # FIXME: remove debug
+        cv2.line(
+            rgb_image,
+            (int(window.x), int(window.y)),
+            (int(window.x + x_shift), int(window.y + y_shift)),
+            (255, 0, 255),
+            1,
+        )
+        window.move(window.x - x_shift, window.y - y_shift, False)
+    else:
+        window.move(window.x, window.y - window_height, False)
+
+
+def __window_at_bounds(image: np.ndarray, window: Window, window_height: int) -> bool:
+    """Check if the window is at the bounds of the image."""
+    return any(
+        [
+            window.y - window_height < 0,
+            window.x - window.margin // 3 < 0,
+            window.x + window.margin // 3 >= image.shape[1],
+        ]
+    )
