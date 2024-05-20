@@ -51,8 +51,6 @@ def td_stitched_image_generator(
             topdown = calibration.transform([left_image, center_image, right_image])
             thresholded = cv2.threshold(topdown, config.preprocessing.white_threshold, 255, cv2.THRESH_BINARY)[1]
 
-            thresholded = cv2.imread("./download.jpg", cv2.IMREAD_GRAYSCALE)
-
             if config.telemetry.enabled:
                 telemetry.websocket_handler.send_image("left", left_image)
                 telemetry.websocket_handler.send_image("center", center_image)
