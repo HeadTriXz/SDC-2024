@@ -1,6 +1,6 @@
 # Kart
 kart:
-  max_steering_angle: 40
+  max_steering_angle: 20
 
   speed_modes:
     selected: ${.options.slow}
@@ -14,27 +14,6 @@ kart:
     margin: 1.0
     max_force: 50
     min_force: 30
-
-camera_ids:
-  left: 0
-  center: 0
-  right: 0
-
-# Camera Calibration
-calibration:
-  aruco_dict: 1  # DICT_4X4_100
-  board_height: 8
-  board_width: 10
-  calibration_file: "${.save_dir}/latest.npz"
-  max_image_height: 400
-  max_image_width: 200
-  marker_length: 0.086
-  render_distance:
-    front: 12.0
-    side: 5.0
-  save_dir: "./data/calibration"
-  square_length: 0.115
-  vanishing_line_offset: 0.02
 
 # Lane Assist
 preprocessing:
@@ -64,7 +43,10 @@ line_detection:
     margin: 0.05  # meters
 
 line_following:
-  requested_lane: 0
+  requested_lane:
+    override: false
+    lane: 1
+
   initial_speed: 5  # km/h
 
   max_steering_range: 40  # degrees
@@ -74,6 +56,34 @@ line_following:
     kp: 20.0
     ki: 1.0
     kd: 0.5
+
+dynamic_speed:
+  friction_coefficient: 0.3
+  static: false
+  static_speed: 10
+
+
+camera_ids:
+  left: 0
+  center: 0
+  right: 0
+
+# Camera Calibration
+calibration:
+  aruco_dict: 1  # DICT_4X4_100
+  board_height: 8
+  board_width: 10
+  calibration_file: "${.save_dir}/latest.npz"
+  max_image_height: 400
+  max_image_width: 200
+  marker_length: 0.086
+  render_distance:
+    front: 12.0
+    side: 5.0
+  save_dir: "./data/calibration"
+  square_length: 0.115
+  vanishing_line_offset: 0.02
+
 
 # Object Detection
 object_detection:
@@ -115,11 +125,6 @@ telemetry:
     port: 8000
     host: 0.0.0.0
     root_url: 192.168.1.89
-
-dynamic_speed:
-  friction_coefficient: 0.3
-  static: false
-  static_speed: 10
 
 lidar:
   port_name: "/dev/ttyUSB0"

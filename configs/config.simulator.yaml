@@ -5,7 +5,7 @@ kart:
     min_force: 10
 
 preprocessing:
-  white_threshold: 185
+  white_threshold: 173
 
 dynamic_speed:
   friction_coefficient: 0.5
