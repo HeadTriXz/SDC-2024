@@ -17,21 +17,23 @@ def process_window(image: np.ndarray, window: Window, window_height: int, stop_l
     :return: The processed window.
     """
     while True:
+        # Check if the window is at the edge of the image. If it is, we should stop.
+        if __window_at_bounds(image, window, window_height):
+            break
+
         top = max(0, min(int(window.y) - window_height, image.shape[0]))
         bottom = max(0, min(int(window.y), image.shape[0]))
         left = max(0, min(int(window.x) - int(window.margin), image.shape[1]))
         right = max(0, min(int(window.x) + int(window.margin), image.shape[1]))
 
-        # Check if the window is at the edge of the image. If it is, we should stop.
-        if __window_at_bounds(image, window, window_height):
-            break
-
-        # We should go up if there are no pixels in the window.
         non_zero = np.argwhere(image[top:bottom, left:right])
+
+        # Move the window if there are not enough points in it
         if len(non_zero) < config.line_detection.pixels_in_window:
             __shift_no_points(window, window_height)
             continue
 
+        # Get the average position of the points
         y_shift, x_shift = np.mean(non_zero, axis=0).astype(int)
 
         # Make sure we will move at least a certain amount. If not, we handle it as no pixels in the window.
@@ -104,7 +106,13 @@ def __shift_no_points(window: Window, window_height: int) -> None:
 
 
 def __window_at_bounds(image: np.ndarray, window: Window, window_height: int) -> bool:
-    """Check if the window is at the bounds of the image."""
+    """Check if the window is at the bounds of the image.
+
+    :param image: The image to check.
+    :param window: The window to check.
+    :param window_height: The height of the window.
+    :return: Whether the window is at the bounds.
+    """
     return any(
         [
             window.y - window_height < 0,
