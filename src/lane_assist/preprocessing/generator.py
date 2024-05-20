@@ -39,10 +39,6 @@ def td_stitched_image_generator(
             center_image = center_cam.next()
             right_image = right_cam.next()
 
-            # left_image = cv2.imread("./data/images/unstitched/latest/left.jpg")
-            # center_image = cv2.imread("./data/images/unstitched/latest/center.jpg")
-            # right_image = cv2.imread("./data/images/unstitched/latest/right.jpg")
-
             left_image = __transform_img(left_image)
             center_image = __transform_img(center_image)
             right_image = __transform_img(right_image)
