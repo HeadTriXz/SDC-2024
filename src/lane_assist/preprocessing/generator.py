@@ -15,7 +15,7 @@ def td_stitched_image_generator(
     left_cam: VideoStream,
     center_cam: VideoStream,
     right_cam: VideoStream,
-    telemetry: TelemetryServer
+    telemetry: TelemetryServer,
 ) -> Callable[[], Generator[np.ndarray, None, None]]:
     """Generate a picture from the cameras.
 
@@ -49,9 +49,7 @@ def td_stitched_image_generator(
                 right_image = gamma_adjuster.adjust(right_image, config.preprocessing.gamma.right)
 
             topdown = calibration.transform([left_image, center_image, right_image])
-            thresholded = cv2.threshold(
-                topdown, config.preprocessing.white_threshold, 255, cv2.THRESH_BINARY
-            )[1]
+            thresholded = cv2.threshold(topdown, config.preprocessing.white_threshold, 255, cv2.THRESH_BINARY)[1]
 
             if config.telemetry.enabled:
                 telemetry.websocket_handler.send_image("left", left_image)

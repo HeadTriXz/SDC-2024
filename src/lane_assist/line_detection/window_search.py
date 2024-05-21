@@ -16,55 +16,64 @@ def process_window(image: np.ndarray, window: Window, window_height: int, stop_l
     :param stop_line: Whether we are searching for a stop line.
     :return: The processed window.
     """
-    while not window.collided:
-        if window.y - window_height < 0:
+    while True:
+        if __window_at_bounds(image, window, window_height):
             break
 
-        if window.x - window.margin // 3 < 0:
-            break
+        top = max(0, min(int(window.y) - window_height, image.shape[0]))
+        bottom = max(0, min(int(window.y), image.shape[0]))
+        left = max(0, min(int(window.x) - int(window.margin), image.shape[1]))
+        right = max(0, min(int(window.x) + int(window.margin), image.shape[1]))
 
-        if window.x + window.margin // 3 >= image.shape[1]:
-            break
-
-        top = max(0, min(window.y - window_height, image.shape[0]))
-        bottom = max(0, min(window.y, image.shape[0]))
-        left = max(0, min(window.x - int(window.margin), image.shape[1]))
-        right = max(0, min(window.x + int(window.margin), image.shape[1]))
-
-        # We should go up if there are no pixels in the window.
         non_zero = np.argwhere(image[top:bottom, left:right])
+
+        # Move the window if there are not enough points in it
         if len(non_zero) < config.line_detection.pixels_in_window:
-            window.move(window.x, top, False)
+            __shift_no_points(window, window_height)
             continue
 
-        # Kill the window if we suddenly change direction.
-        if window.not_found >= 3:
-            x_diff, y_diff = np.mean(window.directions, axis=0)
+        # Get the average position of the points
+        y_shift, x_shift = np.mean(non_zero, axis=0).astype(int)
+        new_pos = [window.x + x_shift, window.y + y_shift]
 
-            direction = abs(abs(np.arctan2(y_diff, x_diff) * 180 / np.pi) - 90)
-            if direction > config.line_detection.thresholds.max_angle_difference:
-                window.collided = True
+        # Make sure we will move at least a certain amount. If not, we handle it as no pixels in the window.
+        # This prevents points from clumping together at the end of lines.
+        # This can only be done if we already have found points.
+        if window.point_count > 0:
+            dist_to_last_point = np.linalg.norm(np.subtract(window.points[-1], new_pos))
+            if dist_to_last_point < window_height * config.line_detection.min_window_shift:
+                __shift_no_points(window, window_height)
                 continue
 
-        y_shift, x_shift = np.mean(non_zero, axis=0).astype(int)
+        # Kill the window if we suddenly change direction.
+        if window.not_found >= 3 and window.point_count > len(window.directions):
+            # Get the angle of the last point to the current point.
+            x_diff, y_diff = np.subtract(window.points[-1], [window.x, window.y])
+            current_direction = abs(np.arctan2(y_diff, x_diff) * 180 / np.pi)
+
+            # Get the angle of the line
+            x_diff, y_diff = window.directions.mean(axis=0)
+            prev_direction = abs(np.arctan2(y_diff, x_diff) * 180 / np.pi)
+
+            angle_diff = abs(prev_direction - current_direction)
+            if angle_diff > config.line_detection.thresholds.max_angle_difference:
+                break
+
+        # If we have a stop line, we don't need to move it less than the window height
         if stop_line:
             y_shift = 0
 
         window.move(left + x_shift, top + y_shift)
 
-    points = window.points
-    if len(points) < 5 and not stop_line:
+    if window.point_count < 5 and not stop_line:
         return None
 
     line_type = LineType.STOP if stop_line else None
-    return Line(points, window_height, line_type)
+    return Line(window.points, window_height, line_type)
 
 
 def window_search(
-        image: np.ndarray,
-        windows: Iterable[Window],
-        window_height: int,
-        stop_line: bool = False
+    image: np.ndarray, windows: Iterable[Window], window_height: int, stop_line: bool = False
 ) -> list[Line]:
     """Search for the windows in the image.
 
@@ -81,3 +90,34 @@ def window_search(
             lines.append(line)
 
     return lines
+
+
+def __shift_no_points(window: Window, window_height: int) -> None:
+    """Shift the window if there are no points in it.
+
+    This will shift the window in the same direction as previous windows if enough are found.
+    If not, it will move the window upward.
+
+    :param window: The window to shift.
+    :param window_height: The height of the window.
+    """
+    if window.point_count >= 3:
+        x_shift, y_shift = window.directions.mean(axis=0)
+        window.move(window.x - x_shift, window.y - y_shift, False)
+    else:
+        window.move(window.x, window.y - window_height, False)
+
+
+def __window_at_bounds(image: np.ndarray, window: Window, window_height: int) -> bool:
+    """Check if the window is at the bounds of the image.
+
+    :param image: The image to check.
+    :param window: The window to check.
+    :param window_height: The height of the window.
+    :return: Whether the window is at the bounds.
+    """
+    return (
+        window.y - window_height < 0
+        or window.x - window.margin // 3 < 0
+        or window.x + window.margin // 3 >= image.shape[1]
+    )

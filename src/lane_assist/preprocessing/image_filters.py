@@ -32,7 +32,7 @@ def basic_filter(image: np.ndarray, calibration: CalibrationData) -> tuple[np.nd
     :param calibration: The calibration data.
     :return: The filtered image and the peaks.
     """
-    histogram = np.sum(image, axis=1) / 255
+    histogram = np.concatenate([[0], np.sum(image, axis=1) / 255, [0]])
     hpx = calibration.get_pixels(config.line_detection.thresholds.zebra_crossing)
     width = calibration.get_pixels(0.5)
 
@@ -48,8 +48,8 @@ def basic_filter(image: np.ndarray, calibration: CalibrationData) -> tuple[np.nd
         if peak.width > calibration.get_pixels(6):
             continue
 
-        min_y = max(int(peak.left - margin), 0)
-        max_y = min(int(peak.right + margin), image.shape[0])
+        min_y = max(int(peak.left - margin) - 1, 0)
+        max_y = min(int(peak.right + margin) - 1, image.shape[0] - 1)
 
         image[min_y:max_y] = 0
 

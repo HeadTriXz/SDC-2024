@@ -15,6 +15,54 @@ kart:
     max_force: 50
     min_force: 30
 
+# Lane Assist
+preprocessing:
+  gamma:
+    enabled: true
+    left: 0.62
+    center: 1.0
+    right: 0.62
+  white_threshold: 180
+
+line_detection:
+  pixels_in_window: 3
+  window_margin_growth: 0  # Percentage, relative to the window width.
+  min_window_shift: 0.3 # Percentage, relative to the window height.
+
+  window_sizing:
+    height: 0.5  # meters
+    width: 1  # meters
+
+  thresholds:
+    max_angle_difference: 45  # degrees
+    zebra_crossing: 1.0  # meters
+
+  filtering:
+    active: true
+    rel_height: 0.9  # percentage
+    min_distance: 1.0  # meters
+    margin: 0.05  # meters
+
+line_following:
+  requested_lane:
+    override: false
+    lane: 1
+
+  initial_speed: 5  # km/h
+
+  max_steering_range: 20  # degrees
+  look_ahead_distance: .5  # meters
+
+  pid:
+    kp: 40.0
+    ki: 1.0
+    kd: 0.5
+
+dynamic_speed:
+  friction_coefficient: 0.3
+  static: false
+  static_speed: 10
+
 camera_ids:
   left: 0
   center: 0
@@ -36,44 +84,6 @@ calibration:
   square_length: 0.115
   vanishing_line_offset: 0.02
 
-# Lane Assist
-preprocessing:
-  gamma:
-    enabled: true
-    left: 0.62
-    center: 1.0
-    right: 0.62
-  white_threshold: 180
-
-line_detection:
-  pixels_in_window: 3
-  window_margin_growth: 0  # percentage
-
-  window_sizing:
-    height: 0.5  # meters
-    width: 0.5  # meters
-
-  thresholds:
-    max_angle_difference: 45  # degrees
-    zebra_crossing: 1.0  # meters
-
-  filtering:
-    active: true
-    rel_height: 0.9  # percentage
-    min_distance: 1.0  # meters
-    margin: 0.05  # meters
-
-line_following:
-  requested_lane: 0
-  initial_speed: 5  # km/h
-
-  max_steering_range: 40  # degrees
-  look_ahead_distance: .5  # meters
-
-  pid:
-    kp: 40.0
-    ki: 1.0
-    kd: 0.5
 
 # Object Detection
 object_detection:
@@ -119,11 +129,6 @@ telemetry:
 gamepad:
   max_trig_bits: 10
   max_joy_bits: 15
-
-dynamic_speed:
-  friction_coefficient: 0.3
-  static: false
-  static_speed: 10
 
 lidar:
   port_name: "/dev/ttyUSB0"

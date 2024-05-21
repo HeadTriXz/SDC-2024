@@ -11,7 +11,7 @@ line_following:
     kd: 0.5
 
 preprocessing:
-  white_threshold: 185
+  white_threshold: 173
 
 dynamic_speed:
   friction_coefficient: 0.5

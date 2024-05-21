@@ -1,4 +1,4 @@
-import numpy as np
+import math
 
 from src.config import config
 from src.lane_assist.line_following.path_generator import Path
@@ -11,7 +11,7 @@ def get_max_corner_speed(radius: float, friction_coefficient: float = 0.9) -> fl
     :param friction_coefficient: The friction coefficient of the road.
     :return: The max speed around the circle in m/s.
     """
-    return np.sqrt(friction_coefficient * 9.81 * radius)
+    return math.sqrt(friction_coefficient * 9.81 * radius)
 
 
 def get_max_path_speed(path: Path) -> int:

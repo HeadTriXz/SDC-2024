@@ -18,16 +18,14 @@ class Window:
 
     """
 
-    collided: bool = False
     directions: np.ndarray
-    found_in_previous: bool = False
     margin: int
     not_found: int = 0
     x: int
     y: int
 
-    __original_margin: int
     __points: list[tuple[int, int]]
+    __original_margin: int
 
     def __init__(self, x: int, y: int, margin: int) -> None:
         """Initialize the window.
@@ -40,14 +38,19 @@ class Window:
         self.y = y
         self.margin = margin
 
-        self.directions = np.zeros((3, 2), dtype=np.uint8)
-        self.__original_margin = margin
+        self.directions = np.zeros((4, 2), dtype=np.int8)
         self.__points = []
+        self.__original_margin = margin
 
     @property
     def points(self) -> np.ndarray:
         """Get the points in the window."""
         return np.array(self.__points)
+
+    @property
+    def point_count(self) -> int:
+        """Get the number of points in the window."""
+        return len(self.__points)
 
     def move(self, x: int, y: int, points: bool = True) -> None:
         """Move the window to a new position.
@@ -61,22 +64,16 @@ class Window:
             self.__points.append((x, y))
 
             self.margin = self.__original_margin
-            self.found_in_previous = True
             self.not_found = 0
 
-            self.directions = np.roll(self.directions, 1, axis=0)
-            self.directions[0] = [self.x - x, self.y - y]
+            if len(self.__points) > 1:
+                self.directions = np.roll(self.directions, 1, axis=0)
+                self.directions[0] = [self.x - x, self.y - y]
         else:
             self.margin *= margin
-            if self.found_in_previous:
+            if len(self.__points) > 0:
                 self.not_found += 1
 
         self.x = x
         self.y = y
 
-    def __eq__(self, other: object) -> bool:
-        """Check if the windows are equal."""
-        if not isinstance(other, Window):
-            return NotImplemented
-
-        return self.x == other.x and self.y == other.y
