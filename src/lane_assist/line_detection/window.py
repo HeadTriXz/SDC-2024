@@ -8,9 +8,7 @@ class Window:
 
     Attributes
     ----------
-        collided: Whether the window collided with another window.
         directions: The directions of the window.
-        found_in_previous: Whether we found points in the previous window.
         margin: The margin of the window.
         not_found: The amount of times the window was not found.
         x: The x position of the window.
@@ -76,4 +74,3 @@ class Window:
 
         self.x = x
         self.y = y
-

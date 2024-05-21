@@ -72,7 +72,10 @@ def process_window(image: np.ndarray, window: Window, window_height: int, stop_l
 
 
 def window_search(
-    image: np.ndarray, windows: Iterable[Window], window_height: int, stop_line: bool = False
+        image: np.ndarray,
+        windows: Iterable[Window],
+        window_height: int,
+        stop_line: bool = False
 ) -> list[Line]:
     """Search for the windows in the image.
 
