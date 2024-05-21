@@ -13,4 +13,4 @@ if __name__ == "__main__":
 
         start_simulator()
     else:
-        kart = Kart().start()
+        Kart().start()

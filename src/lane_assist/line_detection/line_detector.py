@@ -69,7 +69,6 @@ def get_stop_lines(image: np.ndarray, lines: list[Line], calibration: Calibratio
     """
     # Get the bounding box of the lines.
     points = __lines_to_points(lines)
-
     if len(points) == 0:
         return []
 

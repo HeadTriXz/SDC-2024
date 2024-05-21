@@ -76,9 +76,9 @@ class LaneAssist:
         self.speed_controller = speed_controller
         self.image_generator = image_generation
         self.lines = []
-        self.__requested_lane = config.line_following.requested_lane.lane
         self.telemetry = telemetry
 
+        self.__requested_lane = config.line_following.requested_lane.lane
         self.__stop_line_assist = stop_line_assist
         self.__path_follower = PathFollower(calibration, speed_controller)
         self.__calibration = calibration

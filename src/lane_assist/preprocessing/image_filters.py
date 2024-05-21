@@ -49,7 +49,7 @@ def basic_filter(image: np.ndarray, calibration: CalibrationData) -> tuple[np.nd
             continue
 
         min_y = max(int(peak.left - margin) - 1, 0)
-        max_y = min(int(peak.right + margin), image.shape[0])
+        max_y = min(int(peak.right + margin) - 1, image.shape[0] - 1)
 
         image[min_y:max_y] = 0
 

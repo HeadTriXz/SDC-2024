@@ -63,7 +63,6 @@ dynamic_speed:
   static: false
   static_speed: 10
 
-
 camera_ids:
   left: 0
   center: 0

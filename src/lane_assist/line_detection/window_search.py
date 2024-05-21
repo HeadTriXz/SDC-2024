@@ -17,7 +17,6 @@ def process_window(image: np.ndarray, window: Window, window_height: int, stop_l
     :return: The processed window.
     """
     while True:
-        # Check if the window is at the edge of the image. If it is, we should stop.
         if __window_at_bounds(image, window, window_height):
             break
 
@@ -52,7 +51,7 @@ def process_window(image: np.ndarray, window: Window, window_height: int, stop_l
             x_diff, y_diff = np.subtract(window.points[-1], [window.x, window.y])
             current_direction = abs(np.arctan2(y_diff, x_diff) * 180 / np.pi)
 
-            # get the angle of the line
+            # Get the angle of the line
             x_diff, y_diff = window.directions.mean(axis=0)
             prev_direction = abs(np.arctan2(y_diff, x_diff) * 180 / np.pi)
 
@@ -74,7 +73,7 @@ def process_window(image: np.ndarray, window: Window, window_height: int, stop_l
 
 
 def window_search(
-        image: np.ndarray, windows: Iterable[Window], window_height: int, stop_line: bool = False
+    image: np.ndarray, windows: Iterable[Window], window_height: int, stop_line: bool = False
 ) -> list[Line]:
     """Search for the windows in the image.
 
@@ -117,10 +116,8 @@ def __window_at_bounds(image: np.ndarray, window: Window, window_height: int) ->
     :param window_height: The height of the window.
     :return: Whether the window is at the bounds.
     """
-    return any(
-        [
-            window.y - window_height < 0,
-            window.x - window.margin // 3 < 0,
-            window.x + window.margin // 3 >= image.shape[1],
-        ]
+    return (
+        window.y - window_height < 0
+        or window.x - window.margin // 3 < 0
+        or window.x + window.margin // 3 >= image.shape[1]
     )

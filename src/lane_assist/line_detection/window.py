@@ -25,6 +25,7 @@ class Window:
     y: int
 
     __points: list[tuple[int, int]]
+    __original_margin: int
 
     def __init__(self, x: int, y: int, margin: int) -> None:
         """Initialize the window.
@@ -39,6 +40,7 @@ class Window:
 
         self.directions = np.zeros((4, 2), dtype=np.int8)
         self.__points = []
+        self.__original_margin = margin
 
     @property
     def points(self) -> np.ndarray:
@@ -61,7 +63,7 @@ class Window:
         if points:
             self.__points.append((x, y))
 
-            self.margin //= margin ** self.not_found
+            self.margin = self.__original_margin
             self.not_found = 0
 
             if len(self.__points) > 1:
