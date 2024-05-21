@@ -127,6 +127,10 @@ telemetry:
     host: 0.0.0.0
     root_url: 192.168.1.89
 
+gamepad:
+  max_trig_bits: 10
+  max_joy_bits: 15
+
 lidar:
   port_name: "/dev/ttyUSB0"
   min_distance: 500
