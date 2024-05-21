@@ -19,7 +19,6 @@ class Window:
     """
 
     directions: np.ndarray
-    found_in_previous: bool = False
     margin: int
     not_found: int = 0
     x: int
@@ -63,7 +62,6 @@ class Window:
             self.__points.append((x, y))
 
             self.margin //= margin ** self.not_found
-            self.found_in_previous = True
             self.not_found = 0
 
             if len(self.__points) > 1:
@@ -71,7 +69,7 @@ class Window:
                 self.directions[0] = [self.x - x, self.y - y]
         else:
             self.margin *= margin
-            if self.found_in_previous:
+            if len(self.__points) > 0:
                 self.not_found += 1
 
         self.x = x
