@@ -5,10 +5,10 @@ kart:
   speed_modes:
     selected: ${.options.slow}
     options:
-      slow: 20
-      normal: 40
-      fast: 60
-      very_fast: 80
+      slow: 10
+      normal: 20
+      fast: 30
+      very_fast: 40
 
   braking:
     margin: 1.0
@@ -50,11 +50,11 @@ line_following:
 
   initial_speed: 5  # km/h
 
-  max_steering_range: 40  # degrees
+  max_steering_range: 20  # degrees
   look_ahead_distance: .5  # meters
 
   pid:
-    kp: 20.0
+    kp: 40.0
     ki: 1.0
     kd: 0.5
 
