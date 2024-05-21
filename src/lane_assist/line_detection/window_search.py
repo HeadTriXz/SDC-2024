@@ -34,7 +34,10 @@ def process_window(image: np.ndarray, window: Window, window_height: int, stop_l
 
         # Get the average position of the points
         y_shift, x_shift = np.mean(non_zero, axis=0).astype(int)
-        new_pos = [window.x + x_shift, window.y + y_shift]
+        if stop_line:
+            y_shift = 0
+
+        new_pos = [left + x_shift, top + y_shift]
 
         # Make sure we will move at least a certain amount. If not, we handle it as no pixels in the window.
         # This prevents points from clumping together at the end of lines.
@@ -48,7 +51,7 @@ def process_window(image: np.ndarray, window: Window, window_height: int, stop_l
         # Kill the window if we suddenly change direction.
         if window.not_found >= 3 and window.point_count > len(window.directions):
             # Get the angle of the last point to the current point.
-            x_diff, y_diff = np.subtract(window.points[-1], [window.x, window.y])
+            x_diff, y_diff = np.subtract(window.points[-1], new_pos)
             current_direction = abs(np.arctan2(y_diff, x_diff) * 180 / np.pi)
 
             # Get the angle of the line
@@ -59,11 +62,7 @@ def process_window(image: np.ndarray, window: Window, window_height: int, stop_l
             if angle_diff > config.line_detection.thresholds.max_angle_difference:
                 break
 
-        # If we have a stop line, we don't need to move it less than the window height
-        if stop_line:
-            y_shift = 0
-
-        window.move(left + x_shift, top + y_shift)
+        window.move(new_pos[0], new_pos[1])
 
     if window.point_count < 5 and not stop_line:
         return None
