@@ -35,12 +35,16 @@ def process_window(image: np.ndarray, window: Window, window_height: int, stop_l
 
         # Get the average position of the points
         y_shift, x_shift = np.mean(non_zero, axis=0).astype(int)
+        new_pos = [window.x + x_shift, window.y + y_shift]
 
         # Make sure we will move at least a certain amount. If not, we handle it as no pixels in the window.
         # This prevents points from clumping together at the end of lines.
-        if np.linalg.norm([x_shift, y_shift]) < window_height * config.line_detection.min_window_shift:
-            __shift_no_points(window, window_height)
-            continue
+        # This can only be done if we already have found points.
+        if window.point_count > 0:
+            dist_to_last_point = np.linalg.norm(np.subtract(window.points[-1], new_pos))
+            if dist_to_last_point < window_height * config.line_detection.min_window_shift:
+                __shift_no_points(window, window_height)
+                continue
 
         # Kill the window if we suddenly change direction.
         if window.not_found >= 3 and window.point_count > len(window.directions):
@@ -70,7 +74,7 @@ def process_window(image: np.ndarray, window: Window, window_height: int, stop_l
 
 
 def window_search(
-    image: np.ndarray, windows: Iterable[Window], window_height: int, stop_line: bool = False
+        image: np.ndarray, windows: Iterable[Window], window_height: int, stop_line: bool = False
 ) -> list[Line]:
     """Search for the windows in the image.
 

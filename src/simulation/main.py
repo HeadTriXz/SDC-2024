@@ -42,7 +42,7 @@ def start_simulator() -> None:
             if img_rotated is None:
                 continue
 
-            grayscale = cv2.cvtColor(img_rotated[:-20, :], cv2.COLOR_BGR2GRAY)
+            grayscale = cv2.cvtColor(img_rotated[:-42, :], cv2.COLOR_BGR2GRAY)
             grayscale = cv2.threshold(grayscale, config.preprocessing.white_threshold, 255, cv2.THRESH_BINARY)[1]
 
             cx, cy = grayscale.shape[1] // 2, grayscale.shape[0]
