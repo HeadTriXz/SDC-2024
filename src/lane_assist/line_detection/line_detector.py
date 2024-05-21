@@ -52,7 +52,7 @@ def get_lines(image: np.ndarray, calibration: CalibrationData) -> list[Line]:
 
     # Create histogram to find the start of the lines.
     # This is done by weighting the pixels using a logspace.
-    pixels = image[image.shape[0] // 4 * 3:, :]
+    pixels = image[image.shape[0] // 2:, :]
     pixels = np.multiply(pixels, np.logspace(0, 1, pixels.shape[0])[:, np.newaxis])
     histogram = np.sum(pixels, axis=0)
 
@@ -104,9 +104,8 @@ def __filter_stop_lines(lines: list[Line], window_height: int, minimum_points: i
     filtered_lines = []
     for line in lines:
         distances = np.linalg.norm(np.diff(line.points, axis=0), axis=1)
-        gaps = np.diff(distances)
 
-        start, stop = __longest_sequence(gaps, lambda x: window_height + 2 > -x > window_height - 2)
+        start, stop = __longest_sequence(distances, lambda x: window_height + 2 > -x > window_height - 2)
         if minimum_points < stop - start < max_points:
             filtered_lines.append(Line(line.points[start:stop], line_type=LineType.STOP))
 
