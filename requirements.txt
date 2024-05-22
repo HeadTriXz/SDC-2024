@@ -4,7 +4,7 @@ inputs==0.5
 matplotlib==3.8.3
 nncf==2.10.0
 numpy==1.26.4
-omegaconf==2.3.0
+PyYAML==6.0.1
 opencv-python==4.9.0.80
 openvino==2024.1.0
 packaging==23.2
