@@ -5,13 +5,17 @@ kart:
     min_force: 0
 
 line_following:
+  requested_lane:
+    override: true
+    lane: 1
+
   pid:
     kp: 20.0
     ki: 1.0
     kd: 0.5
 
 preprocessing:
-  white_threshold: 173
+  white_threshold: 174
 
 dynamic_speed:
   friction_coefficient: 0.5
