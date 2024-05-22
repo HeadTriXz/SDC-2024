@@ -18,9 +18,9 @@ def main() -> None:
 
     print("Initializing...", file=sys.stderr)  # noqa: T201
 
-    left_cam = VideoStream(config.camera_ids.left, resolution=CameraResolution.FHD)
-    center_cam = VideoStream(config.camera_ids.center, resolution=CameraResolution.FHD)
-    right_cam = VideoStream(config.camera_ids.right, resolution=CameraResolution.FHD)
+    left_cam = VideoStream(config["camera_ids"]["left"], resolution=CameraResolution.FHD)
+    center_cam = VideoStream(config["camera_ids"]["center"], resolution=CameraResolution.FHD)
+    right_cam = VideoStream(config["camera_ids"]["right"], resolution=CameraResolution.FHD)
 
     left_cam.start()
     center_cam.start()

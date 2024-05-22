@@ -51,16 +51,6 @@ class ConfigComponent extends HTMLElement {
                     <div id="yamlData"></div>
                 </div>`
 
-        const save_btn = document.createElement("button");
-        save_btn.innerText = "save";
-        save_btn.onclick = () => this.saveConfig();
-        this.shadow.querySelector(".buttons").appendChild(save_btn);
-
-        const rollback_btn = document.createElement("button");
-        rollback_btn.innerText = "rollback";
-        rollback_btn.onclick = () => this.rollbackConfig();
-        this.shadow.querySelector(".buttons").appendChild(rollback_btn);
-
         const styleTag = document.createElement("style");
         styleTag.innerHTML = this.css();
 
@@ -76,21 +66,6 @@ class ConfigComponent extends HTMLElement {
     async getConfigStructure() {
         return fetch("/get-config-structure")
             .then((res) => res.json());
-    }
-
-    /**
-     * Sends a request to save the current configuration.
-     */
-    async saveConfig() {
-        await fetch("./store-config", { method: "POST" });
-    }
-
-    /**
-     * Sends a request to roll back the configuration to its previous state.
-     */
-    async rollbackConfig() {
-        await fetch("./rollback-config", { method: "POST" });
-        await this.getConfig();
     }
 
     /**
@@ -170,7 +145,8 @@ class ConfigComponent extends HTMLElement {
                 input.step = stepValue;
                 input.onkeydown = (e) => {
                     if (e.code === "Enter") {
-                        this.submit(currentKey).then(r => {});
+                        this.submit(currentKey).then(r => {
+                        });
                     }
                 }
                 div.appendChild(input)

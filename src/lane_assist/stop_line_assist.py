@@ -59,7 +59,7 @@ class StopLineAssist:
             distance = self.__calibration.get_distance(image.shape[0] - line_height)
             total_distance = distance - braking_distance
 
-            if total_distance > config.traffic_light.min_distance:
+            if total_distance > config["traffic_light"]["min_distance"]:
                 continue
 
             self.speed_controller.state = SpeedControllerState.STOPPED

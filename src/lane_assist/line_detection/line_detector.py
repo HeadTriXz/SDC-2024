@@ -36,7 +36,7 @@ def filter_lines(lines: list[Line], starting_point: int) -> list[Line]:
             break
         i += 1
 
-    return lines[j:i + 1]
+    return lines[j : i + 1]
 
 
 def get_lines(image: np.ndarray, calibration: CalibrationData) -> list[Line]:
@@ -47,12 +47,12 @@ def get_lines(image: np.ndarray, calibration: CalibrationData) -> list[Line]:
     :return: The lines in the image.
     """
     # Filter the image. This is done in place and will be used to remove zebra crossings.
-    if config.line_detection.filtering.active:
+    if config["line_detection"]["filtering"]["active"]:
         basic_filter(image, calibration)
 
     # Create histogram to find the start of the lines.
     # This is done by weighting the pixels using a logspace.
-    pixels = image[image.shape[0] // 2:, :]
+    pixels = image[image.shape[0] // 2 :, :]
     pixels = np.multiply(pixels, np.logspace(0, 1, pixels.shape[0])[:, np.newaxis])
     histogram = np.sum(pixels, axis=0)
 
@@ -74,7 +74,7 @@ def get_stop_lines(image: np.ndarray, lines: list[Line], calibration: Calibratio
 
     min_x, min_y, max_x, max_y = get_border_of_points(points)
 
-    min_dist = calibration.get_pixels(config.line_detection.filtering.min_distance)
+    min_dist = calibration.get_pixels(config["line_detection"]["filtering"]["min_distance"])
     max_y = min(max_y, image.shape[0] - min_dist)
 
     # Create a new image. This is the bounding box rotated 90 degrees clockwise.
@@ -113,10 +113,7 @@ def __filter_stop_lines(lines: list[Line], window_height: int, minimum_points: i
 
 
 def __get_lines(
-        image: np.ndarray,
-        histogram: np.ndarray,
-        calibration: CalibrationData,
-        stop_line: bool = False
+    image: np.ndarray, histogram: np.ndarray, calibration: CalibrationData, stop_line: bool = False
 ) -> tuple[list[Line], int]:
     """Get the lines in the image.
 
@@ -130,8 +127,8 @@ def __get_lines(
     """
     std = np.std(histogram) * 2
 
-    window_width = calibration.get_pixels(config.line_detection.window_sizing.width)
-    window_height = calibration.get_pixels(config.line_detection.window_sizing.height)
+    window_width = calibration.get_pixels(config["line_detection"]["window_sizing"]["width"])
+    window_height = calibration.get_pixels(config["line_detection"]["window_sizing"]["height"])
     window_shape = (window_height, window_width)
 
     peaks = scipy.signal.find_peaks(histogram, height=std, distance=window_width * 2, rel_height=0.9)[0]

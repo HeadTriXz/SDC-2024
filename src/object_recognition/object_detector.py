@@ -50,9 +50,9 @@ class ObjectDetector:
             frame = self.stream.next()
             results = model.track(
                 frame,
-                imgsz=config.object_detection.image_size,
-                conf=config.object_detection.min_confidence,
-                verbose=config.object_detection.verbose,
+                imgsz=config["object_detection"]["image_size"],
+                conf=config["object_detection"]["min_confidence"],
+                verbose=config["object_detection"]["verbose"],
                 persist=True,
                 device="cpu"
             )

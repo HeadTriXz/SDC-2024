@@ -21,7 +21,7 @@ def start_collecting() -> None:
 
     print("Initializing...", file=sys.stderr)  # noqa: T201
 
-    center_cam = VideoStream(config.camera_ids.center, resolution=CameraResolution.HD)
+    center_cam = VideoStream(config["camera_ids"]["center"], resolution=CameraResolution.HD)
     center_cam.start()
 
     if not center_cam.has_next():

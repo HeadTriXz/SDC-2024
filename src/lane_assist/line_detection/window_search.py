@@ -23,7 +23,7 @@ def process_window(image: np.ndarray, window: Window, stop_line: bool) -> Line |
         non_zero = np.argwhere(image[top:bottom, left:right])
 
         # Move the window if there are not enough points in it
-        if len(non_zero) < config.line_detection.pixels_in_window:
+        if len(non_zero) < config["line_detection"]["pixels_in_window"]:
             window.move(window.x, top, False)
             continue
 
@@ -45,7 +45,7 @@ def process_window(image: np.ndarray, window: Window, stop_line: bool) -> Line |
             prev_direction = abs(np.arctan2(y_diff, x_diff) * 180 / np.pi)
 
             angle_diff = abs(prev_direction - current_direction)
-            if angle_diff > config.line_detection.thresholds.max_angle_difference:
+            if angle_diff > config["line_detection"]["thresholds"]["max_angle_difference"]:
                 break
 
         window.move(new_pos[0], new_pos[1])
