@@ -34,16 +34,16 @@ class PathFollower:
         :param calibration: The calibration data.
         :param speed_controller: The speed controller.
         """
-        self.max_steering_range = config.kart.max_steering_angle
+        self.max_steering_range = config["kart"]["max_steering_angle"]
         self.__calibration = calibration
         self.__speed_controller = speed_controller
 
         self.__pid = PID(
-            Kp=config.line_following.pid.kp,
-            Ki=config.line_following.pid.ki,
-            Kd=config.line_following.pid.kd,
+            Kp=config["line_following"]["pid"]["kp"],
+            Ki=config["line_following"]["pid"]["ki"],
+            Kd=config["line_following"]["pid"]["kd"],
             setpoint=0,
-            output_limits=(-config.kart.max_steering_angle, config.kart.max_steering_angle),
+            output_limits=(-config["kart"]["max_steering_angle"], config["kart"]["max_steering_angle"]),
         )
 
     def __calc_lookahead_padding(self) -> float:
@@ -51,7 +51,7 @@ class PathFollower:
 
         :return: The distance traveled in pixels.
         """
-        min_dist = self.__calibration.get_pixels(config.line_following.look_ahead_distance)
+        min_dist = self.__calibration.get_pixels(config["line_following"]["look_ahead_distance"])
 
         lt = self.__pid._last_time
         if lt is None:

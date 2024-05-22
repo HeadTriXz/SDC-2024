@@ -29,4 +29,4 @@ def get_ip() -> str:
     if is_valid_ipv4(ip):
         return ip
 
-    return config.telemetry.server.root_url
+    return config["telemetry"]["server"]["root_url"]

@@ -30,14 +30,5 @@ def create_config_router() -> APIRouter:
         """Get the structure of the configuration."""
         return config.get_config_structure()
 
-    @router.post("/store-config")
-    def store_config() -> None:
-        """Store the changes made to the configuration."""
-        config.save_changes(True)
-
-    @router.post("/rollback-config")
-    def rollback_config() -> None:
-        """Rollback the configuration changes."""
-        config.rollback()
 
     return router

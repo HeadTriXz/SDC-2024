@@ -10,7 +10,7 @@ def get_board_shape() -> tuple[int, int]:
 
     :return: The shape of the ChArUco board.
     """
-    return config.calibration.board_width, config.calibration.board_height
+    return config["calibration"]["board_width"], config["calibration"]["board_height"]
 
 
 def get_charuco_detector() -> cv2.aruco.CharucoDetector:
@@ -18,14 +18,14 @@ def get_charuco_detector() -> cv2.aruco.CharucoDetector:
 
     :return: The ChArUco detector.
     """
-    dictionary = cv2.aruco.getPredefinedDictionary(config.calibration.aruco_dict)
+    dictionary = cv2.aruco.getPredefinedDictionary(config["calibration"]["aruco_dict"])
     detector_params = cv2.aruco.DetectorParameters()
     charuco_params = cv2.aruco.CharucoParameters()
 
     board = cv2.aruco.CharucoBoard(
         get_board_shape(),
-        config.calibration.square_length,
-        config.calibration.marker_length,
+        config["calibration"]["square_length"],
+        config["calibration"]["marker_length"],
         dictionary
     )
 

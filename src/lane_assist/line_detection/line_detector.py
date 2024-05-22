@@ -1,3 +1,5 @@
+import time
+
 import cv2
 import numpy as np
 import scipy
@@ -47,7 +49,7 @@ def get_lines(image: np.ndarray, calibration: CalibrationData) -> list[Line]:
     :return: The lines in the image.
     """
     # Filter the image. This is done in place and will be used to remove zebra crossings.
-    if config.line_detection.filtering.active:
+    if config["line_detection"]["filtering"]["active"]:
         basic_filter(image, calibration)
 
     # Create histogram to find the start of the lines.
@@ -74,7 +76,7 @@ def get_stop_lines(image: np.ndarray, lines: list[Line], calibration: Calibratio
 
     min_x, min_y, max_x, max_y = get_border_of_points(points)
 
-    min_dist = calibration.get_pixels(config.line_detection.filtering.min_distance)
+    min_dist = calibration.get_pixels(config["line_detection"]["filtering"]["min_distance"])
     max_y = min(max_y, image.shape[0] - min_dist)
 
     # Create a new image. This is the bounding box rotated 90 degrees clockwise.
@@ -130,8 +132,8 @@ def __get_lines(
     """
     std = np.std(histogram) * 2
 
-    window_width = calibration.get_pixels(config.line_detection.window_sizing.width)
-    window_height = calibration.get_pixels(config.line_detection.window_sizing.height)
+    window_width = calibration.get_pixels(config["line_detection"]["window_sizing"]["width"])
+    window_height = calibration.get_pixels(config["line_detection"]["window_sizing"]["height"])
     window_shape = (window_height, window_width)
 
     peaks = scipy.signal.find_peaks(histogram, height=std, distance=window_width * 2, rel_height=0.9)[0]

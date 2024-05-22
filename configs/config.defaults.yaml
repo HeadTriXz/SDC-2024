@@ -3,7 +3,7 @@ kart:
   max_steering_angle: 20
 
   speed_modes:
-    selected: ${.options.slow}
+    selected: 10
     options:
       slow: 10
       normal: 20
@@ -73,7 +73,7 @@ calibration:
   aruco_dict: 1  # DICT_4X4_100
   board_height: 8
   board_width: 10
-  calibration_file: "${.save_dir}/latest.npz"
+  calibration_file: "./data/calibration/latest.npz"
   max_image_height: 400
   max_image_width: 200
   marker_length: 0.086

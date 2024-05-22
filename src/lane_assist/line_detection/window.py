@@ -10,6 +10,7 @@ class Window:
     Attributes
     ----------
         directions: The directions of the window.
+        margin: The margin of the window.
         not_found: The amount of times the window was not found.
         shape: The shape of the window (height, width).
         x: The x position of the window.
@@ -76,7 +77,7 @@ class Window:
         :param y: The new y position.
         :param points: Whether we found points in the window.
         """
-        margin = 1 + config.line_detection.window_margin_growth
+        margin = 1 + config["line_detection"]["window_margin_growth"] / 100
         if points:
             if self.point_count == 0 or not self.__is_crowded(x, y):
                 self.__points.append((x, y))
@@ -103,6 +104,6 @@ class Window:
         :return: Whether the new position is crowded.
         """
         distance = euclidean_distance(self.points[-1], (x, y))
-        min_distance = self.shape[0] * config.line_detection.min_window_shift
+        min_distance = self.shape[0] * config["line_detection"]["min_window_shift"]
 
         return distance < min_distance

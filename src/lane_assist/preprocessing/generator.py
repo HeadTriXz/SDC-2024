@@ -43,15 +43,15 @@ def td_stitched_image_generator(
             center_image = __transform_img(center_image)
             right_image = __transform_img(right_image)
 
-            if config.preprocessing.gamma.enabled:
-                left_image = gamma_adjuster.adjust(left_image, config.preprocessing.gamma.left)
-                center_image = gamma_adjuster.adjust(center_image, config.preprocessing.gamma.center)
-                right_image = gamma_adjuster.adjust(right_image, config.preprocessing.gamma.right)
+            if config["preprocessing"]["gamma"]["enabled"]:
+                left_image = gamma_adjuster.adjust(left_image, config["preprocessing"]["gamma"]["left"])
+                center_image = gamma_adjuster.adjust(center_image, config["preprocessing"]["gamma"]["center"])
+                right_image = gamma_adjuster.adjust(right_image, config["preprocessing"]["gamma"]["right"])
 
             topdown = calibration.transform([left_image, center_image, right_image])
-            thresholded = cv2.threshold(topdown, config.preprocessing.white_threshold, 255, cv2.THRESH_BINARY)[1]
+            thresholded = cv2.threshold(topdown, config["preprocessing"]["white_threshold"], 255, cv2.THRESH_BINARY)[1]
 
-            if config.telemetry.enabled:
+            if config["telemetry"]["enabled"]:
                 telemetry.websocket_handler.send_image("left", left_image)
                 telemetry.websocket_handler.send_image("center", center_image)
                 telemetry.websocket_handler.send_image("right", right_image)

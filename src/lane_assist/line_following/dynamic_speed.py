@@ -20,7 +20,7 @@ def get_max_path_speed(path: Path) -> int:
     :param path: The path to get the max speed from.
     :return: The max speed on the path in km/h.
     """
-    if config.dynamic_speed.static:
-        return config.dynamic_speed.static_speed
+    if config["dynamic_speed"]["static"]:
+        return config["dynamic_speed"]["static_speed"]
 
-    return int(get_max_corner_speed(path.radius, config.dynamic_speed.friction_coefficient) * 3.6)
+    return int(get_max_corner_speed(path.radius, config["dynamic_speed"]["friction_coefficient"]) * 3.6)

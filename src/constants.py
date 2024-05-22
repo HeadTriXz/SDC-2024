@@ -14,8 +14,8 @@ BTN_ALIAS = {
     "ABS_BRAKE": "ABS_Z",
     "ABS_GAS": "ABS_RZ"
 }
-MAX_TRIG_VAL = math.pow(2, config.gamepad.max_trig_bits)
-MAX_JOY_VAL = math.pow(2, config.gamepad.max_joy_bits)
+MAX_TRIG_VAL = math.pow(2, config["gamepad"]["max_trig_bits"])
+MAX_JOY_VAL = math.pow(2, config["gamepad"]["max_joy_bits"])
 
 
 # Enums

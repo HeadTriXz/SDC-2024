@@ -19,7 +19,7 @@ def calibrate_images(images: list[np.ndarray]) -> None:
     calibrator = CameraCalibrator(images, input_shape=CameraResolution.NHD)
     calibrator.calibrate()
 
-    save_dir = Path(config.calibration.save_dir)
+    save_dir = Path(config["calibration"]["save_dir"])
     history_file = calibrator.save(save_dir)
 
     logging.info("Saved the calibration results to %s. Output shape: %s", history_file, calibrator.output_shape)
@@ -38,13 +38,13 @@ def calibrate_images(images: list[np.ndarray]) -> None:
 
 def calibrate_cameras() -> None:
     """A script to calibrate the cameras."""
-    if len({config.camera_ids.left, config.camera_ids.center, config.camera_ids.right}) < 3:
+    if len({config["camera_ids"]["left"], config["camera_ids"]["center"], config["camera_ids"]["right"]}) < 3:
         raise ValueError("Not all camera ids are unique, calibration may not work as expected")
 
     # Initialize the camera streams.
-    cam_left = VideoStream(config.camera_ids.left, resolution=CameraResolution.FHD)
-    cam_center = VideoStream(config.camera_ids.center, resolution=CameraResolution.FHD)
-    cam_right = VideoStream(config.camera_ids.right, resolution=CameraResolution.FHD)
+    cam_left = VideoStream(config["camera_ids"]["left"], resolution=CameraResolution.FHD)
+    cam_center = VideoStream(config["camera_ids"]["center"], resolution=CameraResolution.FHD)
+    cam_right = VideoStream(config["camera_ids"]["right"], resolution=CameraResolution.FHD)
 
     cam_left.start()
     cam_center.start()

@@ -46,11 +46,11 @@ class AutonomousDriving(DrivingMode):
 
         :param can_controller: The CAN controller to use.
         """
-        calibration = CalibrationData.load(config.calibration.calibration_file)
+        calibration = CalibrationData.load(config["calibration"]["calibration_file"])
 
-        self.cam_left = VideoStream(config.camera_ids.left, resolution=CameraResolution.NHD)
-        self.cam_center = VideoStream(config.camera_ids.center, resolution=CameraResolution.HD)
-        self.cam_right = VideoStream(config.camera_ids.right, resolution=CameraResolution.NHD)
+        self.cam_left = VideoStream(config["camera_ids"]["left"], resolution=CameraResolution.NHD)
+        self.cam_center = VideoStream(config["camera_ids"]["center"], resolution=CameraResolution.HD)
+        self.cam_right = VideoStream(config["camera_ids"]["right"], resolution=CameraResolution.NHD)
 
         self.telemetry = TelemetryServer()
         self.speed_controller = SpeedController(can_controller)
@@ -114,5 +114,5 @@ class AutonomousDriving(DrivingMode):
             object_controller.add_handler(OvertakeHandler(object_controller, lidar))
 
         self.detector = ObjectDetector.from_model(
-            config.object_detection.model_path, object_controller, config.camera_ids.center
+            config["object_detection"]["model_path"], object_controller, config["camera_ids"]["center"]
         )
