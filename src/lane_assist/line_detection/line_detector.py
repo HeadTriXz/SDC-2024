@@ -1,5 +1,3 @@
-import time
-
 import cv2
 import numpy as np
 import scipy
@@ -38,7 +36,7 @@ def filter_lines(lines: list[Line], starting_point: int) -> list[Line]:
             break
         i += 1
 
-    return lines[j:i + 1]
+    return lines[j : i + 1]
 
 
 def get_lines(image: np.ndarray, calibration: CalibrationData) -> list[Line]:
@@ -54,7 +52,7 @@ def get_lines(image: np.ndarray, calibration: CalibrationData) -> list[Line]:
 
     # Create histogram to find the start of the lines.
     # This is done by weighting the pixels using a logspace.
-    pixels = image[image.shape[0] // 2:, :]
+    pixels = image[image.shape[0] // 2 :, :]
     pixels = np.multiply(pixels, np.logspace(0, 1, pixels.shape[0])[:, np.newaxis])
     histogram = np.sum(pixels, axis=0)
 
@@ -115,10 +113,7 @@ def __filter_stop_lines(lines: list[Line], window_height: int, minimum_points: i
 
 
 def __get_lines(
-        image: np.ndarray,
-        histogram: np.ndarray,
-        calibration: CalibrationData,
-        stop_line: bool = False
+    image: np.ndarray, histogram: np.ndarray, calibration: CalibrationData, stop_line: bool = False
 ) -> tuple[list[Line], int]:
     """Get the lines in the image.
 

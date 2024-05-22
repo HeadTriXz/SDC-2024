@@ -1,11 +1,7 @@
 import logging
 import os
 
-import cv2
-
-from src.calibration.data import CalibrationData
 from src.driving.kart import Kart
-from src.lane_assist.line_detection.line_detector import get_lines
 from src.telemetry.logging_handler import LoggingHandler
 
 
