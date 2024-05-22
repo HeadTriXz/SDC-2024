@@ -10,7 +10,6 @@ class Window:
     Attributes
     ----------
         directions: The directions of the window.
-        margin: The margin of the window.
         not_found: The amount of times the window was not found.
         shape: The shape of the window (height, width).
         x: The x position of the window.
@@ -77,7 +76,7 @@ class Window:
         :param y: The new y position.
         :param points: Whether we found points in the window.
         """
-        margin = 1 + config["line_detection"]["window_margin_growth"] / 100
+        margin = 1 + config["line_detection"]["window_margin_growth"]
         if points:
             if self.point_count == 0 or not self.__is_crowded(x, y):
                 self.__points.append((x, y))
