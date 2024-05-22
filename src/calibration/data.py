@@ -3,8 +3,8 @@ import numpy as np
 
 from pathlib import Path
 
-from src.calibration.utils.other import euclidean_distance
 from src.lane_assist.preprocessing.stitching import stitch_images
+from src.utils.other import euclidean_distance
 from src.utils.singleton_meta import SingletonMeta
 
 

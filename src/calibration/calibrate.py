@@ -5,17 +5,11 @@ from datetime import datetime
 from pathlib import Path
 
 from src.calibration.utils.charuco import find_corners
-from src.calibration.utils.corners import get_border_of_points, get_transformed_corners
+from src.calibration.utils.corners import get_transformed_corners
 from src.calibration.utils.grid import corners_to_grid, get_dst_points, merge_grids
-from src.calibration.utils.other import (
-    euclidean_distance,
-    find_intersection,
-    find_offsets,
-    get_board_shape,
-    get_charuco_detector,
-    get_transformed_shape,
-)
+from src.calibration.utils.other import find_offsets, get_board_shape, get_charuco_detector, get_transformed_shape
 from src.config import config
+from src.utils.other import euclidean_distance, find_intersection, get_border_of_points
 
 
 class CameraCalibrator:
