@@ -1,7 +1,7 @@
 import numpy as np
 
 from src.calibration.utils.corners import find_largest_rectangle
-from src.calibration.utils.other import euclidean_distance
+from src.utils.other import euclidean_distance
 
 
 def find_corners(grid: np.ndarray) -> tuple[np.ndarray, tuple[int, int]]:

@@ -5,17 +5,11 @@ from datetime import datetime
 from pathlib import Path
 
 from src.calibration.utils.charuco import find_corners
-from src.calibration.utils.corners import get_border_of_points, get_transformed_corners
+from src.calibration.utils.corners import get_transformed_corners
 from src.calibration.utils.grid import corners_to_grid, get_dst_points, merge_grids
-from src.calibration.utils.other import (
-    euclidean_distance,
-    find_intersection,
-    find_offsets,
-    get_board_shape,
-    get_charuco_detector,
-    get_transformed_shape,
-)
+from src.calibration.utils.other import find_offsets, get_board_shape, get_charuco_detector, get_transformed_shape
 from src.config import config
+from src.utils.other import euclidean_distance, find_intersection, get_border_of_points
 
 
 class CameraCalibrator:
@@ -218,8 +212,8 @@ class CameraCalibrator:
         dst_center = cv2.perspectiveTransform(src_center, self.topdown_matrix)[0][0]
 
         # Update the render distance
-        render_front = config.calibration.render_distance.front * self.pixels_per_meter
-        render_side = config.calibration.render_distance.side * self.pixels_per_meter
+        render_front = config["calibration"]["render_distance"]["front"] * self.pixels_per_meter
+        render_side = config["calibration"]["render_distance"]["side"] * self.pixels_per_meter
 
         min_x = max(min_x, dst_center[0] - render_side)
         max_x = min(max_x, dst_center[0] + render_side)
@@ -251,8 +245,8 @@ class CameraCalibrator:
         height = int(max_y - min_y)
 
         scale_factor = min(
-            config.calibration.max_image_width / width,
-            config.calibration.max_image_height / height
+            config["calibration"]["max_image_width"] / width,
+            config["calibration"]["max_image_height"] / height
         )
 
         min_x *= scale_factor
@@ -394,7 +388,7 @@ class CameraCalibrator:
             return np.nan
 
         vanishing_line = np.median(intersections, axis=0)[1]
-        vanishing_line *= 1 + config.calibration.vanishing_line_offset
+        vanishing_line *= 1 + config["calibration"]["vanishing_line_offset"]
 
         return vanishing_line
 

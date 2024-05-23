@@ -46,8 +46,8 @@ class Line:
         if window_height is None:
             raise ValueError("'window_height' or 'line_type' must be provided.")
 
-        intervals = np.diff(points[:, 1])
-        if len(np.where(intervals <= -window_height)[0]) > gaps_allowed * 1.5:
+        intervals = np.linalg.norm(np.diff(points, axis=0), axis=1).astype(int)
+        if len(np.where(intervals >= window_height)[0]) > gaps_allowed:
             self.line_type = LineType.DASHED
         else:
             self.line_type = LineType.SOLID

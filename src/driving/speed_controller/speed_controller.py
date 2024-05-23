@@ -41,7 +41,7 @@ class SpeedController(ISpeedController):
         """
         self.__can = can_bus
         self.logger = logging.getLogger(__name__)
-        self.max_speed = config.kart.speed_modes.selected
+        self.max_speed = config["kart"]["speed_modes"]["selected"]
 
         self.__thread = threading.Thread(target=self.__debug, daemon=True)
 
@@ -112,12 +112,12 @@ class SpeedController(ISpeedController):
 
         :return: The braking distance in meters.
         """
-        return (self.current_speed**2) / (250 * config.dynamic_speed.friction_coefficient)
+        return (self.current_speed**2) / (250 * config["dynamic_speed"]["friction_coefficient"])
 
     def start(self) -> None:
         """Start the speed controller."""
         self.__can.add_listener(CANFeedbackIdentifier.SPEED_SENSOR, self.__update_speed)
-        if config.telemetry.enabled:
+        if config["telemetry"]["enabled"]:
             self.__thread.start()
 
     def toggle(self) -> None:
@@ -125,7 +125,7 @@ class SpeedController(ISpeedController):
         self.enabled = not self.enabled
         if not self.enabled:
             self.__can.set_throttle(0, Gear.NEUTRAL)
-            self.__can.set_brake(config.kart.braking.max_force)
+            self.__can.set_brake(config["kart"]["braking"]["max_force"])
 
     def __debug(self) -> None:
         """Print debug information."""
@@ -144,14 +144,14 @@ class SpeedController(ISpeedController):
         """Adjust the speed of the kart."""
         if self.__state == SpeedControllerState.STOPPED:
             self.__can.set_throttle(0, Gear.NEUTRAL)
-            self.__can.set_brake(config.kart.braking.max_force)
+            self.__can.set_brake(config["kart"]["braking"]["max_force"])
             return
 
         self.__can.set_throttle(self.__get_target_percentage(), self.__gear)
         self.__can.set_brake(
             0
-            if self.current_speed <= (self.__target_speed + config.kart.braking.margin)
-            else config.kart.braking.min_force
+            if self.current_speed <= (self.__target_speed + config["kart"]["braking"]["margin"])
+            else config["kart"]["braking"]["min_force"]
         )
 
     def __get_target_percentage(self) -> int:
@@ -159,10 +159,10 @@ class SpeedController(ISpeedController):
         if self.__target_speed == 0:
             return 0
 
-        if self.__target_speed >= config.kart.speed_modes.selected:
+        if self.__target_speed >= config["kart"]["speed_modes"]["selected"]:
             return 100
 
-        return int((self.__target_speed / config.kart.speed_modes.selected) * 100)
+        return int((self.__target_speed / config["kart"]["speed_modes"]["selected"]) * 100)
 
     def __update_speed(self, message: can.Message) -> None:
         """Update the speed of the go-kart."""

@@ -3,7 +3,7 @@ kart:
   max_steering_angle: 20
 
   speed_modes:
-    selected: ${.options.slow}
+    selected: 10
     options:
       slow: 10
       normal: 20
@@ -14,27 +14,6 @@ kart:
     margin: 1.0
     max_force: 50
     min_force: 30
-
-camera_ids:
-  left: 0
-  center: 0
-  right: 0
-
-# Camera Calibration
-calibration:
-  aruco_dict: 1  # DICT_4X4_100
-  board_height: 8
-  board_width: 10
-  calibration_file: "${.save_dir}/latest.npz"
-  max_image_height: 400
-  max_image_width: 200
-  marker_length: 0.086
-  render_distance:
-    front: 12.0
-    side: 5.0
-  save_dir: "./data/calibration"
-  square_length: 0.115
-  vanishing_line_offset: 0.02
 
 # Lane Assist
 preprocessing:
@@ -47,14 +26,15 @@ preprocessing:
 
 line_detection:
   pixels_in_window: 3
-  window_margin_growth: 0  # percentage
+  window_margin_growth: 0.1  # Percentage, relative to the window width.
+  min_window_shift: 0.3 # Percentage, relative to the window height.
 
   window_sizing:
     height: 0.5  # meters
-    width: 0.5  # meters
+    width: 0.6  # meters
 
   thresholds:
-    max_angle_difference: 45  # degrees
+    max_angle_difference: 30  # degrees
     zebra_crossing: 1.0  # meters
 
   filtering:
@@ -64,16 +44,45 @@ line_detection:
     margin: 0.05  # meters
 
 line_following:
-  requested_lane: 0
+  requested_lane:
+    override: false
+    lane: 0
+
   initial_speed: 5  # km/h
 
-  max_steering_range: 40  # degrees
+  max_steering_range: 20  # degrees
   look_ahead_distance: .5  # meters
 
   pid:
     kp: 40.0
     ki: 1.0
     kd: 0.5
+
+dynamic_speed:
+  friction_coefficient: 0.3
+  static: false
+  static_speed: 10
+
+camera_ids:
+  left: 0
+  center: 0
+  right: 0
+
+# Camera Calibration
+calibration:
+  aruco_dict: 1  # DICT_4X4_100
+  board_height: 8
+  board_width: 10
+  calibration_file: "./data/calibration/latest.npz"
+  max_image_height: 400
+  max_image_width: 200
+  marker_length: 0.086
+  render_distance:
+    front: 12.0
+    side: 5.0
+  save_dir: "./data/calibration"
+  square_length: 0.115
+  vanishing_line_offset: 0.02
 
 # Object Detection
 object_detection:
@@ -117,10 +126,9 @@ telemetry:
     host: 0.0.0.0
     root_url: 192.168.1.89
 
-dynamic_speed:
-  friction_coefficient: 0.3
-  static: false
-  static_speed: 10
+gamepad:
+  max_trig_bits: 10
+  max_joy_bits: 15
 
 lidar:
   port_name: "/dev/ttyUSB0"

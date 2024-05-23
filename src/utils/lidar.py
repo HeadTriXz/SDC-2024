@@ -30,7 +30,7 @@ class Lidar:
 
     def __init__(self) -> None:
         """Initializes the lidar."""
-        self.lidar = RPLidar(config.lidar.port_name, timeout=5)
+        self.lidar = RPLidar(config["lidar"]["port_name"], timeout=5)
         self.thread = Thread(target=self.capture, daemon=True)
         self.scan_data = np.full(360, np.inf)
 
@@ -64,7 +64,7 @@ class Lidar:
 
             for _, angle, distance in scan:
                 angle = int(angle % 360)
-                if distance < config.lidar.min_distance:
+                if distance < config["lidar"]["min_distance"]:
                     self.scan_data[floor(angle)] = np.inf
                     continue
 

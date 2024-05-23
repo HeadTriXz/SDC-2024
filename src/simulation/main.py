@@ -23,7 +23,7 @@ def start_simulator() -> None:
     client.confirmConnection()
 
     # Load the calibration data
-    calibration = CalibrationData.load(config.calibration.calibration_file)
+    calibration = CalibrationData.load(config["calibration"]["calibration_file"])
 
     factor = 2.0
     height = calibration.output_shape[1]
@@ -42,15 +42,15 @@ def start_simulator() -> None:
             if img_rotated is None:
                 continue
 
-            grayscale = cv2.cvtColor(img_rotated[:-20, :], cv2.COLOR_BGR2GRAY)
-            grayscale = cv2.threshold(grayscale, config.preprocessing.white_threshold, 255, cv2.THRESH_BINARY)[1]
+            grayscale = cv2.cvtColor(img_rotated[:-42, :], cv2.COLOR_BGR2GRAY)
+            grayscale = cv2.threshold(grayscale, config["preprocessing"]["white_threshold"], 255, cv2.THRESH_BINARY)[1]
 
             cx, cy = grayscale.shape[1] // 2, grayscale.shape[0]
 
             grayscale = grayscale[cy - my:cy + my, cx - mx:cx + mx]
             grayscale = cv2.resize(grayscale, (width, height))
 
-            if config.telemetry.enabled:
+            if config["telemetry"]["enabled"]:
                 telemetry.websocket_handler.send_image("topdown", grayscale)
 
             yield grayscale

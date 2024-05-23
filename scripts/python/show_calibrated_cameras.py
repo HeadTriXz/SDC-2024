@@ -23,9 +23,9 @@ def send_discord_image(image: np.ndarray) -> None:
 
 
 def send_discord_calibration() -> None:
-    left_cam = VideoStream(config.camera_ids.left, resolution=CameraResolution.NHD)
-    center_cam = VideoStream(config.camera_ids.center, resolution=CameraResolution.HD)
-    right_cam = VideoStream(config.camera_ids.right, resolution=CameraResolution.NHD)
+    left_cam = VideoStream(config["camera_ids"]["left"], resolution=CameraResolution.NHD)
+    center_cam = VideoStream(config["camera_ids"]["center"], resolution=CameraResolution.HD)
+    right_cam = VideoStream(config["camera_ids"]["right"], resolution=CameraResolution.NHD)
 
     left_cam.start()
     center_cam.start()
@@ -42,7 +42,7 @@ def send_discord_calibration() -> None:
     center_image = cv2.cvtColor(center_image, cv2.COLOR_BGR2GRAY)
     right_image = cv2.cvtColor(right_image, cv2.COLOR_BGR2GRAY)
 
-    calibration_path = Path(config.calibration.calibration_file)
+    calibration_path = Path(config["calibration"]["calibration_file"])
     if not calibration_path.exists():
         raise FileNotFoundError(f"Calibration file not found: {calibration_path}")
 

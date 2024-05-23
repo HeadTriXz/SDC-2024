@@ -76,12 +76,25 @@ class LaneAssist:
         self.speed_controller = speed_controller
         self.image_generator = image_generation
         self.lines = []
-        self.requested_lane = config.line_following.requested_lane
         self.telemetry = telemetry
 
+        self.__requested_lane = config["line_following"]["requested_lane"]["lane"]
         self.__stop_line_assist = stop_line_assist
         self.__path_follower = PathFollower(calibration, speed_controller)
         self.__calibration = calibration
+
+    @property
+    def requested_lane(self) -> int:
+        """The requested lane."""
+        if config["line_following"]["requested_lane"]["override"]:
+            return config["line_following"]["requested_lane"]["lane"]
+
+        return self.__requested_lane
+
+    @requested_lane.setter
+    def requested_lane(self, lane: int) -> None:
+        """Set the requested lane."""
+        self.__requested_lane = lane
 
     def lane_assist_loop(self, image: np.ndarray) -> None:
         """Lane assist loop.
@@ -103,7 +116,7 @@ class LaneAssist:
         self.__stop_line_assist.detect_and_handle(image, filtered_lines)
 
         # If telemetry is enabled, send the image to the telemetry server.
-        if config.telemetry.enabled:
+        if config["telemetry"]["enabled"]:
             rgb = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
 
             # Draw the path on the image.

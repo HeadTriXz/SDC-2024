@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 
+from src.utils.other import get_border_of_points
+
 
 def find_largest_rectangle(matrix: np.ndarray) -> np.ndarray | None:
     """Find the largest rectangle in a binary matrix.
@@ -35,20 +37,6 @@ def find_largest_rectangle(matrix: np.ndarray) -> np.ndarray | None:
     bottom_left = (bottom_right[0], top_left[1])
 
     return np.array([top_left, top_right, bottom_right, bottom_left])
-
-
-def get_border_of_points(points: np.ndarray) -> tuple[int, int, int, int]:
-    """Get the border of the points.
-
-    :param points: The points.
-    :return: The border of the points.
-    """
-    min_x = np.min(points[:, 0])
-    min_y = np.min(points[:, 1])
-    max_x = np.max(points[:, 0])
-    max_y = np.max(points[:, 1])
-
-    return int(min_x), int(min_y), int(max_x), int(max_y)
 
 
 def get_transformed_corners(matrix: np.ndarray, shape: tuple[int, int]) -> tuple[int, int, int, int]:

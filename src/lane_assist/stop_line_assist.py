@@ -33,12 +33,13 @@ class StopLineAssist:
         self.speed_controller = speed_controller
         self.__calibration = calibration
 
-    def detect_and_handle(self, img: np.ndarray, filtered_lines: list[Line]) -> None:
+    def detect_and_handle(self, image: np.ndarray, filtered_lines: list[Line]) -> None:
         """Handle the stop lines.
 
         This function will handle the stop lines in the image.
         If a stop line is found, it will stop the kart.
 
+        :param image: The image to detect the stop lines in.
         :param filtered_lines: the stop lines found in the image.
         """
         if self.speed_controller.state != SpeedControllerState.WAITING_TO_STOP:
@@ -47,18 +48,18 @@ class StopLineAssist:
         if len(filtered_lines) == 0:
             return
 
-        stop_lines = get_stop_lines(img, filtered_lines, self.__calibration)
+        stop_lines = get_stop_lines(image, filtered_lines, self.__calibration)
         if len(stop_lines) == 0:
             return
 
         braking_distance = self.speed_controller.get_braking_distance()
 
         for line in stop_lines:
-            line_height = np.average(line.points[:, 1])
-            distance = self.__calibration.get_distance(img.shape[0] - line_height)
+            line_height = np.mean(line.points[:, 1])
+            distance = self.__calibration.get_distance(image.shape[0] - line_height)
             total_distance = distance - braking_distance
 
-            if total_distance > config.traffic_light.min_distance:
+            if total_distance > config["traffic_light"]["min_distance"]:
                 continue
 
             self.speed_controller.state = SpeedControllerState.STOPPED

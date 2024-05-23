@@ -6,12 +6,12 @@ from collections.abc import Callable
 from typing import Any
 
 from src.calibration.data import CalibrationData
-from src.calibration.utils.corners import get_border_of_points
 from src.config import config
 from src.lane_assist.line_detection.line import Line, LineType
 from src.lane_assist.line_detection.window import Window
 from src.lane_assist.line_detection.window_search import window_search
 from src.lane_assist.preprocessing.image_filters import basic_filter
+from src.utils.other import get_border_of_points
 
 
 def filter_lines(lines: list[Line], starting_point: int) -> list[Line]:
@@ -36,7 +36,7 @@ def filter_lines(lines: list[Line], starting_point: int) -> list[Line]:
             break
         i += 1
 
-    return lines[j:i + 1]
+    return lines[j : i + 1]
 
 
 def get_lines(image: np.ndarray, calibration: CalibrationData) -> list[Line]:
@@ -47,12 +47,12 @@ def get_lines(image: np.ndarray, calibration: CalibrationData) -> list[Line]:
     :return: The lines in the image.
     """
     # Filter the image. This is done in place and will be used to remove zebra crossings.
-    if config.line_detection.filtering.active:
+    if config["line_detection"]["filtering"]["active"]:
         basic_filter(image, calibration)
 
     # Create histogram to find the start of the lines.
     # This is done by weighting the pixels using a logspace.
-    pixels = image[image.shape[0] // 4 * 3:, :]
+    pixels = image[image.shape[0] // 2 :, :]
     pixels = np.multiply(pixels, np.logspace(0, 1, pixels.shape[0])[:, np.newaxis])
     histogram = np.sum(pixels, axis=0)
 
@@ -69,36 +69,30 @@ def get_stop_lines(image: np.ndarray, lines: list[Line], calibration: Calibratio
     """
     # Get the bounding box of the lines.
     points = __lines_to_points(lines)
+    if len(points) == 0:
+        return []
+
     min_x, min_y, max_x, max_y = get_border_of_points(points)
 
-    min_dist = calibration.get_pixels(config.line_detection.filtering.min_distance)
+    min_dist = calibration.get_pixels(config["line_detection"]["filtering"]["min_distance"])
     max_y = min(max_y, image.shape[0] - min_dist)
 
     # Create a new image. This is the bounding box rotated 90 degrees clockwise.
     new_img = image[min_y:max_y, min_x:max_x]
-    new_img = cv2.rotate(new_img, cv2.ROTATE_90_CLOCKWISE)
+    new_img = cv2.rotate(new_img, cv2.ROTATE_90_COUNTERCLOCKWISE)
 
     # Get the lines in the image.
     histogram = np.sum(new_img, axis=0)
     rotated_lines, window_height = __get_lines(new_img, histogram, calibration, True)
 
-    lines = []
-    # Rotate the lines to its original position
-    for line in rotated_lines:
-        points = np.flip(line.points, axis=1)
-        points[:, 0] = min_x + points[:, 0]
-        points[:, 1] = max_y - points[:, 1]
-
-        lines.append(Line(points, line_type=LineType.STOP))
-
-    # Get the number of windows needed to be at least 2.5 meters long. A stop line will be 3 meters long
     min_windows = calibration.get_pixels(2.5) // window_height
     max_windows = calibration.get_pixels(3.5) // window_height
 
-    return filter_stop_lines(lines, window_height, min_windows, max_windows)
+    rotated_lines = __filter_stop_lines(rotated_lines, window_height, min_windows, max_windows)
+    return __rotate_lines(rotated_lines)
 
 
-def filter_stop_lines(lines: list[Line], window_height: int, minimum_points: int, max_points: int) -> list[Line]:
+def __filter_stop_lines(lines: list[Line], window_height: int, minimum_points: int, max_points: int) -> list[Line]:
     """Filter the stop lines to be actual stop lines.
 
     :param lines: The lines to filter.
@@ -109,8 +103,9 @@ def filter_stop_lines(lines: list[Line], window_height: int, minimum_points: int
     """
     filtered_lines = []
     for line in lines:
-        gaps = np.diff(line.points[:, 0])
-        start, stop = __longest_sequence(gaps, lambda x: window_height + 2 > -x > window_height - 2)
+        distances = np.linalg.norm(np.diff(line.points, axis=0), axis=1)
+
+        start, stop = __longest_sequence(distances, lambda x: window_height + 2 > x > window_height - 2)
         if minimum_points < stop - start < max_points:
             filtered_lines.append(Line(line.points[start:stop], line_type=LineType.STOP))
 
@@ -118,10 +113,7 @@ def filter_stop_lines(lines: list[Line], window_height: int, minimum_points: int
 
 
 def __get_lines(
-        image: np.ndarray,
-        histogram: np.ndarray,
-        calibration: CalibrationData,
-        stop_line: bool = False
+    image: np.ndarray, histogram: np.ndarray, calibration: CalibrationData, stop_line: bool = False
 ) -> tuple[list[Line], int]:
     """Get the lines in the image.
 
@@ -135,12 +127,13 @@ def __get_lines(
     """
     std = np.std(histogram) * 2
 
-    window_width = calibration.get_pixels(config.line_detection.window_sizing.width)
-    window_height = calibration.get_pixels(config.line_detection.window_sizing.height)
+    window_width = calibration.get_pixels(config["line_detection"]["window_sizing"]["width"])
+    window_height = calibration.get_pixels(config["line_detection"]["window_sizing"]["height"])
+    window_shape = (window_height, window_width)
 
     peaks = scipy.signal.find_peaks(histogram, height=std, distance=window_width * 2, rel_height=0.9)[0]
-    windows = [Window(int(center), image.shape[0], window_width // 2) for center in peaks]
-    lines = window_search(image, windows, window_height, stop_line)
+    windows = [Window(center, image.shape[0], window_shape) for center in peaks]
+    lines = window_search(image, windows, stop_line)
 
     return lines, window_height
 
@@ -168,3 +161,17 @@ def __lines_to_points(lines: list[Line]) -> np.ndarray:
     :return: The points of the lines.
     """
     return np.concatenate([line.points for line in lines], dtype=np.int32)
+
+
+def __rotate_lines(lines: list[Line]) -> list[Line]:
+    """Rotate the lines 90 degrees clockwise.
+
+    :param lines: The lines to rotate.
+    :return: The rotated lines.
+    """
+    rotated_lines = []
+    for line in lines:
+        line = Line(line.points[:, [1, 0]], line_type=line.line_type)
+        rotated_lines.append(line)
+
+    return rotated_lines

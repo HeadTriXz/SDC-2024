@@ -15,7 +15,7 @@ class SpeedLimitHandler(BaseObjectHandler):
 
         :param controller: The object controller.
         """
-        allowed_classes = list(config.speed_limit.class_to_speed.keys())
+        allowed_classes = list(config["speed_limit"]["class_to_speed"].keys())
         super().__init__(controller, allowed_classes)
 
     def handle(self, predictions: Boxes) -> None:
@@ -33,10 +33,10 @@ class SpeedLimitHandler(BaseObjectHandler):
         braking_distance = self.controller.get_braking_distance()
         total_distance = distance - braking_distance
 
-        if total_distance > config.speed_limit.min_distance:
+        if total_distance > config["speed_limit"]["min_distance"]:
             return
 
-        speed = config.speed_limit.class_to_speed[int(closest[-1])]
+        speed = config["speed_limit"]["class_to_speed"][int(closest[-1])]
         self.controller.set_max_speed(speed)
 
     def _get_sign_coords(self, bbox: np.ndarray) -> tuple[int, int]:
@@ -45,7 +45,7 @@ class SpeedLimitHandler(BaseObjectHandler):
         :param bbox: The bounding box of the speed limit sign.
         :return: The coordinates of the speed limit sign.
         """
-        height = (bbox[3] - bbox[1]) * config.speed_limit.height_ratio
+        height = (bbox[3] - bbox[1]) * config["speed_limit"]["height_ratio"]
 
         x = bbox[0] + bbox[2] // 2
         y = bbox[1] + height

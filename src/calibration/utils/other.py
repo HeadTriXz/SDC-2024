@@ -5,25 +5,12 @@ from src.calibration.utils.corners import get_transformed_corners
 from src.config import config
 
 
-Coordinate = tuple[int, int] | np.ndarray
-
-
-def euclidean_distance(p1: Coordinate, p2: Coordinate) -> float:
-    """Calculate the Euclidean distance between two points.
-
-    :param p1: The first point.
-    :param p2: The second point.
-    :return: The Euclidean distance between the two points.
-    """
-    return np.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
-
-
 def get_board_shape() -> tuple[int, int]:
     """Get the shape of the ChArUco board.
 
     :return: The shape of the ChArUco board.
     """
-    return config.calibration.board_width, config.calibration.board_height
+    return config["calibration"]["board_width"], config["calibration"]["board_height"]
 
 
 def get_charuco_detector() -> cv2.aruco.CharucoDetector:
@@ -31,14 +18,14 @@ def get_charuco_detector() -> cv2.aruco.CharucoDetector:
 
     :return: The ChArUco detector.
     """
-    dictionary = cv2.aruco.getPredefinedDictionary(config.calibration.aruco_dict)
+    dictionary = cv2.aruco.getPredefinedDictionary(config["calibration"]["aruco_dict"])
     detector_params = cv2.aruco.DetectorParameters()
     charuco_params = cv2.aruco.CharucoParameters()
 
     board = cv2.aruco.CharucoBoard(
         get_board_shape(),
-        config.calibration.square_length,
-        config.calibration.marker_length,
+        config["calibration"]["square_length"],
+        config["calibration"]["marker_length"],
         dictionary
     )
 
@@ -58,35 +45,6 @@ def get_transformed_shape(matrix: np.ndarray, shape: tuple[int, int]) -> tuple[i
     height = int(max_y - min_y)
 
     return height, width
-
-
-def find_intersection(
-        line1: tuple[Coordinate, Coordinate],
-        line2: tuple[Coordinate, Coordinate],
-        segments: bool = True
-) -> Coordinate | None:
-    """Find the intersection between two lines.
-
-    :param line1: The first line.
-    :param line2: The second line.
-    :param segments: Whether the lines are segments or infinite lines.
-    :return: The intersection between the two lines, if it exists.
-    """
-    x1, y1 = line1[0]
-    x2, y2 = line1[1]
-    x3, y3 = line2[0]
-    x4, y4 = line2[1]
-
-    ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / ((y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1))
-    ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / ((y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1))
-
-    px = x1 + ua * (x2 - x1)
-    py = y1 + ua * (y2 - y1)
-
-    if segments and not (0 <= ua <= 1 and 0 <= ub <= 1):
-        return None
-
-    return px, py
 
 
 def find_offsets(grids: np.ndarray, shapes: np.ndarray, ref_idx: int) -> np.ndarray:

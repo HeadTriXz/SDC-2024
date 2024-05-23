@@ -31,8 +31,8 @@ class TelemetryServer:
 
     def __init__(self) -> None:
         """Initialize the telemetry server."""
-        self.__port = config.telemetry.server.port
-        self.__host = config.telemetry.server.host
+        self.__port = config["telemetry"]["server"]["port"]
+        self.__host = config["telemetry"]["server"]["host"]
         self.thread = threading.Thread(target=self.__start, daemon=True)
         self.__app = fastapi.FastAPI()
 
@@ -52,7 +52,7 @@ class TelemetryServer:
 
     def start(self) -> None:
         """Start the telemetry server."""
-        if config.telemetry.enabled:
+        if config["telemetry"]["enabled"]:
             self.thread.start()
 
     def __start(self) -> None:

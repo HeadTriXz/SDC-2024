@@ -44,7 +44,7 @@ class OvertakeHandler(BaseObjectHandler):
         for x1, _, x2, y2 in predictions.xyxy:
             cx = (x1 + x2) // 2
             distance = self.controller.calibration.get_distance_to_y(cx, y2, predictions.orig_shape[::-1])
-            if distance > config.overtake.min_distance:
+            if distance > config["overtake"]["min_distance"]:
                 continue
 
             lane = self.controller.get_object_lane(cx, y2, predictions.orig_shape[::-1])
@@ -69,21 +69,21 @@ class OvertakeHandler(BaseObjectHandler):
                 self.__frames_seen[current_lane] = 0
 
             is_side_free = self.lidar.free_range(
-                config.overtake.min_angle,
-                config.overtake.max_angle,
-                config.overtake.range_threshold
+                config["overtake"]["min_angle"],
+                config["overtake"]["max_angle"],
+                config["overtake"]["range_threshold"]
             )
 
             if not is_side_free:
                 self.__frames_seen[current_lane] += 1
 
-            if self.__frames_seen[current_lane] >= config.overtake.consecutive_frames:
+            if self.__frames_seen[current_lane] >= config["overtake"]["consecutive_frames"]:
                 if is_side_free:
                     self.__frames_lost[current_lane] += 1
                 else:
                     self.__frames_lost[current_lane] -= 1
 
-            if self.__frames_lost[current_lane] >= config.overtake.consecutive_frames:
+            if self.__frames_lost[current_lane] >= config["overtake"]["consecutive_frames"]:
                 self.controller.set_lane(current_lane - 1)
                 del self.__frames_lost[current_lane]
                 del self.__frames_seen[current_lane]
