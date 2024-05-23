@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from src.lane_assist.preprocessing.stitching import stitch_images
@@ -35,6 +36,12 @@ class CalibrationData(metaclass=SingletonMeta):
     stitched_shape: tuple[int, int]
     topdown_matrix: np.ndarray
 
+    __pool: ThreadPoolExecutor
+
+    def __init__(self) -> None:
+        """Initialize the calibration data."""
+        self.__pool = ThreadPoolExecutor()
+
     def transform(self, images: list[np.ndarray]) -> np.ndarray:
         """Transform the images to a topdown view.
 
@@ -44,23 +51,19 @@ class CalibrationData(metaclass=SingletonMeta):
         if self.topdown_matrix is None:
             raise ValueError("Calibrator has not been calibrated yet.")
 
-        # Ensure all the images are the right shape
-        for i, image in enumerate(images):
-            if image.shape == self.input_shape[::-1]:
-                continue
-
-            images[i] = cv2.resize(image, self.input_shape, interpolation=cv2.INTER_NEAREST)
-
-        # Stitch the warped images together
         stitched = np.zeros(self.stitched_shape[::-1], dtype=np.uint8)
-        for i, img in enumerate(images):
+
+        futures = []
+        for i, image in enumerate(images):
             if i == self.ref_idx:
                 continue
 
-            warped = self._warp_image(img, i)
-            stitched = stitch_images(stitched, warped, self.offsets[i])
+            futures.append(self.__pool.submit(self._stitch_image, stitched, image, i))
 
-        stitched = stitch_images(stitched, images[self.ref_idx], self.offsets[self.ref_idx])
+        for future in futures:
+            stitched = future.result()
+
+        stitched = self._stitch_image(stitched, images[self.ref_idx], self.ref_idx)
 
         # Warp the stitched image to a topdown view
         return cv2.warpPerspective(
@@ -69,6 +72,20 @@ class CalibrationData(metaclass=SingletonMeta):
             self.output_shape,
             flags=cv2.INTER_NEAREST
         )
+
+    def _stitch_image(self, stitched: np.ndarray, image: np.ndarray, idx: int) -> np.ndarray:
+        """Stitch an image to the stitched image.
+
+        :param stitched: The stitched image.
+        :param image: The image to stitch.
+        :param idx: The index of the camera.
+        :return: The stitched image.
+        """
+        if image.shape[:2] != self.input_shape[::-1]:
+            image = cv2.resize(image, self.shapes[idx], interpolation=cv2.INTER_NEAREST)
+
+        warped = self._warp_image(image, idx)
+        return stitch_images(stitched, warped, self.offsets[idx])
 
     def transform_point(self, x: int, y: int, shape: tuple[int, int]) -> tuple[int, int]:
         """Transform a point to a topdown view.
@@ -148,6 +165,9 @@ class CalibrationData(metaclass=SingletonMeta):
         :param idx: The camera to select the configuration for.
         :return: The warped image.
         """
+        if idx == self.ref_idx:
+            return image
+
         return cv2.warpPerspective(image, self.matrices[idx], self.shapes[idx], flags=cv2.INTER_NEAREST)
 
     @classmethod
