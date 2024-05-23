@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 
 from ultralytics.engine.results import Boxes
@@ -10,7 +11,7 @@ from src.object_recognition.object_controller import ObjectController
 
 def start_parking() -> None:
     """Starts parking the go-kart."""
-    ...
+    logging.info("The eagle has landed.")
 
 
 class ParkingHandler(BaseObjectHandler):
@@ -70,4 +71,4 @@ class ParkingHandler(BaseObjectHandler):
         x, y = (bbox[0] + bbox[2]) // 2, bbox[3]
         distance = self.controller.calibration.get_distance_to_y(x, y, shape[::-1])
 
-        return distance < config.parking.min_distance
+        return distance < config["parking"]["min_distance"]
