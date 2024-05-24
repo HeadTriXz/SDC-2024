@@ -43,7 +43,9 @@ def start_simulator() -> None:
                 continue
 
             grayscale = cv2.cvtColor(rot_image[:-20, :], cv2.COLOR_BGR2GRAY)
-            thresholded = cv2.threshold(grayscale, config["preprocessing"]["white_threshold"], 255, cv2.THRESH_BINARY)[1]
+            thresholded = cv2.threshold(
+                grayscale, config["preprocessing"]["white_threshold"], 255, cv2.THRESH_BINARY
+            )[1]
 
             # Crop the image to the same size as real-world images.
             cx, cy = thresholded.shape[1] // 2, thresholded.shape[0]
