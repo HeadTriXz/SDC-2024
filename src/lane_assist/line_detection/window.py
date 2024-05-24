@@ -83,7 +83,7 @@ class Window:
 
                 if len(self.__points) > 1:
                     self.directions = np.roll(self.directions, 1, axis=0)
-                    self.directions[0] = [self.x - x, self.y - y]
+                    self.directions[0] = [x - self.x, y - self.y]
 
             self.shape = self.__original_shape
             self.not_found = 0
