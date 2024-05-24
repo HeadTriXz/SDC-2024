@@ -8,6 +8,7 @@ from src.lane_assist.lane_assist import LaneAssist
 from src.lane_assist.preprocessing.generator import td_stitched_image_generator
 from src.lane_assist.stop_line_assist import StopLineAssist
 from src.object_recognition.handlers.overtake_handler import OvertakeHandler
+from src.object_recognition.handlers.parking_handler import ParkingHandler
 from src.object_recognition.handlers.pedestrian_handler import PedestrianHandler
 from src.object_recognition.handlers.speed_limit_handler import SpeedLimitHandler
 from src.object_recognition.handlers.traffic_light_handler import TrafficLightHandler
@@ -112,6 +113,7 @@ class AutonomousDriving(DrivingMode):
         lidar = Lidar.safe_init()
         if lidar is not None:
             object_controller.add_handler(OvertakeHandler(object_controller, lidar))
+            object_controller.add_handler(ParkingHandler(object_controller, lidar))
 
         self.detector = ObjectDetector.from_model(
             config["object_detection"]["model_path"], object_controller, config["camera_ids"]["center"]

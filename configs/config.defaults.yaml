@@ -95,12 +95,10 @@ speed_limit:
   height_ratio: 3.1
   min_distance: 3
   class_to_speed:
-    5: 5
-    6: 10
-    7: 15
-    8: 20
-    9: 30
-    10: 40
+    6: 5
+    7: 10
+    8: 15
+    9: 20
 
 traffic_light:
   min_distance: 2
@@ -111,6 +109,9 @@ overtake:
   min_angle: 230
   max_angle: 280
   range_threshold: 3000
+
+parking:
+  min_distance: 1
 
 crosswalk:
   overlap_margin: 0.2
