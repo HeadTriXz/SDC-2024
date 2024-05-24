@@ -7,6 +7,7 @@ from src.config import config
 from src.constants import Label
 from src.object_recognition.handlers.base_handler import BaseObjectHandler
 from src.object_recognition.object_controller import ObjectController
+from src.utils.lidar import Lidar
 
 
 def start_parking() -> None:
@@ -17,12 +18,16 @@ def start_parking() -> None:
 class ParkingHandler(BaseObjectHandler):
     """A handler for parking spaces."""
 
-    def __init__(self, controller: ObjectController) -> None:
+    lidar: Lidar
+
+    def __init__(self, controller: ObjectController, lidar: Lidar) -> None:
         """Initializes the parking handler.
 
         :param controller: The object controller.
+        :param lidar: The lidar sensor.
         """
         super().__init__(controller, [Label.PARKING_SPACE])
+        self.lidar = lidar
 
     def handle(self, predictions: Boxes) -> None:
         """Check if there is a parking space available. If so, set the state to parking.
