@@ -5,7 +5,7 @@ from collections.abc import Iterable
 from src.config import config
 from src.lane_assist.line_detection.line import Line, LineType
 from src.lane_assist.line_detection.window import Window
-from src.utils.other import center_of_masses
+from src.utils.center_of_masses import center_of_masses
 
 
 def process_window(image: np.ndarray, window: Window, stop_line: bool) -> Line | None:
@@ -22,7 +22,7 @@ def process_window(image: np.ndarray, window: Window, stop_line: bool) -> Line |
         top, bottom, left, right = window.get_borders(image.shape)
 
         chunk = image[top:bottom, left:right]
-        non_zero = np.argwhere(chunk)
+        non_zero = np.transpose(np.nonzero(chunk))
 
         # Move the window if there are not enough points in it
         if len(non_zero) < config["line_detection"]["pixels_in_window"]:
@@ -40,14 +40,11 @@ def process_window(image: np.ndarray, window: Window, stop_line: bool) -> Line |
         if stop_line:
             y_shift = 0
 
-        new_pos = [left + x_shift, top + y_shift]
+        new_pos = (left + x_shift, top + y_shift)
 
         # Kill the window if we suddenly change direction.
         if window.not_found >= 3 and window.point_count > len(window.directions):
-            curr_direction = abs(np.arctan2(np.subtract(window.points[-1], new_pos)))
-            prev_direction = abs(np.arctan2(window.directions.mean(axis=0)))
-
-            angle_diff = abs(prev_direction - curr_direction * 180 / np.pi)
+            angle_diff = __get_angle(window, new_pos)
             if angle_diff > config["line_detection"]["thresholds"]["max_angle_difference"]:
                 break
 
@@ -76,6 +73,24 @@ def window_search(image: np.ndarray, windows: Iterable[Window], stop_line: bool 
             lines.append(line)
 
     return lines
+
+
+def __get_angle(window: Window, new_pos: tuple[int, int]) -> float:
+    """Get the angle between the last point and the new position.
+
+    :param window: The window.
+    :param new_pos: The new position.
+    :return: The angle between the last point and the new position.
+    """
+    # Get the angle of the last point to the current point.
+    x_diff, y_diff = np.subtract(window.last_point, new_pos)
+    curr_direction = abs(np.arctan2(y_diff, x_diff) * 180 / np.pi)
+
+    # Get the angle of the line
+    x_diff, y_diff = window.directions.mean(axis=0)
+    prev_direction = abs(np.arctan2(y_diff, x_diff) * 180 / np.pi)
+
+    return abs(prev_direction - curr_direction)
 
 
 def __move_no_points(window: Window) -> None:
