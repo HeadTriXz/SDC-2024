@@ -107,7 +107,7 @@ class Window:
         :param y: The new y position.
         :return: Whether the new position is crowded.
         """
-        distance = euclidean_distance(self.__points[-1], (x, y))
+        distance = euclidean_distance(self.last_point, (x, y))
         min_distance = self.shape[0] * config["line_detection"]["min_window_shift"]
 
         return distance < min_distance

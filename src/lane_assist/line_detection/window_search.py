@@ -101,7 +101,7 @@ def __move_no_points(window: Window) -> None:
     x_shift = 0
     y_shift = -window.shape[0]
 
-    if window.point_count >= 3:
+    if window.point_count >= len(window.directions):
         x_shift, y_shift = window.directions.mean(axis=0)
 
     window.move(window.x + x_shift, window.y + y_shift, False)
