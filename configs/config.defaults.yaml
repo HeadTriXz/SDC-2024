@@ -31,7 +31,7 @@ line_detection:
 
   window_sizing:
     height: 0.5  # meters
-    width: 0.6  # meters
+    width: 1.0  # meters
 
   thresholds:
     max_angle_difference: 30  # degrees

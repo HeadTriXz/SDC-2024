@@ -17,6 +17,7 @@ def process_window(image: np.ndarray, window: Window, stop_line: bool) -> Line |
     :param stop_line: Whether we are searching for a stop line.
     :return: The processed window.
     """
+    image_center = image.shape[1] // 2
     while not __window_at_bounds(image, window):
         top, bottom, left, right = window.get_borders(image.shape)
 
@@ -29,7 +30,7 @@ def process_window(image: np.ndarray, window: Window, stop_line: bool) -> Line |
             continue
 
         # Calculate the new position of the window
-        target = 0 if right < image.shape[1] else window.shape[1]
+        target = window.shape[1] if right < image_center else 0
         offset = center_of_masses(chunk, target, config["line_detection"]["pixels_in_window"])
         if offset is None:
             __move_no_points(window)

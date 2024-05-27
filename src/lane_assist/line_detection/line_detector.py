@@ -10,7 +10,7 @@ from src.config import config
 from src.lane_assist.line_detection.line import Line, LineType
 from src.lane_assist.line_detection.window import Window
 from src.lane_assist.line_detection.window_search import window_search
-from src.lane_assist.preprocessing.image_filters import basic_filter
+from src.lane_assist.preprocessing.image_filters import morphex_filter
 from src.utils.other import get_border_of_points
 
 
@@ -48,11 +48,12 @@ def get_lines(image: np.ndarray, calibration: CalibrationData) -> list[Line]:
     """
     # Filter the image. This is done in place and will be used to remove zebra crossings.
     if config["line_detection"]["filtering"]["active"]:
-        basic_filter(image, calibration)
+        filter_mask = cv2.bitwise_not(morphex_filter(image, calibration))
+        image = cv2.bitwise_and(image, filter_mask)
 
     # Create histogram to find the start of the lines.
     # This is done by weighting the pixels using a logspace.
-    pixels = image[image.shape[0] // 2 :, :]
+    pixels = image[image.shape[0] // 2:, :]
     pixels = np.multiply(pixels, np.logspace(0, 1, pixels.shape[0])[:, np.newaxis])
     histogram = np.sum(pixels, axis=0)
 
