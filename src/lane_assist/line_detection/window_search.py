@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 
 from collections.abc import Iterable
@@ -30,7 +32,7 @@ def process_window(image: np.ndarray, window: Window, stop_line: bool) -> Line |
             continue
 
         # Calculate the new position of the window
-        target = max(0, min(image_center - left, window.shape[1]))
+        target = 0 if right < image.shape[1] else window.shape[1]
         offset = center_of_masses(chunk, target, config["line_detection"]["pixels_in_window"])
         if offset is None:
             __move_no_points(window)
@@ -43,7 +45,7 @@ def process_window(image: np.ndarray, window: Window, stop_line: bool) -> Line |
         new_pos = (left + x_shift, top + y_shift)
 
         # Kill the window if we suddenly change direction.
-        if window.not_found >= 3 and window.point_count > len(window.directions):
+        if window.not_found >= 3:
             angle_diff = __get_angle(window, new_pos)
             if angle_diff > config["line_detection"]["thresholds"]["max_angle_difference"]:
                 break
@@ -83,12 +85,12 @@ def __get_angle(window: Window, new_pos: tuple[int, int]) -> float:
     :return: The angle between the last point and the new position.
     """
     # Get the angle of the last point to the current point.
-    x_diff, y_diff = np.subtract(window.last_point, new_pos)
-    curr_direction = abs(np.arctan2(y_diff, x_diff) * 180 / np.pi)
+    x_diff, y_diff = np.subtract(new_pos, window.last_point)
+    curr_direction = math.atan2(y_diff, x_diff) * 180 / np.pi
 
     # Get the angle of the line
-    x_diff, y_diff = window.directions.mean(axis=0)
-    prev_direction = abs(np.arctan2(y_diff, x_diff) * 180 / np.pi)
+    x_diff, y_diff = window.directions.sum(axis=0)
+    prev_direction = math.atan2(y_diff, x_diff) * 180 / np.pi
 
     return abs(prev_direction - curr_direction)
 
