@@ -42,6 +42,11 @@ class Window:
         self.__original_shape = shape
 
     @property
+    def last_point(self) -> tuple[int, int]:
+        """The last point in the window."""
+        return self.__points[-1]
+
+    @property
     def margin(self) -> int:
         """The margin of the window (x-axis)."""
         return self.shape[1] // 2
@@ -69,21 +74,21 @@ class Window:
 
         return top, bottom, left, right
 
-    def move(self, x: int, y: int, points: bool = True) -> None:
+    def move(self, x: int, y: int, found_points: bool = True) -> None:
         """Move the window to a new position.
 
         :param x: The new x position.
         :param y: The new y position.
-        :param points: Whether we found points in the window.
+        :param found_points: Whether we found points in the window.
         """
         margin = 1 + config["line_detection"]["window_margin_growth"]
-        if points:
+        if found_points:
             if self.point_count == 0 or not self.__is_crowded(x, y):
                 self.__points.append((x, y))
 
-                if len(self.__points) > 1:
+                if self.point_count > 1:
                     self.directions = np.roll(self.directions, 1, axis=0)
-                    self.directions[0] = [self.x - x, self.y - y]
+                    self.directions[0] = [x - self.x, y - self.y]
 
             self.shape = self.__original_shape
             self.not_found = 0
@@ -102,7 +107,7 @@ class Window:
         :param y: The new y position.
         :return: Whether the new position is crowded.
         """
-        distance = euclidean_distance(self.points[-1], (x, y))
+        distance = euclidean_distance(self.last_point, (x, y))
         min_distance = self.shape[0] * config["line_detection"]["min_window_shift"]
 
         return distance < min_distance

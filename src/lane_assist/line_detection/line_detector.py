@@ -125,13 +125,15 @@ def __get_lines(
     :param calibration: The calibration data of the stitching, used for calculating the window sizes.
     :return: The lines in the image and the height of the windows.
     """
-    std = np.std(histogram) * 2
+    mean = np.mean(histogram)
+    std = np.std(histogram)
+    threshold = mean + std
 
     window_width = calibration.get_pixels(config["line_detection"]["window_sizing"]["width"])
     window_height = calibration.get_pixels(config["line_detection"]["window_sizing"]["height"])
     window_shape = (window_height, window_width)
 
-    peaks = scipy.signal.find_peaks(histogram, height=std, distance=window_width * 2, rel_height=0.9)[0]
+    peaks = scipy.signal.find_peaks(histogram, height=threshold, distance=window_width * 2, rel_height=0.9)[0]
     windows = [Window(center, image.shape[0], window_shape) for center in peaks]
     lines = window_search(image, windows, stop_line)
 

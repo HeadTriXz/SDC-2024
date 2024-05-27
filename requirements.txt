@@ -3,6 +3,7 @@ fastapi==0.110.0
 inputs==0.5
 matplotlib==3.8.3
 nncf==2.10.0
+numba==0.59.1
 numpy==1.26.4
 PyYAML==6.0.1
 opencv-python==4.9.0.80

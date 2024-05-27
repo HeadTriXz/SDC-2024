@@ -1,9 +1,11 @@
+import numba
 import numpy as np
 
 
 Coordinate = tuple[int, int] | np.ndarray
 
 
+@numba.njit
 def euclidean_distance(p1: Coordinate, p2: Coordinate) -> float:
     """Calculate the Euclidean distance between two points.
 
