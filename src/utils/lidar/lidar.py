@@ -7,9 +7,10 @@ from threading import Thread
 from typing import Optional
 
 from src.config import config
+from src.utils.lidar.ILidar import ILidar
 
 
-class Lidar:
+class Lidar(ILidar):
     """Class to read data from the lidar and process the data from it.
 
     The lidar can be used to find the distance to the obstacles around the car.
@@ -30,31 +31,15 @@ class Lidar:
 
     def __init__(self) -> None:
         """Initializes the lidar."""
+        super().__init__()
+
         self.lidar = RPLidar(config["lidar"]["port_name"], timeout=5)
-        self.thread = Thread(target=self.capture, daemon=True)
         self.scan_data = np.full(360, np.inf)
 
-    def find_obstacle_distance(self, angle_min: int, angle_max: int) -> int:
-        """A function that finds the distance to the closest obstacle in a certain angle range.
-
-        :param angle_min: The minimum angle to check.
-        :param angle_max: The maximum angle to check.
-        :return: The distance to the closest obstacle.
-        """
-        if angle_min < 0:
-            return min(*self.scan_data[359 + angle_min :], *self.scan_data[:angle_max])
-
-        return min(self.scan_data[angle_min:angle_max])
-
-    def free_range(self, angle_min: int, angle_max: int, distance: int) -> bool:
-        """A function that checks if the side between angle_min and angle_max of the car is free.
-
-        :param angle_min: The minimum angle to check. (180 is the front of the car)
-        :param angle_max: The maximum angle to check. (180 is the front of the car)
-        :param distance: The minimum distance to check.
-        :return: Whether the side is free.
-        """
-        return self.find_obstacle_distance(angle_min, angle_max) > distance
+    @property
+    def points(self) -> np.ndarray:
+        """Return the points in the lidar sensor."""
+        return self.scan_data
 
     def capture(self) -> None:
         """A function that captures the data from the lidar and filters it."""

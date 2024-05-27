@@ -15,7 +15,7 @@ from src.object_recognition.handlers.traffic_light_handler import TrafficLightHa
 from src.object_recognition.object_controller import ObjectController
 from src.object_recognition.object_detector import ObjectDetector
 from src.telemetry.app import TelemetryServer
-from src.utils.lidar import Lidar
+from src.utils.lidar.lidar import Lidar
 from src.utils.video_stream import VideoStream
 
 

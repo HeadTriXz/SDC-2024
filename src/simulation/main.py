@@ -1,16 +1,12 @@
 import airsim
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 
 from typing import Generator
 
 from src.calibration.data import CalibrationData
 from src.config import config
-from src.constants import Gear
-from src.driving.speed_controller import SpeedController, SpeedControllerState
-from src.lane_assist.lane_assist import LaneAssist
-from src.lane_assist.stop_line_assist import StopLineAssist
-from src.simulation.can_controller import SimCanController
 from src.telemetry.app import TelemetryServer
 
 
@@ -31,6 +27,37 @@ def start_simulator() -> None:
 
     mx, my = int(width * factor / 2), int(height * factor)
 
+    def get_lidar_data() -> np.ndarray:
+        lidar_data = client.getLidarData()
+        # convert the point cloud to [(angle, distance), ...] in the car's frame of reference in horizontal axis
+        if len(lidar_data.point_cloud) == 0:
+            return np.array([])
+        points = np.array(lidar_data.point_cloud, dtype=np.float32)
+        points = points.reshape((int(points.shape[0] / 3), 3))
+
+        x_y = points[:, :2]
+        # get distance from the origin
+        distances = np.linalg.norm(x_y, axis=1)
+        # get the angle
+        angles = np.arctan2(x_y[:, 1], x_y[:, 0])
+        # combine the angles and distances
+        points = np.stack((angles, distances), axis=1)
+
+        # put into buckets of 1 degeree and grab a random point from each bucket
+        # this is to reduce the number of points we have to process
+        points = np.rad2deg(points)
+        points = np.round(points)
+        points = np.unique(points, axis=0)
+
+        distances = np.full((360, 1), np.inf)
+        for point in points:
+            angle, distance = point
+            angle = int(angle)
+            if distances[angle] > distance:
+                distances[angle] = distance
+
+        return distances
+
     def get_sim_image_generator() -> Generator[np.ndarray, None, None]:
         while True:
             responses = client.simGetImages([airsim.ImageRequest("0", airsim.ImageType.Scene, False, False)])
@@ -43,14 +70,14 @@ def start_simulator() -> None:
                 continue
 
             grayscale = cv2.cvtColor(rot_image[:-20, :], cv2.COLOR_BGR2GRAY)
-            thresholded = cv2.threshold(
-                grayscale, config["preprocessing"]["white_threshold"], 255, cv2.THRESH_BINARY
-            )[1]
+            thresholded = cv2.threshold(grayscale, config["preprocessing"]["white_threshold"], 255, cv2.THRESH_BINARY)[
+                1
+            ]
 
             # Crop the image to the same size as real-world images.
             cx, cy = thresholded.shape[1] // 2, thresholded.shape[0]
 
-            cropped = thresholded[cy - my:cy + my, cx - mx:cx + mx]
+            cropped = thresholded[cy - my : cy + my, cx - mx : cx + mx]
             resized = cv2.resize(cropped, (width, height))
 
             # Add information loss; this is the same as with real cameras.
@@ -58,7 +85,7 @@ def start_simulator() -> None:
                 resized,
                 calibration.topdown_matrix,
                 calibration.stitched_shape,
-                flags=cv2.WARP_INVERSE_MAP | cv2.INTER_NEAREST
+                flags=cv2.WARP_INVERSE_MAP | cv2.INTER_NEAREST,
             )
 
             top_view = cv2.warpPerspective(
@@ -70,25 +97,16 @@ def start_simulator() -> None:
 
             yield top_view
 
-    can_controller = SimCanController()
-    speed_controller = SpeedController(can_controller)
-    speed_controller.gear = Gear.DRIVE
-    speed_controller.state = SpeedControllerState.DRIVING
-    speed_controller.max_speed = 5
+    while True:
+        print("Getting lidar data")
+        # plot the lidar data
+        lidar_data = get_lidar_data()
+        print(len(lidar_data))
+        if len(lidar_data) == 0:
+            continue
 
-    # Initialize the lane assist
-    stop_line_assist = StopLineAssist(speed_controller, calibration)
-    lane_assist = LaneAssist(
-        get_sim_image_generator,
-        stop_line_assist,
-        speed_controller,
-        telemetry=telemetry,
-        calibration=calibration
-    )
+        # update the plot
+        plt.clf()
+        plt.polar(np.linspace(0, 2 * np.pi, 360), lidar_data)
+        plt.pause(0.01)
 
-    telemetry.start()
-    speed_controller.start()
-    speed_controller.toggle()
-
-    lane_assist.toggle()
-    lane_assist.start()
