@@ -1,5 +1,4 @@
 import math
-
 import numpy as np
 
 from collections.abc import Iterable
@@ -18,8 +17,6 @@ def process_window(image: np.ndarray, window: Window, stop_line: bool) -> Line |
     :param stop_line: Whether we are searching for a stop line.
     :return: The processed window.
     """
-    image_center = image.shape[1] // 2
-
     while not __window_at_bounds(image, window):
         top, bottom, left, right = window.get_borders(image.shape)
 
