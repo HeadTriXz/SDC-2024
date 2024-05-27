@@ -1,5 +1,6 @@
 import logging
 import numpy as np
+import time
 
 from math import floor
 from rplidar import RPLidar
@@ -30,7 +31,7 @@ class Lidar:
 
     def __init__(self) -> None:
         """Initializes the lidar."""
-        self.lidar = RPLidar(config["lidar"]["port_name"], timeout=5)
+        self.lidar = RPLidar(config.lidar.port_name, timeout=5)
         self.thread = Thread(target=self.capture, daemon=True)
         self.scan_data = np.full(360, np.inf)
 
@@ -42,7 +43,7 @@ class Lidar:
         :return: The distance to the closest obstacle.
         """
         if angle_min < 0:
-            return min(*self.scan_data[359 + angle_min :], *self.scan_data[:angle_max])
+            return min(*self.scan_data[359 + angle_min:], *self.scan_data[:angle_max])
 
         return min(self.scan_data[angle_min:angle_max])
 
@@ -58,24 +59,40 @@ class Lidar:
 
     def capture(self) -> None:
         """A function that captures the data from the lidar and filters it."""
-        for scan in self.lidar.iter_scans():
-            if not self.running:
-                return
+        while self.running:
+            try:
+                self.lidar.clean_input()
+                for scan in self.lidar.iter_scans():
+                    if not self.running:
+                        return
 
-            for _, angle, distance in scan:
-                angle = int(angle % 360)
-                if distance < config["lidar"]["min_distance"]:
-                    self.scan_data[floor(angle)] = np.inf
-                    continue
+                    for _, angle, distance in scan:
+                        angle = int(angle % 360)
+                        if distance < config["lidar"]["min_distance"]:
+                            self.scan_data[floor(angle)] = np.inf
+                            continue
 
-                self.scan_data[floor(angle)] = distance
+                        self.scan_data[floor(angle)] = distance
+
+            except Exception as e:
+                logging.warning("Failed to capture the lidar data: %s", e)
+                self.lidar.stop()
+                self.lidar.reset()
+                self.lidar.start()
+            time.sleep(0.1)
 
     def start(self) -> None:
         """Start the lidar."""
         self.running = True
-        self.lidar.reset()
         if not self.thread.is_alive():
             self.thread.start()
+
+    def restart(self) -> None:
+        """Restart and reset the lidar."""
+        self.lidar.disconnect()
+        self.lidar.connect()
+        self.lidar.clean_input()
+        self.lidar.start()
 
     def stop(self) -> None:
         """Stop the lidar."""
