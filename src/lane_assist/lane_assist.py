@@ -116,7 +116,7 @@ class LaneAssist:
         self.__stop_line_assist.detect_and_handle(image, filtered_lines)
 
         # If telemetry is enabled, send the image to the telemetry server.
-        if config["telemetry"]["enabled"]:
+        if config["telemetry"]["enabled"] and self.telemetry.any_listening():
             rgb = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
 
             # Draw the path on the image.

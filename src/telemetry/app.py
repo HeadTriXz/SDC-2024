@@ -50,6 +50,21 @@ class TelemetryServer:
         self.__app.mount("/js", StaticFiles(directory=get_path("static/js")), name="static")
         self.__app.mount("/css", StaticFiles(directory=get_path("static/css")), name="static")
 
+    def add_callback_function(self, name: str, func: callable) -> None:
+        """Add a callback function.
+
+        :param name: The name of the callback function.
+        :param func: The callback function to add.
+        """
+        self.available_functions[name] = func
+
+    def any_listening(self) -> bool:
+        """Check if there are any active connections.
+
+        :return: Whether there are any active connections.
+        """
+        return self.websocket_handler.any_active()
+
     def start(self) -> None:
         """Start the telemetry server."""
         if config["telemetry"]["enabled"]:
@@ -67,14 +82,6 @@ class TelemetryServer:
         with open(get_path("static/index.html")) as f:
             html = f.read().replace("$root-url", f"{get_ip()}:{self.__port}")
             return HTMLResponse(content=html)
-
-    def add_callback_function(self, name: str, func: callable) -> None:
-        """Add a callback function.
-
-        :param name: The name of the callback function.
-        :param func: The callback function to add.
-        """
-        self.available_functions[name] = func
 
     def __execute_function(self, name: str) -> Any:
         """Execute a function based on the provided name.
