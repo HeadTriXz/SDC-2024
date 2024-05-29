@@ -47,6 +47,7 @@ class ObjectDetector:
         model = YOLO(self.model_path)
 
         while self.stream.has_next():
+            start = time.perf_counter()
             frame = self.stream.next()
             results = model.track(
                 frame,
@@ -58,7 +59,11 @@ class ObjectDetector:
             )
 
             self.controller.handle(results[0].boxes)
-            time.sleep(0)
+            end = time.perf_counter()
+
+            # Sleep for the remaining time to keep the FPS constant.
+            sleep_time = 1 / config["object_detection"]["max_frame_rate"] - (end - start)
+            time.sleep(max(0, sleep_time))
 
         self.stream.stop()
 
