@@ -1,13 +1,17 @@
 kart:
   max_steering_angle: 20
+
   braking:
     max_force: 100
     min_force: 0
 
+  speed_modes:
+    selected: 20
+
 line_following:
   requested_lane:
     override: true
-    lane: 1
+    lane: 0
 
   pid:
     kp: 20.0

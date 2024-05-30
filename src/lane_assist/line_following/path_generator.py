@@ -1,9 +1,12 @@
+import math
 import numpy as np
 
 from scipy.signal import savgol_filter
 
 from src.calibration.data import CalibrationData
+from src.config import config
 from src.lane_assist.line_detection.line import Line
+from src.utils.other import euclidean_distance
 
 
 class Path:
@@ -54,12 +57,18 @@ class Path:
         return f"Path({self.points}, {self.radius})"
 
 
-def generate_driving_path(calibration: CalibrationData, lines: list[Line], requested_lane: int) -> Path:
+def generate_driving_path(
+        calibration: CalibrationData,
+        lines: list[Line],
+        requested_lane: int,
+        current_position: tuple[int, int]
+) -> Path:
     """Generate the driving path based on the lines.
 
     :param calibration: The calibration data.
     :param requested_lane: The lane we want to drive in.
     :param lines: The lines to generate the path from.
+    :param current_position: The current position of the go-kart.
     :return: The generated path.
     """
     lanes = [[lines[i], lines[i - 1]] for i in range(len(lines) - 1, 0, -1)]
@@ -84,6 +93,25 @@ def generate_driving_path(calibration: CalibrationData, lines: list[Line], reque
     # Smooth the centerline.
     center_x = savgol_filter(center_x, 51, 3)
     center_y = savgol_filter(center_y, 51, 3)
+
+    # Find the intersection point.
+    dist = calibration.get_distance(abs(center_x[0] - current_position[0]))
+    if dist > config["line_following"]["look_ahead_distance"] * 2:
+        look_ahead_padding = max(0.0, math.log(dist + 1) * 2)
+        look_ahead_px = calibration.get_pixels(dist + look_ahead_padding)
+
+        i = 0
+        for i in range(len(center_x)):
+            distance = euclidean_distance(current_position, (center_x[i], center_y[i]))
+            if distance > look_ahead_px:
+                break
+
+        intersection_point = np.array([center_x[i], center_y[i]])
+        feeler_points = np.concatenate([np.linspace(current_position, intersection_point, look_ahead_px // 3)])
+
+        # Add the feeler points to the centerline.
+        center_x = np.concatenate([feeler_points[:, 0], center_x[i:]])
+        center_y = np.concatenate([feeler_points[:, 1], center_y[i:]])
 
     return Path(calibration, np.array([center_x, center_y]).T)
 
