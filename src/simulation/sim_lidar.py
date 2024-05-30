@@ -58,9 +58,11 @@ class SimLidar(ILidar):
         :param angle_max: The maximum angle to check.
         :return: The distance to the closest obstacle.
         """
-        return self.points.index(min(self.points[angle_min:angle_max]))
+        return np.argmin(self.points[angle_min:angle_max]) + angle_min
 
-    def find_highest_index(self, angle_min: int, angle_max: int, min_dist: int, max_dist: int) -> int:
+
+
+    def find_rightmost_point(self, angle_min: int, angle_max: int, min_dist: int, max_dist: int) -> int:
         """A function that returns the distance to rightmost object in range.
 
         :param angle_min: The minimum angle to check.
@@ -71,6 +73,34 @@ class SimLidar(ILidar):
         for i in range(angle_max, angle_min, -1):
             if min_dist < self.points[i] < max_dist:
                 return self.points[i]
+        return 0
+
+    def find_highest_index(self, angle_min: int, angle_max: int, min_dist: int, max_dist:int) -> int:
+        """A function that returns the highest index with a distance in range.
+
+        :param angle_min: The minimum angle to check.
+        :param angle_max: The maximum angle to check.
+        :param min_dist: The minimum distance to check.
+        :param max_dist: The maximum distance to check.
+        :return: The highest index with a distance in range.
+        """
+        for i in range(angle_max, angle_min, -1):
+            if min_dist < self.points[i] < max_dist:
+                return i
+        return 0
+
+    def find_lowest_index(self, angle_min: int, angle_max: int, min_dist: int, max_dist:int) -> int:
+        """A function that returns the lowest index with a distance in range.
+
+        :param angle_min: The minimum angle to check.
+        :param angle_max: The maximum angle to check.
+        :param min_dist: The minimum distance to check.
+        :param max_dist: The maximum distance to check.
+        :return: The lowest index with a distance in range.
+        """
+        for i in range(angle_min, angle_max):
+            if min_dist < self.points[i] < max_dist:
+                return i
         return 0
 
     def free_range(self, angle_min: int, angle_max: int, distance: int) -> bool:

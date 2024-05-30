@@ -1,8 +1,6 @@
-from threading import Thread
-
-import numpy as np
 
 from abc import ABC, abstractmethod
+from threading import Thread
 
 
 class ILidar(ABC):
@@ -14,8 +12,6 @@ class ILidar(ABC):
     def capture(self) -> None:
         """A function that captures the data from the lidar and filters it."""
         pass
-
-
 
     def start(self) -> None:
         """Start the lidar."""

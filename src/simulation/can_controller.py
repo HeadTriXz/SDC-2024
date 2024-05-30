@@ -1,7 +1,7 @@
 import airsim
 import can
 
-from src.constants import CANFeedbackIdentifier
+from src.constants import CANFeedbackIdentifier, Gear
 from src.driving.can import ICANController
 
 
@@ -11,6 +11,7 @@ class SimCanController(ICANController):
     updating = False
 
     brake = 0
+    gear: Gear = Gear.NEUTRAL
     throttle = 0
     steering = 0
 
@@ -39,9 +40,10 @@ class SimCanController(ICANController):
         self.brake = brake / 100
         self.update()
 
-    def set_throttle(self, throttle: int, _gear: int) -> None:
+    def set_throttle(self, throttle: int, gear: Gear) -> None:
         """Set the speed."""
         self.throttle = throttle / 100
+        self.gear = gear
         self.update()
 
     def set_steering(self, steering: float) -> None:
@@ -58,6 +60,10 @@ class SimCanController(ICANController):
         car_controls = airsim.CarControls()
         car_controls.steering = self.steering
         car_controls.throttle = self.throttle
+        car_controls.is_manual_gear = self.gear == Gear.REVERSE
+        if car_controls.is_manual_gear:
+            car_controls.manual_gear = -1
+
         car_controls.brake = self.brake
         self.update_client.setCarControls(car_controls)
         state = self.update_client.getCarState()

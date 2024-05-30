@@ -7,6 +7,7 @@ from src.config import config
 from src.constants import Label
 from src.object_recognition.handlers.base_handler import BaseObjectHandler
 from src.object_recognition.object_controller import ObjectController
+from src.parking.parking_handler import ParkingHandler
 from src.utils.lidar.lidar import Lidar
 
 
@@ -40,7 +41,7 @@ class ParkingHandler(BaseObjectHandler):
         if not self.__any_within_distance(predictions):
             return
 
-        start_parking()
+        self.controller.lane_assist.toggle()
 
     def __any_within_distance(self, predictions: Boxes) -> bool:
         """Check if any parking space is within the distance threshold.
