@@ -4,8 +4,10 @@ from threading import Thread
 
 
 class ILidar(ABC):
+    """An interface for a lidar."""
 
     def __init__(self) -> None:
+        """Initialize the lidar."""
         self.thread = Thread(target=self.capture, daemon=True)
 
     @abstractmethod
