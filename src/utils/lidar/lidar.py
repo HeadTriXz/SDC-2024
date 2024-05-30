@@ -75,7 +75,7 @@ class Lidar(ILidar):
         """
         return np.argmin(self.points[angle_min:angle_max]) + angle_min
 
-    def find_highest_angle(self, angle_min: int, angle_max: int, min_dist: int, max_dist:int) -> int:
+    def find_highest_index(self, angle_min: int, angle_max: int, min_dist: int, max_dist:int) -> int:
         """A function that returns the highest index with a distance in range.
 
         :param angle_min: The minimum angle to check.
@@ -89,7 +89,7 @@ class Lidar(ILidar):
                 return i
         return 0
 
-    def find_lowest_angle(self, angle_min: int, angle_max: int, min_dist: int, max_dist:int) -> int:
+    def find_lowest_index(self, angle_min: int, angle_max: int, min_dist: int, max_dist:int) -> int:
         """A function that returns the lowest index with a distance in range.
 
         :param angle_min: The minimum angle to check.
