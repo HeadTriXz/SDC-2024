@@ -65,7 +65,7 @@ def start_simulator() -> None:
                 front_view, calibration.topdown_matrix, calibration.output_shape, flags=cv2.INTER_NEAREST
             )
 
-            if config["telemetry"]["enabled"]:
+            if config["telemetry"]["enabled"] and telemetry.any_listening():
                 telemetry.websocket_handler.send_image("topdown", top_view)
 
             yield top_view

@@ -61,7 +61,6 @@ class WebsocketHandler:
     def __init__(self) -> None:
         """Initialize the websocket handler."""
         self.websocket_clients = {}
-        self.websockets_active = {}
 
     def add_socket(self, name: str, websocket: WebSocket, loop: AbstractEventLoop) -> WebsocketDataStream:
         """Add a websocket client to the list of clients.
@@ -76,6 +75,13 @@ class WebsocketHandler:
 
         self.websocket_clients[name].append(WebsocketDataStream(websocket, loop))
         return self.websocket_clients[name][-1]
+
+    def any_active(self) -> bool:
+        """Check if there are any active websockets.
+
+        :return: Whether there are any active websockets.
+        """
+        return any(len(clients) > 0 for clients in self.websocket_clients.values())
 
     def send_image(self, name: str, image: np.ndarray) -> None:
         """Send image on channel with the given name.
