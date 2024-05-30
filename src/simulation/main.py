@@ -62,7 +62,12 @@ def start_simulator() -> None:
             )
 
             top_view = cv2.warpPerspective(
-                front_view, calibration.topdown_matrix, calibration.output_shape, flags=cv2.INTER_NEAREST
+                front_view,
+                calibration.topdown_matrix,
+                calibration.output_shape,
+                flags=cv2.INTER_NEAREST,
+                borderMode=cv2.BORDER_CONSTANT,
+                borderValue=(255, 255, 255)
             )
 
             if config["telemetry"]["enabled"]:

@@ -11,32 +11,44 @@ from src.lane_assist.line_detection.line import Line, LineType
 from src.lane_assist.line_detection.window import Window
 from src.lane_assist.line_detection.window_search import window_search
 from src.lane_assist.preprocessing.image_filters import morphex_filter
-from src.utils.other import get_border_of_points
+from src.utils.other import euclidean_distance, get_border_of_points
 
 
-def filter_lines(lines: list[Line], starting_point: int) -> list[Line]:
+def filter_lines(lines: list[Line], position: tuple[int, int]) -> list[Line]:
     """Get the lines between the solid lines closest to each side of the starting point.
 
     :param lines: The lines to filter.
-    :param starting_point: The starting point.
+    :param position: Our position in the image.
     :return: The filtered lines.
     """
-    i = 0
-    j = 0
+    sorted_lanes = sorted(lines, key=lambda line: euclidean_distance(line.points[0], position))
 
-    while i < len(lines):
-        # Check if we are after the starting point
-        if lines[i].points[0][0] >= starting_point and lines[i].line_type == LineType.SOLID:
-            # Back up until we find a solid line
-            j = i
-            while j > 0:
-                j -= 1
-                if lines[j].line_type == LineType.SOLID:
-                    break
+    closest_left = None
+    closest_right = None
+
+    for line in sorted_lanes:
+        if closest_left is not None and closest_right is not None:
             break
-        i += 1
 
-    return lines[j : i + 1]
+        if line.line_type != LineType.SOLID:
+            continue
+
+        if closest_left is None and line.points[0][0] < position[0]:
+            closest_left = line
+
+        if closest_right is None and line.points[0][0] > position[0]:
+            closest_right = line
+
+    start_idx = 0
+    stop_idx = len(lines)
+
+    if closest_left is not None:
+        start_idx = lines.index(closest_left)
+
+    if closest_right is not None:
+        stop_idx = lines.index(closest_right) + 1
+
+    return lines[start_idx:stop_idx]
 
 
 def get_lines(image: np.ndarray, calibration: CalibrationData) -> list[Line]:
@@ -130,12 +142,13 @@ def __get_lines(
     std = np.std(histogram)
     threshold = mean + std
 
-    window_width = calibration.get_pixels(config["line_detection"]["window_sizing"]["width"])
-    window_height = calibration.get_pixels(config["line_detection"]["window_sizing"]["height"])
+    max_width = calibration.get_pixels(config["line_detection"]["window"]["max_width"])
+    window_width = calibration.get_pixels(config["line_detection"]["window"]["min_width"])
+    window_height = calibration.get_pixels(config["line_detection"]["window"]["height"])
     window_shape = (window_height, window_width)
 
     peaks = scipy.signal.find_peaks(histogram, height=threshold, distance=window_width * 2, rel_height=0.9)[0]
-    windows = [Window(center, image.shape[0], window_shape) for center in peaks]
+    windows = [Window(center, image.shape[0], window_shape, max_width) for center in peaks]
     lines = window_search(image, windows, stop_line)
 
     return lines, window_height

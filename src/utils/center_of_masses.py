@@ -85,7 +85,7 @@ def center_of_masses(image: np.ndarray, target: int, min_pixels: int = 1) -> tup
     for i in range(num_features):
         if counts[i] >= min_pixels:
             center = centroids[i]
-            distance = abs(center[1] - target)
+            distance = abs(target - center[1])
 
             if distance < nearest_dist:
                 nearest = center
