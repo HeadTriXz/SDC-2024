@@ -57,14 +57,14 @@ line_following:
   look_ahead_distance: .5  # meters
 
   pid:
-    kp: 40.0
+    kp: 20.0
     ki: 1.0
     kd: 0.5
 
 dynamic_speed:
   friction_coefficient: 0.3
-  static: false
-  static_speed: 10
+  static: true
+  static_speed: 4
 
 camera_ids:
   left: 0
