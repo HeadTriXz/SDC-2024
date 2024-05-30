@@ -25,23 +25,26 @@ preprocessing:
   white_threshold: 180
 
 line_detection:
-  pixels_in_window: 3
-  window_margin_growth: 0.05  # Percentage, relative to the window width.
-  min_window_shift: 0.3 # Percentage, relative to the window height.
+  max_angle_difference: 30  # degrees
+  max_angle_junction: 60  # degrees
 
-  window_sizing:
+  window:
     height: 0.5  # meters
-    width: 1.0  # meters
+    min_width: 1.0  # meters
+    max_width: 2.0  # meters
+
+    min_pixels: 3
+    min_shift: 0.3  # percentage, relative to the window height.
+    margin_growth: 0.3  # percentage, relative to the window height.
 
   thresholds:
-    max_angle_difference: 30  # degrees
-    zebra_crossing: 1.0  # meters
+    zebra_crossing: 0.6  # meters
 
   filtering:
     active: true
-    rel_height: 0.9  # percentage
+    rel_height: 0.95  # percentage
     min_distance: 1.0  # meters
-    margin: 0.05  # meters
+    margin: 0.2  # meters
 
 line_following:
   requested_lane:
@@ -74,12 +77,12 @@ calibration:
   board_height: 8
   board_width: 10
   calibration_file: "./data/calibration/latest.npz"
-  max_image_height: 400
-  max_image_width: 200
+  max_image_height: 250
+  max_image_width: 250
   marker_length: 0.086
   render_distance:
     front: 12.0
-    side: 5.0
+    side: 6.0
   save_dir: "./data/calibration"
   square_length: 0.115
   vanishing_line_offset: 0.02

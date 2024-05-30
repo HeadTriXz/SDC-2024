@@ -18,6 +18,9 @@ def process_window(image: np.ndarray, window: Window, stop_line: bool) -> Line |
     :return: The processed window.
     """
     image_center = image.shape[1] // 2
+    attempts_left = 3
+    attempts_reset_after = 10
+
     while not __window_at_bounds(image, window):
         top, bottom, left, right = window.get_borders(image.shape)
 
@@ -25,13 +28,15 @@ def process_window(image: np.ndarray, window: Window, stop_line: bool) -> Line |
         non_zero = np.transpose(np.nonzero(chunk))
 
         # Move the window if there are not enough points in it
-        if len(non_zero) < config["line_detection"]["pixels_in_window"]:
+        if len(non_zero) < config["line_detection"]["window"]["min_pixels"]:
             __move_no_points(window)
             continue
 
         # Calculate the new position of the window
-        target = window.shape[1] if right < image_center else 0
-        offset = center_of_masses(chunk, target, config["line_detection"]["pixels_in_window"])
+        ref_point = __get_ref_point(window)
+        target_point = __get_target_point(window, ref_point, image_center)
+
+        offset = center_of_masses(chunk, target_point, config["line_detection"]["window"]["min_pixels"])
         if offset is None:
             __move_no_points(window)
             continue
@@ -43,11 +48,25 @@ def process_window(image: np.ndarray, window: Window, stop_line: bool) -> Line |
         new_pos = (left + x_shift, top + y_shift)
 
         # Kill the window if we suddenly change direction.
-        if window.not_found >= 3:
+        if window.point_count > 1:
             angle_diff = __get_angle(window, new_pos)
-            if angle_diff > config["line_detection"]["thresholds"]["max_angle_difference"]:
+            if window.not_found >= 3 and angle_diff > config["line_detection"]["max_angle_difference"]:
                 break
 
+            is_junction = angle_diff > config["line_detection"]["max_angle_junction"]
+            if window.not_found == 0 and is_junction and attempts_left > 0:
+                x_diff, y_diff = window.directions[1:].mean(axis=0)
+                attempts_left -= 1
+
+                window.move_back()
+                window.move(int(window.x + x_diff), int(window.y + y_diff), False)
+                continue
+
+        if attempts_reset_after == 0:
+            attempts_left = 3
+            attempts_reset_after = 10
+
+        attempts_reset_after -= 1
         window.move(new_pos[0], new_pos[1])
 
     # Check if we have enough points to make a line
@@ -93,6 +112,33 @@ def __get_angle(window: Window, new_pos: tuple[int, int]) -> float:
     return abs(prev_direction - curr_direction)
 
 
+def __get_ref_point(window: Window) -> int:
+    """Get the reference point for the window.
+
+    :param window: The window to get the reference point for.
+    :return: The reference point.
+    """
+    ref_point = window.x
+    if window.point_count > 0:
+        ref_point = window.first_point[0]
+
+    return ref_point + window.margin
+
+
+def __get_target_point(window: Window, ref_point: int, image_center: int) -> int:
+    """Get the target point for the window.
+
+    :param window: The window to get the target point for.
+    :param ref_point: The reference point.
+    :param image_center: The center of the image.
+    :return: The target point.
+    """
+    if ref_point < image_center:
+        return window.shape[1]
+
+    return 0
+
+
 def __move_no_points(window: Window) -> None:
     """Move the window if there are no points in it.
 
@@ -103,6 +149,9 @@ def __move_no_points(window: Window) -> None:
 
     if window.point_count >= len(window.directions):
         x_shift, y_shift = window.directions.mean(axis=0)
+    elif window.point_count > 1:
+        x_shift, y_shift = window.directions.sum(axis=0)
+        y_shift = max(-window.shape[0], y_shift)
 
     window.move(window.x + x_shift, window.y + y_shift, False)
 

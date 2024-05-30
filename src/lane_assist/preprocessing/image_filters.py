@@ -77,11 +77,11 @@ def morphex_filter(image: np.ndarray, calibration: CalibrationData) -> np.ndarra
 
     histogram_peaks = basic_filter_ranges(image, hpx, width, margin)
 
-    dilate_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-    dilated_image = cv2.dilate(image, dilate_kernel, iterations=1)
+    full_mask = np.full((image.shape[0] + 10, image.shape[1]), 255, dtype=np.uint8)
+    full_mask[:-10] = image
 
-    full_mask = cv2.morphologyEx(dilated_image, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_OPEN, (6, 6)))
-    full_mask = cv2.dilate(full_mask, cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)))
+    full_mask = cv2.morphologyEx(full_mask, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7)))
+    full_mask = cv2.dilate(full_mask, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (13, 13)))
 
     full_mask[full_mask > 100] = 255
     full_mask[full_mask <= 100] = 0

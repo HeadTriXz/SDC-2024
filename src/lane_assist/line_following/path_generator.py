@@ -33,16 +33,17 @@ class Path:
 
     def __fit_curve(self) -> None:
         """Fit a curve to the points."""
-        self.__fit = np.polyfit(self.points[:, 1], self.points[:, 0], 2)
-
-        # Fit polynomial curve to points in real-world coordinates
         meters_per_pixel = self.__calibration.get_distance(1)
-        fit_cr = np.polyfit(self.points[:, 1] * meters_per_pixel, self.points[:, 0] * meters_per_pixel, 2)[:2]
+
+        # Fit a second-degree polynomial to the points.
+        coefficients = np.polyfit(self.points[:, 1] * meters_per_pixel, self.points[:, 0] * meters_per_pixel, 2)
+
+        # Get the maximum y-coordinate of the points.
         y_eval = np.max(self.points[:, 1])
-        a, b = fit_cr
+        a, b = coefficients[:2]
 
         # Calculate the radius of curvature
-        self.radius = (((1 + (2 * a * y_eval * meters_per_pixel + b) ** 2) ** 1.5) / np.absolute(2 * a))
+        self.radius = ((1 + (2 * a * y_eval * meters_per_pixel + b) ** 2) ** 1.5) / np.absolute(2 * a)
 
     def __repr__(self) -> str:
         """Get the representation of the path."""
@@ -77,14 +78,14 @@ def generate_driving_path(calibration: CalibrationData, lines: list[Line], reque
     new_a2_x, new_a2_y = interpolate_line(a2, inter_line_points)
 
     # Generate a centerline based on the two lines.
-    midx = [np.mean([new_a1_x[i], new_a2_x[i]]) for i in range(inter_line_points)]
-    midy = [np.mean([new_a1_y[i], new_a2_y[i]]) for i in range(inter_line_points)]
+    center_x = [np.mean([new_a1_x[i], new_a2_x[i]]) for i in range(inter_line_points)]
+    center_y = [np.mean([new_a1_y[i], new_a2_y[i]]) for i in range(inter_line_points)]
 
     # Smooth the centerline.
-    midx = savgol_filter(midx, 51, 3)
-    midy = savgol_filter(midy, 51, 3)
+    center_x = savgol_filter(center_x, 51, 3)
+    center_y = savgol_filter(center_y, 51, 3)
 
-    return Path(calibration, np.array([midx, midy]).T)
+    return Path(calibration, np.array([center_x, center_y]).T)
 
 
 def interpolate_line(line: Line, points: int) -> tuple[np.ndarray, np.ndarray]:
