@@ -168,7 +168,7 @@ class LaneAssist:
         :return: The path and the target point.
         """
         # Generate the driving path.
-        path = generate_driving_path(self.__calibration, lines, lane)
+        path = generate_driving_path(self.__calibration, lines, lane, position)
         speed = min(self.speed_controller.max_speed, get_max_path_speed(path))
         self.speed_controller.target_speed = speed
 
