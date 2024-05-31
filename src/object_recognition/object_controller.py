@@ -14,6 +14,7 @@ class ObjectController:
     Attributes
     ----------
         calibration (CalibrationData): The calibration data.
+        disabled (bool): Whether the object controller is disabled.
         handlers (list[BaseObjectHandler]): The object handlers.
         lane_assist (LaneAssist): The lane assist.
         speed_controller (SpeedController): The speed controller.
@@ -22,6 +23,7 @@ class ObjectController:
     """
 
     calibration: CalibrationData
+    disabled: bool = False
     handlers: list[BaseObjectHandler]
     lane_assist: LaneAssist
     speed_controller: ISpeedController
@@ -50,6 +52,10 @@ class ObjectController:
         :param handler: The handler to add.
         """
         self.handlers.append(handler)
+
+    def stop(self) -> None:
+        """Stops checking for new objects."""
+        self.disabled = True
 
     def get_braking_distance(self) -> float:
         """Calculates the braking distance of the go-kart.
@@ -99,6 +105,9 @@ class ObjectController:
 
         :param predictions: The predictions to handle.
         """
+        if self.disabled:
+            return
+
         for handler in self.handlers:
             filtered_predictions = handler.filter_predictions(predictions)
             if len(filtered_predictions.data) == 0:

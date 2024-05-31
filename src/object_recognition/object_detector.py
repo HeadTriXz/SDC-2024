@@ -42,11 +42,16 @@ class ObjectDetector:
         self.stream.start()
         self.__thread.start()
 
+    def stop(self) -> None:
+        """Stop looking for objects in the video stream."""
+        self.__thread.join()
+        self.stream.stop()
+
     def __track_video_stream(self) -> None:
         """Track the objects in the video stream."""
         model = YOLO(self.model_path)
 
-        while self.stream.has_next():
+        while not self.controller.disabled and self.stream.has_next():
             frame = self.stream.next()
             results = model.track(
                 frame,

@@ -149,6 +149,10 @@ class LaneAssist:
 
         return self.__run()
 
+    def stop(self) -> None:
+        """Stop the lane assist."""
+        self.enabled = False
+
     def toggle(self) -> None:
         """Toggle the lane assist."""
         self.enabled = not self.enabled
@@ -179,10 +183,13 @@ class LaneAssist:
 
     def __run(self) -> None:
         """Run the lane assist loop."""
-        for gray_image in self.image_generator():
-            if not self.enabled:
-                time.sleep(0.5)
-                continue
+        try:
+            for gray_image in self.image_generator():
+                if not self.enabled:
+                    time.sleep(0.5)
+                    continue
 
-            self.lane_assist_loop(gray_image)
-            time.sleep(0)
+                self.lane_assist_loop(gray_image)
+                time.sleep(0)
+        except StopIteration:
+            pass
