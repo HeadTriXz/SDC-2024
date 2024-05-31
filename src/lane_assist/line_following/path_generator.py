@@ -1,9 +1,12 @@
+import math
 import numpy as np
 
 from scipy.signal import savgol_filter
 
 from src.calibration.data import CalibrationData
+from src.config import config
 from src.lane_assist.line_detection.line import Line
+from src.utils.other import euclidean_distance
 
 
 class Path:
@@ -33,16 +36,17 @@ class Path:
 
     def __fit_curve(self) -> None:
         """Fit a curve to the points."""
-        self.__fit = np.polyfit(self.points[:, 1], self.points[:, 0], 2)
-
-        # Fit polynomial curve to points in real-world coordinates
         meters_per_pixel = self.__calibration.get_distance(1)
-        fit_cr = np.polyfit(self.points[:, 1] * meters_per_pixel, self.points[:, 0] * meters_per_pixel, 2)[:2]
+
+        # Fit a second-degree polynomial to the points.
+        coefficients = np.polyfit(self.points[:, 1] * meters_per_pixel, self.points[:, 0] * meters_per_pixel, 2)
+
+        # Get the maximum y-coordinate of the points.
         y_eval = np.max(self.points[:, 1])
-        a, b = fit_cr
+        a, b = coefficients[:2]
 
         # Calculate the radius of curvature
-        self.radius = (((1 + (2 * a * y_eval * meters_per_pixel + b) ** 2) ** 1.5) / np.absolute(2 * a))
+        self.radius = ((1 + (2 * a * y_eval * meters_per_pixel + b) ** 2) ** 1.5) / np.absolute(2 * a)
 
     def __repr__(self) -> str:
         """Get the representation of the path."""
@@ -53,12 +57,18 @@ class Path:
         return f"Path({self.points}, {self.radius})"
 
 
-def generate_driving_path(calibration: CalibrationData, lines: list[Line], requested_lane: int) -> Path:
+def generate_driving_path(
+        calibration: CalibrationData,
+        lines: list[Line],
+        requested_lane: int,
+        current_position: tuple[int, int]
+) -> Path:
     """Generate the driving path based on the lines.
 
     :param calibration: The calibration data.
     :param requested_lane: The lane we want to drive in.
     :param lines: The lines to generate the path from.
+    :param current_position: The current position of the go-kart.
     :return: The generated path.
     """
     lanes = [[lines[i], lines[i - 1]] for i in range(len(lines) - 1, 0, -1)]
@@ -77,14 +87,33 @@ def generate_driving_path(calibration: CalibrationData, lines: list[Line], reque
     new_a2_x, new_a2_y = interpolate_line(a2, inter_line_points)
 
     # Generate a centerline based on the two lines.
-    midx = [np.mean([new_a1_x[i], new_a2_x[i]]) for i in range(inter_line_points)]
-    midy = [np.mean([new_a1_y[i], new_a2_y[i]]) for i in range(inter_line_points)]
+    center_x = [np.mean([new_a1_x[i], new_a2_x[i]]) for i in range(inter_line_points)]
+    center_y = [np.mean([new_a1_y[i], new_a2_y[i]]) for i in range(inter_line_points)]
 
     # Smooth the centerline.
-    midx = savgol_filter(midx, 51, 3)
-    midy = savgol_filter(midy, 51, 3)
+    center_x = savgol_filter(center_x, 51, 3)
+    center_y = savgol_filter(center_y, 51, 3)
 
-    return Path(calibration, np.array([midx, midy]).T)
+    # Find the intersection point.
+    dist = calibration.get_distance(abs(center_x[0] - current_position[0]))
+    if dist > config["line_following"]["look_ahead_distance"] * 2:
+        look_ahead_padding = max(0.0, math.log(dist + 1) * 2)
+        look_ahead_px = calibration.get_pixels(dist + look_ahead_padding)
+
+        i = 0
+        for i in range(len(center_x)):
+            distance = euclidean_distance(current_position, (center_x[i], center_y[i]))
+            if distance > look_ahead_px:
+                break
+
+        intersection_point = np.array([center_x[i], center_y[i]])
+        feeler_points = np.concatenate([np.linspace(current_position, intersection_point, look_ahead_px // 3)])
+
+        # Add the feeler points to the centerline.
+        center_x = np.concatenate([feeler_points[:, 0], center_x[i:]])
+        center_y = np.concatenate([feeler_points[:, 1], center_y[i:]])
+
+    return Path(calibration, np.array([center_x, center_y]).T)
 
 
 def interpolate_line(line: Line, points: int) -> tuple[np.ndarray, np.ndarray]:

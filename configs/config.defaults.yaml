@@ -25,23 +25,26 @@ preprocessing:
   white_threshold: 180
 
 line_detection:
-  pixels_in_window: 3
-  window_margin_growth: 0.1  # Percentage, relative to the window width.
-  min_window_shift: 0.3 # Percentage, relative to the window height.
+  max_angle_difference: 30  # degrees
+  max_angle_junction: 60  # degrees
 
-  window_sizing:
+  window:
     height: 0.5  # meters
-    width: 0.6  # meters
+    min_width: 1.0  # meters
+    max_width: 2.0  # meters
+
+    min_pixels: 3
+    min_shift: 0.3  # percentage, relative to the window height.
+    margin_growth: 0.3  # percentage, relative to the window height.
 
   thresholds:
-    max_angle_difference: 30  # degrees
-    zebra_crossing: 1.0  # meters
+    zebra_crossing: 0.6  # meters
 
   filtering:
     active: true
-    rel_height: 0.9  # percentage
+    rel_height: 0.95  # percentage
     min_distance: 1.0  # meters
-    margin: 0.05  # meters
+    margin: 0.2  # meters
 
 line_following:
   requested_lane:
@@ -54,14 +57,14 @@ line_following:
   look_ahead_distance: .5  # meters
 
   pid:
-    kp: 40.0
+    kp: 20.0
     ki: 1.0
     kd: 0.5
 
 dynamic_speed:
   friction_coefficient: 0.3
-  static: false
-  static_speed: 10
+  static: true
+  static_speed: 4
 
 camera_ids:
   left: 0
@@ -74,12 +77,12 @@ calibration:
   board_height: 8
   board_width: 10
   calibration_file: "./data/calibration/latest.npz"
-  max_image_height: 400
-  max_image_width: 200
+  max_image_height: 250
+  max_image_width: 250
   marker_length: 0.086
   render_distance:
     front: 12.0
-    side: 5.0
+    side: 6.0
   save_dir: "./data/calibration"
   square_length: 0.115
   vanishing_line_offset: 0.02
@@ -87,6 +90,7 @@ calibration:
 # Object Detection
 object_detection:
   model_path: "./models/yolo8s.pt"
+  max_frame_rate: 10.0
   min_confidence: 0.6
   verbose: false
   image_size: 1280
@@ -95,10 +99,9 @@ speed_limit:
   height_ratio: 3.1
   min_distance: 3
   class_to_speed:
-    6: 5
-    7: 10
-    8: 15
-    9: 20
+    6: 10
+    7: 15
+    8: 20
 
 traffic_light:
   min_distance: 2

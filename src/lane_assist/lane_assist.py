@@ -103,8 +103,10 @@ class LaneAssist:
 
         :param image: The image to follow the path in.
         """
+        current_position = (image.shape[1] // 2, image.shape[0] - 1)
+
         lines = get_lines(image, calibration=self.__calibration)
-        filtered_lines = filter_lines(lines, image.shape[1] // 2)
+        filtered_lines = filter_lines(lines, current_position)
 
         if len(filtered_lines) < 2:
             return
@@ -112,11 +114,11 @@ class LaneAssist:
         self.lines = filtered_lines
 
         # Act on the lines in the image.
-        path, target_point = self.__follow_path(filtered_lines, image.shape[1] // 2, self.requested_lane)
+        path, target_point = self.__follow_path(filtered_lines, current_position, self.requested_lane)
         self.__stop_line_assist.detect_and_handle(image, filtered_lines)
 
         # If telemetry is enabled, send the image to the telemetry server.
-        if config["telemetry"]["enabled"]:
+        if config["telemetry"]["enabled"] and self.telemetry.any_listening():
             rgb = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
 
             # Draw the path on the image.
@@ -158,25 +160,25 @@ class LaneAssist:
         self.enabled = not self.enabled
         self.__path_follower.reset()
 
-    def __follow_path(self, lines: list[Line], car_position: float, lane: int) -> tuple[Path, np.ndarray]:
+    def __follow_path(self, lines: list[Line], position: tuple[int, int], lane: int) -> tuple[Path, np.ndarray]:
         """Follow the path.
 
         This function will follow the path based on the lines in the image.
         If the lane is not available, it will throw an error
 
         :param lines: The lines in the image.
-        :param car_position: The position of the car in the image.
+        :param position: The position of the car in the image.
         :param lane: The lane to follow.
         :return: The path and the target point.
         """
         # Generate the driving path.
-        path = generate_driving_path(self.__calibration, lines, lane)
+        path = generate_driving_path(self.__calibration, lines, lane, position)
         speed = min(self.speed_controller.max_speed, get_max_path_speed(path))
         self.speed_controller.target_speed = speed
 
         # Steer the kart based on the path and its position.
         target_point = self.__path_follower.get_path_point(path.points)
-        steering_fraction = self.__path_follower.get_steering_fraction(target_point, car_position)
+        steering_fraction = self.__path_follower.get_steering_fraction(target_point, position[0])
 
         self.can_controller.set_steering(steering_fraction)
         return path, target_point

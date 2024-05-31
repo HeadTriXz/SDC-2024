@@ -67,5 +67,5 @@ def calibrate_cameras() -> None:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     calibrate_cameras()
