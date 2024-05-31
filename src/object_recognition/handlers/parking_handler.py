@@ -6,7 +6,6 @@ from ultralytics.engine.results import Boxes
 
 from src.config import config
 from src.constants import Gear, Label
-from src.driving.speed_controller import ISpeedController
 from src.object_recognition.handlers.base_handler import BaseObjectHandler
 from src.object_recognition.object_controller import ObjectController
 from src.utils.lidar.lidar import Lidar
@@ -15,7 +14,7 @@ from src.utils.lidar.lidar import Lidar
 class ParkingHandler(BaseObjectHandler):
     """A handler for parking spaces."""
 
-    def __init__(self, controller: ObjectController, lidar: Lidar, speed_controller: ISpeedController) -> None:
+    def __init__(self, controller: ObjectController, lidar: Lidar) -> None:
         """Initializes the parking handler.
 
         :param controller: The object controller.
@@ -23,8 +22,8 @@ class ParkingHandler(BaseObjectHandler):
         """
         super().__init__(controller, [Label.PARKING_SPACE])
         self.__lidar = lidar
-        self.__speed_controller = speed_controller
-        self.__can_controller = speed_controller.can_controller
+        self.__speed_controller = controller.speed_controller
+        self.__can_controller = controller.speed_controller.can_controller
 
     def handle(self, predictions: Boxes) -> None:
         """Check if there is a parking space available. If so, set the state to parking.
@@ -36,6 +35,8 @@ class ParkingHandler(BaseObjectHandler):
 
         if not self.__any_within_distance(predictions):
             return
+
+        self.start_parking(0)
 
     def __any_within_distance(self, predictions: Boxes) -> bool:
         """Check if any parking space is within the distance threshold.
@@ -78,8 +79,11 @@ class ParkingHandler(BaseObjectHandler):
 
         :param phase: The phase of the parking.
         """
-        time.sleep(1)
+        self.controller.stop()
+        self.controller.lane_assist.stop()
         self.__speed_controller.target_speed = 3
+
+        time.sleep(1)
         while phase == 0:
             if not self.__lidar.free_range(265, 275, 250):
                 phase = 1
@@ -119,7 +123,6 @@ class ParkingHandler(BaseObjectHandler):
 
         counter = 0
         while phase == 4:
-
             corner_angle = self.__lidar.find_nearest_angle(250, 300)
             corner = self.__lidar.points[corner_angle]
 
@@ -144,7 +147,6 @@ class ParkingHandler(BaseObjectHandler):
             time.sleep(0.1)
 
         while phase == 5:
-
             lowest_angle = self.__lidar.find_lowest_index(0, 150, 30, 900)
             highest_angle = self.__lidar.find_highest_index(180, 320, 30, 900)
             angle = highest_angle - lowest_angle
@@ -195,7 +197,6 @@ class ParkingHandler(BaseObjectHandler):
                 reverse = True
 
         while phase == 7:
-
             left_wall = self.__lidar.find_lowest_index(130, 240, 30, 900)
             right_wall = self.__lidar.find_highest_index(150, 260, 30, 900)
             deviation = ((right_wall - 180) + (180 - left_wall)) / 2
