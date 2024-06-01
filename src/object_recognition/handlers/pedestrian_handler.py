@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 
 from ultralytics.engine.results import Boxes
@@ -14,10 +15,12 @@ class PedestrianHandler(BaseObjectHandler):
 
     Attributes
     ----------
+        frames_lost (int): The number of frames lost.
         track_history (dict[int, list[int]]): The history of the pedestrians.
 
     """
 
+    frames_lost: int = 0
     track_history: dict[int, np.ndarray]
 
     def __init__(self, controller: ObjectController) -> None:
@@ -38,11 +41,21 @@ class PedestrianHandler(BaseObjectHandler):
 
         stopped = self.controller.has_stopped()
         should_stop = self.__should_stop(predictions)
+        if should_stop:
+            self.frames_lost = 0
 
         if stopped and not should_stop:
+            if self.frames_lost < config["crosswalk"]["lost_frames"]:
+                self.frames_lost += 1
+                return
+
+            logging.info("The pedestrian has finished crossing. Resuming driving.")
+
             self.controller.stopped_by = None
             self.controller.set_state(SpeedControllerState.DRIVING)
         elif not stopped and should_stop:
+            logging.info("A pedestrian is crossing. Stopping the go-kart.")
+
             self.controller.stopped_by = self
             self.controller.set_state(SpeedControllerState.STOPPED)
 
@@ -140,8 +153,8 @@ class PedestrianHandler(BaseObjectHandler):
 
         # Calculate the distance to the crosswalk.
         distance = self.controller.calibration.get_distance_to_y(x, y, shape)
-        braking_distance = self.controller.get_braking_distance()
-        total_distance = distance - braking_distance
+        stopping_distance = self.controller.get_stopping_distance()
+        total_distance = distance - stopping_distance
 
         return total_distance < config["crosswalk"]["min_distance"]
 

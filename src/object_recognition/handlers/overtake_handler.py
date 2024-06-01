@@ -1,3 +1,5 @@
+import logging
+
 from threading import Thread
 from ultralytics.engine.results import Boxes
 
@@ -44,7 +46,10 @@ class OvertakeHandler(BaseObjectHandler):
         for x1, _, x2, y2 in predictions.xyxy:
             cx = (x1 + x2) // 2
             distance = self.controller.calibration.get_distance_to_y(cx, y2, predictions.orig_shape[::-1])
-            if distance > config["overtake"]["min_distance"]:
+            reaction_distance = self.controller.get_reaction_distance()
+
+            total_distance = distance - reaction_distance
+            if total_distance > config["overtake"]["min_distance"]:
                 continue
 
             lane = self.controller.get_object_lane(cx, y2, predictions.orig_shape[::-1])
@@ -55,6 +60,7 @@ class OvertakeHandler(BaseObjectHandler):
 
         current_lane = self.controller.get_current_lane()
         if current_lane in full_lanes:
+            logging.info("Vehicle detected in the current lane. Switching to the next lane.")
             self.controller.set_lane(current_lane + 1)
 
     def __return_lane(self) -> None:
@@ -84,6 +90,7 @@ class OvertakeHandler(BaseObjectHandler):
                     self.__frames_lost[current_lane] -= 1
 
             if self.__frames_lost[current_lane] >= config["overtake"]["consecutive_frames"]:
+                logging.info("The right side is free. Returning to the previous lane.")
                 self.controller.set_lane(current_lane - 1)
                 del self.__frames_lost[current_lane]
                 del self.__frames_seen[current_lane]
