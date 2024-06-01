@@ -117,9 +117,10 @@ parking:
   min_distance: 1
 
 crosswalk:
-  overlap_margin: 0.2
-  safe_zone_margin: 0.1
+  lost_frames: 10
   min_distance: 3
+  overlap_margin: 0.25
+  safe_zone_margin: 0.15
 
 # Other
 telemetry:
