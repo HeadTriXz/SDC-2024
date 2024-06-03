@@ -1,7 +1,6 @@
 import can
 import struct
 import threading
-import time
 
 from src.constants import CAN_SEND_PERIOD, CANControlIdentifier, CANFeedbackIdentifier, Gear
 from src.driving.can import ICANController
@@ -35,6 +34,10 @@ class CANController(ICANController):
         :param can_bus: The CAN bus to use.
         """
         self.bus = can_bus
+        self.bus.set_filters([
+            {"can_id": CANFeedbackIdentifier.SPEED_SENSOR, "can_mask": 0xFFF, "extended": False}
+        ])
+
         self.__listeners = {}
         self.__thread = threading.Thread(target=self.__listen, daemon=True)
 
@@ -90,9 +93,7 @@ class CANController(ICANController):
     def __listen(self) -> None:
         """Listen to the CAN bus for messages."""
         while True:
-            message = self.bus.recv()
-            if message.arbitration_id in self.__listeners:
+            message = self.bus.recv(0.5)
+            if message is not None and message.arbitration_id in self.__listeners:
                 for listener in self.__listeners[message.arbitration_id]:
                     listener(message)
-
-            time.sleep(0)
