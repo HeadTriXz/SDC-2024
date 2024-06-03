@@ -110,11 +110,15 @@ class AutonomousDriving(DrivingMode):
         object_controller.add_handler(SpeedLimitHandler(object_controller))
         object_controller.add_handler(TrafficLightHandler(object_controller))
 
+        # Initialize Lidar-specific handlers.
         lidar = Lidar.safe_init()
         if lidar is not None:
             object_controller.add_handler(OvertakeHandler(object_controller, lidar))
             object_controller.add_handler(ParkingHandler(object_controller, lidar))
 
+            lidar.start()
+
+        # Initialize the object detector.
         self.detector = ObjectDetector.from_model(
             config["object_detection"]["model_path"], object_controller, config["camera_ids"]["center"]
         )
