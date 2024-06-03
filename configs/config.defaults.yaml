@@ -108,6 +108,10 @@ traffic_light:
 
 overtake:
   consecutive_frames: 3
+  force_return:
+    enabled: true
+    angle: 1.0  # percentage
+    duration: 0.5  # seconds
   min_distance: 6
   min_angle: 230
   max_angle: 280

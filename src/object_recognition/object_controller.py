@@ -151,3 +151,10 @@ class ObjectController:
         :param state: The new state.
         """
         self.speed_controller.state = state
+
+    def set_steering(self, angle: float) -> None:
+        """Set the steering of the go-kart.
+
+        :param angle: The angle to set.
+        """
+        self.speed_controller.can_controller.set_steering(angle)
