@@ -28,8 +28,8 @@ class SimLidar(ILidar):
                 2,
             )
             angles = angles.astype(int)
-            distances = distances / 2
-            distances[distances > 600] = np.inf
+            distances = distances / 0.2
+            distances[distances > 6000] = np.inf
 
             # get the index of first occurence of each angle
             angle_starts = np.unique(angles, return_index=True)[1]

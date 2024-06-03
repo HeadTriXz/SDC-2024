@@ -112,6 +112,7 @@ class AutonomousDriving(DrivingMode):
 
         lidar = Lidar.safe_init()
         if lidar is not None:
+            lidar.start()
             object_controller.add_handler(OvertakeHandler(object_controller, lidar))
             object_controller.add_handler(ParkingHandler(object_controller, lidar))
 
