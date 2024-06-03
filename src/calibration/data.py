@@ -84,7 +84,7 @@ class CalibrationData(metaclass=SingletonMeta):
         :return: The stitched image.
         """
         if image.shape[:2] != self.input_shape[::-1]:
-            image = cv2.resize(image, self.shapes[idx], interpolation=cv2.INTER_NEAREST)
+            image = cv2.resize(image, self.input_shape, interpolation=cv2.INTER_NEAREST)
 
         warped = self._warp_image(image, idx)
         return stitch_images(stitched, warped, self.offsets[idx])
