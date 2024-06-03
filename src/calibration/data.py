@@ -51,7 +51,7 @@ class CalibrationData(metaclass=SingletonMeta):
         if self.topdown_matrix is None:
             raise ValueError("Calibrator has not been calibrated yet.")
 
-        stitched = np.full(self.stitched_shape[::-1], 255, dtype=np.uint8)
+        stitched = np.zeros(self.stitched_shape[::-1], dtype=np.uint8)
 
         futures = []
         for i, image in enumerate(images):
@@ -70,9 +70,7 @@ class CalibrationData(metaclass=SingletonMeta):
             stitched,
             self.topdown_matrix,
             self.output_shape,
-            flags=cv2.INTER_NEAREST,
-            borderMode=cv2.BORDER_CONSTANT,
-            borderValue=(255, 255, 255)
+            flags=cv2.INTER_NEAREST
         )
 
     def _stitch_image(self, stitched: np.ndarray, image: np.ndarray, idx: int) -> np.ndarray:

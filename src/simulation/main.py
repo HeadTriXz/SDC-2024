@@ -65,9 +65,7 @@ def start_simulator() -> None:
                 front_view,
                 calibration.topdown_matrix,
                 calibration.output_shape,
-                flags=cv2.INTER_NEAREST,
-                borderMode=cv2.BORDER_CONSTANT,
-                borderValue=(255, 255, 255)
+                flags=cv2.INTER_NEAREST
             )
 
             if config["telemetry"]["enabled"] and telemetry.any_listening():
