@@ -1,3 +1,4 @@
+import logging
 import math
 import numpy as np
 import time
@@ -38,7 +39,9 @@ class ParkingHandler(BaseObjectHandler):
 
         self.controller.stop()
         self.controller.lane_assist.stop()
-        self.start_parking(0)
+
+        self.__speed_controller.target_speed = 5
+        self.wait_for_wall()
 
     def __any_within_distance(self, predictions: Boxes) -> bool:
         """Check if any parking space is within the distance threshold.
@@ -148,7 +151,6 @@ class ParkingHandler(BaseObjectHandler):
                     self.__can_controller.set_steering(-config["parking"]["steering_angle"])
                     return self.wait_to_stop()
                 counter += 1
-            time.sleep(0.1)
 
     def wait_to_stop(self):
         """Wait till the go-kart almost crosses the line."""
@@ -163,7 +165,7 @@ class ParkingHandler(BaseObjectHandler):
                 self.__can_controller.set_brake(100)
                 self.__can_controller.set_throttle(0, Gear.NEUTRAL)
                 self.__can_controller.set_steering(0)
-                phase = 6
+                return self.forward_creep(False)
             if lowest_angle == 0:
                 if counter == 3:
                     self.__can_controller.set_brake(100)
@@ -196,13 +198,12 @@ class ParkingHandler(BaseObjectHandler):
             if -15 < deviation < 15:
                 self.__can_controller.set_brake(100)
                 self.__can_controller.set_throttle(0, Gear.NEUTRAL)
-                phase = 8
-                continue
+                return
 
             if not self.__lidar.free_range(160, 220, 800) and reverse:
                 self.reverse_creep(reverse)
                 counter += 1
-                continue
+                return
 
             if self.__lidar.free_range(160, 220, 2500):
                 reverse = False
@@ -227,11 +228,10 @@ class ParkingHandler(BaseObjectHandler):
                 self.__can_controller.set_brake(100)
                 self.__can_controller.set_throttle(0, Gear.DRIVE)
                 self.__can_controller.set_steering(0)
-                reverse = False
-                self.start_parking(6)
+                return self.forward_creep(False)
 
             if deviation < 0:
-                self.start_parking(6)
+                self.forward_creep(reverse)
                 self.__can_controller.set_steering(config["parking"]["steering_angle"])
             else:
                 self.__can_controller.set_steering(-config["parking"]["steering_angle"])

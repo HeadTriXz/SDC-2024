@@ -1,2 +1,2 @@
-from .ILidar import ILidar
+from .lidar_interface import ILidar
 from .lidar import Lidar

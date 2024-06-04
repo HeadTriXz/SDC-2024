@@ -7,9 +7,10 @@ from threading import Thread
 from typing import Optional
 
 from src.config import config
+from src.utils.lidar import ILidar
 
 
-class Lidar:
+class Lidar(ILidar):
     """Class to read data from the lidar and process the data from it.
 
     The lidar can be used to find the distance to the obstacles around the car.

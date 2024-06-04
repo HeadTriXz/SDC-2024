@@ -21,7 +21,7 @@ def filter_lines(lines: list[Line], position: tuple[int, int]) -> list[Line]:
     :param position: Our position in the image.
     :return: The filtered lines.
     """
-    sorted_lanes = sorted(lines, key=lambda line: euclidean_distance(line.points[0], position))
+    sorted_lanes = sorted(lines, key=lambda line: euclidean_distance(line.scan_data[0], position))
 
     closest_left = None
     closest_right = None
