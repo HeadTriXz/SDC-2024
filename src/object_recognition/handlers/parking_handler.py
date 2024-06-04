@@ -142,7 +142,7 @@ class ParkingHandler(BaseObjectHandler):
                 continue
             print(corner_angle - wall_1)
 
-            if corner_angle - wall_1 < 25 and wall_2 - corner_angle > 4 and (wall_2_distance - corner) > 50 and (
+            if corner_angle - wall_1 < 28 and wall_2 - corner_angle > 4 and (wall_2_distance - corner) > 50 and (
                     wall_1_distance - corner) > 50:
                 if counter == 3:
                     self.__can_controller.set_steering(-config["parking"]["steering_angle"])
