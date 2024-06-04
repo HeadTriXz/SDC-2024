@@ -78,14 +78,16 @@ class ParkingHandler(BaseObjectHandler):
         distance = self.controller.calibration.get_distance_to_y(x, y, shape[::-1])
 
         return distance < config["parking"]["min_distance"]
-    
+
     def wait_for_wall(self) -> None:
+        """Wait until the lidar detects a wall."""
         while self.__lidar.free_range(265, 275, 2500):
             time.sleep(0.1)
 
         self.wait_for_opening()
 
     def wait_for_opening(self) -> None:
+        """Wait for the opening to be reached."""
         amount = 0
         while self.__lidar.free_range(265, 290, 3000):
             time.sleep(0.1)
@@ -122,9 +124,8 @@ class ParkingHandler(BaseObjectHandler):
                     self.drive_into_spot()
                     continue
 
-    def drive_into_spot(self):
+    def drive_into_spot(self) -> None:
         """Drive into the parking spot."""
-        print("spot")
         counter = 0
 
         while True:
@@ -143,7 +144,6 @@ class ParkingHandler(BaseObjectHandler):
 
             if wall_1 == 0 or wall_2 == 0:
                 continue
-            print(corner_angle - wall_1)
 
             if corner_angle - wall_1 < 28 and wall_2 - corner_angle > 4 and (wall_2_distance - corner) > 50 and (
                     wall_1_distance - corner) > 50:
@@ -152,7 +152,7 @@ class ParkingHandler(BaseObjectHandler):
                     return self.wait_to_stop()
                 counter += 1
 
-    def wait_to_stop(self):
+    def wait_to_stop(self) -> None:
         """Wait till the go-kart almost crosses the line."""
         counter = 0
         while True:
@@ -171,13 +171,13 @@ class ParkingHandler(BaseObjectHandler):
                     self.__can_controller.set_brake(100)
 
                     logging.error("Cannot see the left wall, failed parking.")
-                    return
+                    return None
 
                 counter += 1
             time.sleep(0.1)
 
-    def forward_creep(self, reverse: bool):
-        """werk dan"""
+    def forward_creep(self, reverse: bool) -> None:
+        """Align with the parking spot by driving forward."""
         counter = 0
         while True:
             time.sleep(0.1)
@@ -212,7 +212,8 @@ class ParkingHandler(BaseObjectHandler):
             if self.__lidar.free_range(160, 220, 500):
                 reverse = True
 
-    def reverse_creep(self, reverse: bool):
+    def reverse_creep(self, reverse: bool) -> None:
+        """Reverse the go kart align it with the parking spot."""
         counter = 0
         while True:
             time.sleep(0.1)
@@ -241,7 +242,7 @@ class ParkingHandler(BaseObjectHandler):
                 self.__can_controller.set_throttle(0, Gear.NEUTRAL)
                 if self.__lidar.free_range(160, 250, 800):
                     self.forward_creep(reverse)
-                return
+                return None
 
             if not reverse:
                 self.forward_creep(reverse)
