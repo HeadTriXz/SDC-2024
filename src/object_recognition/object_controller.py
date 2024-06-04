@@ -3,6 +3,7 @@ import numpy as np
 from ultralytics.engine.results import Boxes
 
 from src.calibration.data import CalibrationData
+from src.config import config
 from src.driving.speed_controller import ISpeedController, SpeedControllerState
 from src.lane_assist.lane_assist import LaneAssist
 from src.object_recognition.handlers.base_handler import BaseObjectHandler
@@ -100,6 +101,23 @@ class ObjectController:
 
         return None
 
+    def get_reaction_distance(self) -> float:
+        """Calculates the reaction distance of the go-kart.
+
+        :return: The reaction distance in meters.
+        """
+        time_until_next = 1 / config["object_detection"]["max_frame_rate"]
+        meters_per_second = self.speed_controller.current_speed / 3.6
+
+        return meters_per_second * time_until_next
+
+    def get_stopping_distance(self) -> float:
+        """Calculates the stopping distance of the go-kart.
+
+        :return: The stopping distance in meters.
+        """
+        return self.get_reaction_distance() + self.get_braking_distance()
+
     def handle(self, predictions: Boxes) -> None:
         """Handles the predictions.
 
@@ -142,3 +160,10 @@ class ObjectController:
         :param state: The new state.
         """
         self.speed_controller.state = state
+
+    def set_steering(self, angle: float) -> None:
+        """Set the steering of the go-kart.
+
+        :param angle: The angle to set.
+        """
+        self.speed_controller.can_controller.set_steering(angle)

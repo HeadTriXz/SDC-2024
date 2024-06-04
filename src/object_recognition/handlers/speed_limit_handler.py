@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 
 from ultralytics.engine.results import Boxes
@@ -30,13 +31,15 @@ class SpeedLimitHandler(BaseObjectHandler):
         x, y = self._get_sign_coords(closest)
         distance = self.controller.calibration.get_distance_to_y(x, y, predictions.orig_shape[::-1])
 
-        braking_distance = self.controller.get_braking_distance()
-        total_distance = distance - braking_distance
+        stopping_distance = self.controller.get_stopping_distance()
+        total_distance = distance - stopping_distance
 
         if total_distance > config["speed_limit"]["min_distance"]:
             return
 
         speed = config["speed_limit"]["class_to_speed"][int(closest[-1])]
+        logging.info("Speed limit sign detected. Setting the speed limit to %d km/h.", speed)
+
         self.controller.set_max_speed(speed)
 
     def _get_sign_coords(self, bbox: np.ndarray) -> tuple[int, int]:

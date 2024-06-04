@@ -3,8 +3,6 @@ import logging
 import numpy as np
 import requests
 
-from pathlib import Path
-
 from src.calibration.data import CalibrationData
 from src.config import config
 from src.constants import CameraResolution
@@ -42,11 +40,7 @@ def send_discord_calibration() -> None:
     center_image = cv2.cvtColor(center_image, cv2.COLOR_BGR2GRAY)
     right_image = cv2.cvtColor(right_image, cv2.COLOR_BGR2GRAY)
 
-    calibration_path = Path(config["calibration"]["calibration_file"])
-    if not calibration_path.exists():
-        raise FileNotFoundError(f"Calibration file not found: {calibration_path}")
-
-    calibration_data = CalibrationData.load(calibration_path)
+    calibration_data = CalibrationData.load(config["calibration"]["calibration_file"])
     topdown = calibration_data.transform([left_image, center_image, right_image])
 
     try:

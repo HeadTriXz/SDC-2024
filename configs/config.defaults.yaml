@@ -108,6 +108,10 @@ traffic_light:
 
 overtake:
   consecutive_frames: 3
+  force_return:
+    enabled: true
+    angle: 1.0  # percentage
+    duration: 0.5  # seconds
   min_distance: 6
   min_angle: 230
   max_angle: 280
@@ -118,9 +122,10 @@ parking:
   steering_angle: 1.25
 
 crosswalk:
-  overlap_margin: 0.2
-  safe_zone_margin: 0.1
+  lost_frames: 10
   min_distance: 3
+  overlap_margin: 0.25
+  safe_zone_margin: 0.15
 
 # Other
 telemetry:
