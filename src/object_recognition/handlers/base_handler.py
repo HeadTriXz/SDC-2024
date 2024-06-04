@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 from ultralytics.engine.results import Boxes
 
+
 if TYPE_CHECKING:
     from src.object_recognition.object_controller import ObjectController
 
