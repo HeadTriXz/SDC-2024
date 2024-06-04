@@ -75,38 +75,38 @@ class ParkingHandler(BaseObjectHandler):
         distance = self.controller.calibration.get_distance_to_y(x, y, shape[::-1])
 
         return distance < config["parking"]["min_distance"]
-
-    def start_parking(self, phase: int) -> None:
-        """Start the parking maneuver.
-
-        :param phase: The phase of the parking.
-        """
-        time.sleep(1)
-        self.__speed_controller.target_speed = 3
-        while phase == 0:
-            if not self.__lidar.free_range(265, 275, 2500):
-                phase = 1
-                continue
+    
+    def wait_for_wall(self) -> None:
+        while self.__lidar.free_range(265, 275, 2500):
             time.sleep(0.1)
+
+        self.wait_for_opening()
+
+    def wait_for_opening(self) -> None:
         amount = 0
-
-        while phase == 1:
-            if self.__lidar.free_range(265, 290, 3000):
-                amount += 1
-                if amount == 3:
-                    phase = 2
-                continue
+        while self.__lidar.free_range(265, 290, 3000):
             time.sleep(0.1)
+            if amount == 3:
+                break
 
-        while phase == 2:
+            amount += 1
+
+        if amount < 3:
+            time.sleep(0.1)
+            return self.wait_for_opening()
+
+        return self.wait_for_steering_point()
+
+    def wait_for_steering_point(self) -> None:
+        """Wait for the steering point to be reached."""
+        while True:
             time.sleep(0.1)
             if not self.__lidar.free_range(282, 290, 2000):
                 a_side = self.__lidar.find_obstacle_distance(265, 280)
                 c_side = self.__lidar.find_rightmost_point(280, 335, 800, 3000)
                 if a_side == 0 or c_side == 0 or c_side < a_side:
                     continue
-                c_side = int(c_side)
-                a_side = int(a_side)
+
                 b_side = math.sqrt((c_side ** 2) - (a_side ** 2))
                 if b_side >= 160:
                     self.__speed_controller.toggle()
@@ -116,37 +116,45 @@ class ParkingHandler(BaseObjectHandler):
                     self.__can_controller.set_throttle(20, Gear.REVERSE)
                     time.sleep(1)
                     self.__can_controller.set_steering(config["parking"]["steering_angle"])
-                    phase = 4
+                    self.drive_into_spot()
                     continue
 
+    def drive_into_spot(self):
+        """Drive into the parking spot."""
+        print("spot")
         counter = 0
-        while phase == 4:
 
+        while True:
+            time.sleep(0.1)
             corner_angle = self.__lidar.find_nearest_angle(250, 300)
-            corner = self.__lidar.points[corner_angle]
+            corner = self.__lidar.scan_data[corner_angle]
 
             wall_1 = self.__lidar.find_lowest_index(200, corner_angle, corner, 8000)
             wall_2 = self.__lidar.find_highest_index(corner_angle, 320, corner, 8000)
-            indices = np.where(self.__lidar.points[corner_angle:320] == np.inf)[0]
-            wall_1_distance = self.__lidar.points[wall_1]
-            wall_2_distance = self.__lidar.points[wall_2]
+            indices = np.where(self.__lidar.scan_data[corner_angle:320] == np.inf)[0]
+            wall_1_distance = self.__lidar.scan_data[wall_1]
+            wall_2_distance = self.__lidar.scan_data[wall_2]
 
             if len(indices) > 0:
                 wall_2 = corner_angle + indices[0]
 
             if wall_1 == 0 or wall_2 == 0:
                 continue
+            print(corner_angle - wall_1)
 
-            if corner_angle - wall_1 < 20 and wall_2 - corner_angle > 4 and (wall_2_distance - corner) > 50 and (
+            if corner_angle - wall_1 < 25 and wall_2 - corner_angle > 4 and (wall_2_distance - corner) > 50 and (
                     wall_1_distance - corner) > 50:
                 if counter == 3:
                     self.__can_controller.set_steering(-config["parking"]["steering_angle"])
-                    phase = 5
+                    return self.wait_to_stop()
                 counter += 1
             time.sleep(0.1)
 
-        while phase == 5:
-
+    def wait_to_stop(self):
+        """Wait till the go-kart almost crosses the line."""
+        counter = 0
+        while True:
+            time.sleep(0.1)
             lowest_angle = self.__lidar.find_lowest_index(0, 150, 300, 9000)
             highest_angle = self.__lidar.find_highest_index(180, 320, 300, 9000)
             angle = highest_angle - lowest_angle
@@ -159,13 +167,17 @@ class ParkingHandler(BaseObjectHandler):
             if lowest_angle == 0:
                 if counter == 3:
                     self.__can_controller.set_brake(100)
-                    phase = 3
-                    continue
+
+                    logging.error("Cannot see the left wall, failed parking.")
+                    return
+
                 counter += 1
             time.sleep(0.1)
-        reverse = False
 
-        while phase == 6:
+    def forward_creep(self, reverse: bool):
+        """werk dan"""
+        counter = 0
+        while True:
             time.sleep(0.1)
 
             left_wall = self.__lidar.find_lowest_index(120, 250, 300, 9000)
@@ -188,7 +200,7 @@ class ParkingHandler(BaseObjectHandler):
                 continue
 
             if not self.__lidar.free_range(160, 220, 800) and reverse:
-                phase = 7
+                self.reverse_creep(reverse)
                 counter += 1
                 continue
 
@@ -199,7 +211,10 @@ class ParkingHandler(BaseObjectHandler):
             if self.__lidar.free_range(160, 220, 500):
                 reverse = True
 
-        while phase == 7:
+    def reverse_creep(self, reverse: bool):
+        counter = 0
+        while True:
+            time.sleep(0.1)
             left_wall = self.__lidar.find_lowest_index(120, 250, 300, 9000)
             right_wall = self.__lidar.find_highest_index(150, 310, 300, 9000)
             deviation = (right_wall + left_wall) / 2 - 180
@@ -225,18 +240,18 @@ class ParkingHandler(BaseObjectHandler):
                 self.__can_controller.set_brake(100)
                 self.__can_controller.set_throttle(0, Gear.NEUTRAL)
                 if self.__lidar.free_range(160, 250, 800):
-                    self.start_parking(8)
+                    self.forward_creep(reverse)
+                return
 
             if not reverse:
-                self.start_parking(6)
+                self.forward_creep(reverse)
             elif counter > 3:
                 reverse = True
 
             if self.__lidar.free_range(120, 240, 2000):
                 reverse = False
                 counter = 0
-                self.start_parking(6)
-
+                self.forward_creep(reverse)
             else:
                 self.__can_controller.set_throttle(20, Gear.REVERSE)
             time.sleep(0.1)
