@@ -28,7 +28,7 @@ class SpeedLimitHandler(BaseObjectHandler):
         if closest is None:
             return
 
-        x, y = self._get_sign_coords(closest)
+        x, y = self.__get_sign_coords(closest)
         distance = self.controller.calibration.get_distance_to_y(x, y, predictions.orig_shape[::-1])
 
         stopping_distance = self.controller.get_stopping_distance()
@@ -42,7 +42,8 @@ class SpeedLimitHandler(BaseObjectHandler):
 
         self.controller.set_max_speed(speed)
 
-    def _get_sign_coords(self, bbox: np.ndarray) -> tuple[int, int]:
+    @staticmethod
+    def __get_sign_coords(bbox: np.ndarray) -> tuple[int, int]:
         """Get the coordinates of where the speed limit sign is on the ground.
 
         :param bbox: The bounding box of the speed limit sign.

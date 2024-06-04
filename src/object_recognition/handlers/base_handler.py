@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 from ultralytics.engine.results import Boxes
 
-
 if TYPE_CHECKING:
     from src.object_recognition.object_controller import ObjectController
 
@@ -41,7 +40,15 @@ class BaseObjectHandler(ABC):
 
         return Boxes(data, predictions.orig_shape)
 
-    def get_closest_prediction(self, predictions: Boxes) -> np.ndarray | None:
+    def is_stopped_by_other(self) -> bool:
+        """Checks if another handler has stopped the go-kart.
+
+        :return: Whether the handler has stopped the go-kart.
+        """
+        return self.controller.has_stopped() and self.controller.stopped_by != self
+
+    @staticmethod
+    def get_closest_prediction(predictions: Boxes) -> np.ndarray | None:
         """Gets the closest prediction to the go-kart. We assume the largest bounding box is the closest.
 
         :param predictions: The predictions to search.
@@ -57,13 +64,6 @@ class BaseObjectHandler(ABC):
                 closest_prediction = box
 
         return closest_prediction
-
-    def is_stopped_by_other(self) -> bool:
-        """Checks if another handler has stopped the go-kart.
-
-        :return: Whether the handler has stopped the go-kart.
-        """
-        return self.controller.has_stopped() and self.controller.stopped_by != self
 
     @abstractmethod
     def handle(self, predictions: Boxes) -> None:
