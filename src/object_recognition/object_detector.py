@@ -1,3 +1,4 @@
+import logging
 import time
 
 from pathlib import Path
@@ -23,6 +24,7 @@ class ObjectDetector:
     controller: ObjectController
     model_path: str | Path
     stream: VideoStream
+    __ready: bool = False
     __thread: Thread
 
     def __init__(self, model_path: str | Path, controller: ObjectController, camera_id: int) -> None:
@@ -37,10 +39,20 @@ class ObjectDetector:
         self.stream = VideoStream(camera_id)
         self.__thread = Thread(target=self.__track_video_stream, daemon=True)
 
+    @property
+    def ready(self) -> bool:
+        """Whether the object detection model has been initialized."""
+        return self.__ready
+
     def start(self) -> None:
         """Start looking for objects in the video stream."""
         self.stream.start()
         self.__thread.start()
+
+        while not self.ready:
+            time.sleep(0.1)
+
+        logging.info("Started the object detection model.")
 
     def __track_video_stream(self) -> None:
         """Track the objects in the video stream."""
@@ -58,6 +70,7 @@ class ObjectDetector:
                 device="cpu"
             )
 
+            self.__ready = True
             self.controller.handle(results[0].boxes)
             end = time.perf_counter()
 
