@@ -120,6 +120,19 @@ overtake:
 parking:
   min_distance: 1
   steering_angle: 1.25
+  speed: 3 # km/h
+  kart_length: 160
+  angle_threshold: 230
+
+  side_angles:
+    right: [265, 275]
+
+  free_side:
+    max_distance: 3000 # millimeters
+
+    wait_for_opening:
+      max_angle: 290
+
 
 crosswalk:
   lost_frames: 10
