@@ -135,7 +135,7 @@ class SpeedController(ISpeedController):
                 self.current_speed,
                 self.__target_speed,
                 self.__max_speed,
-                self.state.name
+                self.state.name,
             )
             time.sleep(1)
 
@@ -148,11 +148,13 @@ class SpeedController(ISpeedController):
             return
 
         self.__can.set_throttle(self.__get_target_percentage(), self.__gear)
-        self.__can.set_brake(
-            0
-            if self.current_speed <= (self.__target_speed + config["kart"]["braking"]["margin"])
-            else config["kart"]["braking"]["min_force"]
-        )
+
+        brake_margin = 0 if self.state == SpeedControllerState.PARKING else config["kart"]["braking"]["margin"]
+        brake_percentage = 0
+        if self.current_speed > (self.__target_speed + brake_margin):
+            brake_percentage = config["kart"]["braking"]["min_force"]
+
+        self.__can.set_brake(brake_percentage)
 
     def __get_target_percentage(self) -> int:
         """Get the target percentage of the throttle to apply."""

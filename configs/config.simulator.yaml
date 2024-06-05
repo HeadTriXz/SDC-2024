@@ -18,6 +18,10 @@ line_following:
     ki: 1.0
     kd: 0.5
 
+parking:
+  steering_angle: 0.8
+  speed: 5
+
 preprocessing:
   white_threshold: 174
 

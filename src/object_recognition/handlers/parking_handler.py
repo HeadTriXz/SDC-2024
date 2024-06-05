@@ -7,6 +7,8 @@ from ultralytics.engine.results import Boxes
 
 from src.config import config
 from src.constants import Gear, Label
+from src.driving.can import ICANController
+from src.driving.speed_controller import ISpeedController, SpeedControllerState
 from src.object_recognition.handlers.base_handler import BaseObjectHandler
 from src.object_recognition.object_controller import ObjectController
 from src.utils.lidar import ILidar
@@ -42,7 +44,6 @@ class ParkingHandler(BaseObjectHandler):
             return
 
         self.controller.stop()
-        self.controller.lane_assist.stop()
 
         self.__speed_controller.state = SpeedControllerState.PARKING
         self.__speed_controller.target_speed = config["parking"]["speed"]
@@ -141,7 +142,7 @@ class ParkingHandler(BaseObjectHandler):
                     time.sleep(2)
                     self.__can_controller.set_steering(config["parking"]["steering_angle"])
                     time.sleep(1)
-                    # drive backwards into the parking spot
+                    # Drive backwards into the parking spot.
                     self.__speed_controller.gear = Gear.REVERSE
                     self.__speed_controller.target_speed = config["parking"]["speed"]
                     self.drive_into_spot()

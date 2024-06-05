@@ -118,7 +118,7 @@ overtake:
   range_threshold: 3000
 
 parking:
-  min_distance: 1
+  min_distance: 900 # millimeters
   steering_angle: 1.25
   speed: 3 # km/h
   kart_length: 160
@@ -130,8 +130,8 @@ parking:
   free_side:
     max_distance: 3000 # millimeters
 
-    wait_for_opening:
-      max_angle: 290
+  wait_for_opening:
+    max_angle: 290
 
 
 crosswalk:
