@@ -13,7 +13,15 @@ from src.utils.lidar.lidar import Lidar
 
 
 class ParkingHandler(BaseObjectHandler):
-    """A handler for parking spaces."""
+    """A handler for parking spaces.
+
+    Attributes
+    ----------
+        lidar (Lidar): The lidar sensor.
+
+    """
+
+    lidar: Lidar
 
     def __init__(self, controller: ObjectController, lidar: Lidar) -> None:
         """Initializes the parking handler.

@@ -15,7 +15,6 @@ from src.object_recognition.handlers.traffic_light_handler import TrafficLightHa
 from src.object_recognition.object_controller import ObjectController
 from src.object_recognition.object_detector import ObjectDetector
 from src.telemetry.app import TelemetryServer
-from src.utils.lidar.lidar import Lidar
 from src.utils.video_stream import VideoStream
 
 
@@ -116,8 +115,6 @@ class AutonomousDriving(DrivingMode):
             lidar.start()
             object_controller.add_handler(OvertakeHandler(object_controller, lidar))
             object_controller.add_handler(ParkingHandler(object_controller, lidar))
-
-            lidar.start()
 
         # Initialize the object detector.
         self.detector = ObjectDetector.from_model(

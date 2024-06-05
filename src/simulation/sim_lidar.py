@@ -63,7 +63,7 @@ class SimLidar(ILidar):
                 return self.scan_data[i]
         return 0
 
-    def find_highest_index(self, angle_min: int, angle_max: int, min_dist: int, max_dist:int) -> int:
+    def find_highest_index(self, angle_min: int, angle_max: int, min_dist: int, max_dist: int) -> int:
         """A function that returns the highest index with a distance in range.
 
         :param angle_min: The minimum angle to check.
@@ -77,7 +77,7 @@ class SimLidar(ILidar):
                 return i
         return 0
 
-    def find_lowest_index(self, angle_min: int, angle_max: int, min_dist: int, max_dist:int) -> int:
+    def find_lowest_index(self, angle_min: int, angle_max: int, min_dist: int, max_dist: int) -> int:
         """A function that returns the lowest index with a distance in range.
 
         :param angle_min: The minimum angle to check.
@@ -120,10 +120,8 @@ class SimLidar(ILidar):
             points = np.array(lidar_data.point_cloud, dtype=np.float32).reshape((-1, 3))
             angles, distances = np.hsplit(
                 np.rad2deg(
-                    np.column_stack((np.arctan2(points[:, 1], points[:, 0]), np.linalg.norm(points[:, :2], axis=1)))
-                ),
-                2,
-            )
+                    np.column_stack((np.arctan2(points[:, 1], points[:, 0]),
+                                     np.linalg.norm(points[:, :2], axis=1)))), 2 )
             angles = angles.astype(int)
 
             distances *= 5
