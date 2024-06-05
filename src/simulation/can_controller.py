@@ -1,5 +1,8 @@
 import airsim
 import can
+import time
+
+from threading import Thread
 
 from src.constants import CANFeedbackIdentifier, Gear
 from src.driving.can import ICANController

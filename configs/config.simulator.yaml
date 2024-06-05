@@ -3,7 +3,7 @@ kart:
 
   braking:
     max_force: 100
-    min_force: 0
+    min_force: 100
 
   speed_modes:
     selected: 20

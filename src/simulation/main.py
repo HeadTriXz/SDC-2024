@@ -14,6 +14,7 @@ from src.simulation.can_controller import SimCanController
 from src.telemetry.app import TelemetryServer
 
 
+
 def start_simulator() -> None:
     """Run the simulator."""
     telemetry = TelemetryServer()
@@ -92,6 +93,9 @@ def start_simulator() -> None:
     telemetry.start()
     speed_controller.start()
     speed_controller.toggle()
+
+    speed_controller.state = SpeedControllerState.PARKING
+    speed_controller.target_speed = config["parking"]["speed"]
 
     lane_assist.toggle()
     lane_assist.start()

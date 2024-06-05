@@ -7,3 +7,4 @@ class SpeedControllerState(IntEnum):
     STOPPED = 0
     WAITING_TO_STOP = 1
     DRIVING = 2
+    PARKING = 3

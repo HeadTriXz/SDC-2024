@@ -9,21 +9,17 @@ from src.config import config
 from src.constants import Gear, Label
 from src.object_recognition.handlers.base_handler import BaseObjectHandler
 from src.object_recognition.object_controller import ObjectController
-from src.utils.lidar.lidar import Lidar
+from src.utils.lidar import ILidar
 
 
 class ParkingHandler(BaseObjectHandler):
-    """A handler for parking spaces.
+    """A handler for parking spaces."""
 
-    Attributes
-    ----------
-        lidar (Lidar): The lidar sensor.
+    __lidar: ILidar
+    __speed_controller: ISpeedController
+    __can_controller: ICANController
 
-    """
-
-    lidar: Lidar
-
-    def __init__(self, controller: ObjectController, lidar: Lidar) -> None:
+    def __init__(self, controller: ObjectController, lidar: ILidar) -> None:
         """Initializes the parking handler.
 
         :param controller: The object controller.
@@ -90,15 +86,24 @@ class ParkingHandler(BaseObjectHandler):
 
     def wait_for_wall(self) -> None:
         """Wait until the lidar detects a wall."""
-        while self.__lidar.free_range(265, 275, 2500):
+        while self.__lidar.free_range(
+            config["parking"]["side_angles"]["right"][0],
+            config["parking"]["side_angles"]["right"][1],
+            config["parking"]["free_side"]["max_distance"],
+        ):
             time.sleep(0.1)
+            # TODO:: Check for multiple frames
 
         self.wait_for_opening()
 
     def wait_for_opening(self) -> None:
         """Wait for the opening to be reached."""
         amount = 0
-        while self.__lidar.free_range(265, 290, 3000):
+        while self.__lidar.free_range(
+            config["parking"]["side_angles"]["right"][0],
+            config["parking"]["wait_for_opening"]["max_angle"],
+            config["parking"]["free_side"]["max_distance"],
+        ):
             time.sleep(0.1)
             if amount == 3:
                 break
@@ -113,28 +118,32 @@ class ParkingHandler(BaseObjectHandler):
 
     def wait_for_steering_point(self) -> None:
         """Wait for the steering point to be reached."""
+        self.controller.lane_assist.stop()
+
         while True:
             time.sleep(0.1)
-            # check if we are still detecting a wall.
-            if not self.__lidar.free_range(282, 290, cnf["free_side"]["max_distance"]):
-                # get the distance to the wall nad the right most point of it and calculate the distance to it.
+            # Check if we are still detecting a wall.
+            if not self.__lidar.free_range(282, 290, config["parking"]["free_side"]["max_distance"]):
+                # Get the distance to the wall nad the right most point of it and calculate the distance to it.
                 distance_wall = self.__lidar.find_obstacle_distance(265, 280)
-                rightmost_point = self.__lidar.find_rightmost_point(280, 335, 800, cnf["free_side"]["max_distance"])
+                rightmost_point = self.__lidar.find_rightmost_point(
+                    280, config["parking"]["rightmost_point_max"], 800, config["parking"]["free_side"]["max_distance"]
+                )
                 if distance_wall == 0 or rightmost_point == 0 or rightmost_point < distance_wall:
                     continue
 
-                distance_to_spot = math.sqrt((rightmost_point ** 2) - (distance_wall ** 2))
+                distance_to_spot = math.sqrt((rightmost_point**2) - (distance_wall**2))
 
-                # if the kart is close enough to the spot steer the kart.
-                if distance_to_spot >= cnf["parking"]["kart_length"]:
-                    # stop and steer the kart
+                # If the kart is close enough to the spot steer the kart.
+                if distance_to_spot >= config["parking"]["kart_length"]:
+                    # Stop and steer the kart
                     self.__speed_controller.target_speed = 0
                     time.sleep(2)
                     self.__can_controller.set_steering(config["parking"]["steering_angle"])
                     time.sleep(1)
                     # drive backwards into the parking spot
                     self.__speed_controller.gear = Gear.REVERSE
-                    self.__speed_controller.target_speed = cnf["speed"]
+                    self.__speed_controller.target_speed = config["parking"]["speed"]
                     self.drive_into_spot()
                     continue
 
@@ -159,8 +168,12 @@ class ParkingHandler(BaseObjectHandler):
             if wall_1 == 0 or wall_2 == 0:
                 continue
 
-            if corner_angle - wall_1 < 28 and wall_2 - corner_angle > 4 and (wall_2_distance - corner) > 50 and (
-                    wall_1_distance - corner) > 50:
+            if (
+                corner_angle - wall_1 < 29
+                and wall_2 - corner_angle > 4
+                and (wall_2_distance - corner) > 50
+                and (wall_1_distance - corner) > 50
+            ):
                 if counter == 3:
                     self.__can_controller.set_steering(-config["parking"]["steering_angle"])
                     return self.wait_to_stop()
@@ -175,12 +188,12 @@ class ParkingHandler(BaseObjectHandler):
             highest_angle = self.__lidar.find_highest_index(180, 320, 300, 9000)
             angle = highest_angle - lowest_angle
 
-            if angle < cnf["angle_threshold"]:
-                self.__speed_controller.target_speed = cnf["speed"]
+            if angle < config["parking"]["angle_threshold"]:
+                self.__speed_controller.target_speed = 0
                 self.__can_controller.set_steering(0)
                 return self.forward_creep(False)
             if lowest_angle == 0:
-                if counter == 3:
+                if counter == 2:
                     self.__speed_controller.target_speed = 0
                     logging.error("Cannot see the left wall, failed parking.")
                     return None
@@ -197,7 +210,7 @@ class ParkingHandler(BaseObjectHandler):
             left_wall = self.__lidar.find_lowest_index(120, 250, 300, 9000)
             right_wall = self.__lidar.find_highest_index(160, 310, 300, 9000)
             self.__speed_controller.gear = Gear.DRIVE
-            self.__speed_controller.target_speed = cnf["speed"]
+            self.__speed_controller.target_speed = config["parking"]["speed"]
 
             if right_wall == 0:
                 continue
@@ -209,19 +222,19 @@ class ParkingHandler(BaseObjectHandler):
                 self.__can_controller.set_steering(-config["parking"]["steering_angle"])
 
             if -15 < deviation < 15:
-                self.__can_controller.set_brake(100)
-                self.__can_controller.set_throttle(0, Gear.NEUTRAL)
+                self.__speed_controller.stmaate = SpeedControllerState.STOPPED
                 return
 
-            if not self.__lidar.free_range(160, 220, 800) and reverse:
+            if not self.__lidar.free_range(140, 250, 800) and reverse:
                 self.reverse_creep(reverse)
                 counter += 1
                 return
 
             if self.__lidar.free_range(160, 220, 2500):
                 reverse = False
+
             self.__speed_controller.gear = Gear.DRIVE
-            self.__speed_controller.target_speed = cnf["speed"]
+            self.__speed_controller.target_speed = config["parking"]["speed"]
             if self.__lidar.free_range(160, 220, 500):
                 reverse = True
 
@@ -239,20 +252,22 @@ class ParkingHandler(BaseObjectHandler):
             angle = highest_angle - lowest_angle
 
             if angle < 233 and deviation > 40:
-                self.__speed_controller.target_speed = cnf["speed"]
+                self.__speed_controller.target_speed = config["parking"]["speed"]
                 self.__can_controller.set_steering(0)
                 return self.forward_creep(False)
-
+            # If the deviation is in the left direction.
             if deviation < 0:
                 self.forward_creep(reverse)
                 self.__can_controller.set_steering(config["parking"]["steering_angle"])
             else:
                 self.__can_controller.set_steering(-config["parking"]["steering_angle"])
-
+            # If the car is aligned with the parking spot, stop the car.
             if -15 < deviation < 15:
-                self.__speed_controller.target_speed = cnf["speed"]
+                self.__speed_controller.target_speed = config["parking"]["speed"]
                 if self.__lidar.free_range(160, 250, 800):
                     self.forward_creep(reverse)
+
+                self.__speed_controller.state = SpeedControllerState.STOPPED
                 return None
 
             if not reverse:
@@ -266,5 +281,5 @@ class ParkingHandler(BaseObjectHandler):
                 self.forward_creep(reverse)
             else:
                 self.__speed_controller.gear = Gear.REVERSE
-                self.__speed_controller.target_speed = cnf["speed"]
+                self.__speed_controller.target_speed = config["parking"]["speed"]
             time.sleep(0.1)

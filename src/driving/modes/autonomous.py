@@ -83,21 +83,11 @@ class AutonomousDriving(DrivingMode):
         :param calibration: The calibration data to use.
         """
         generator = td_stitched_image_generator(
-            calibration,
-            self.cam_left,
-            self.cam_center,
-            self.cam_right,
-            self.telemetry
+            calibration, self.cam_left, self.cam_center, self.cam_right, self.telemetry
         )
 
         stop_line_assist = StopLineAssist(self.speed_controller, calibration)
-        self.lane_assist = LaneAssist(
-            generator,
-            stop_line_assist,
-            self.speed_controller,
-            self.telemetry,
-            calibration
-        )
+        self.lane_assist = LaneAssist(generator, stop_line_assist, self.speed_controller, self.telemetry, calibration)
 
     def __init_object_detection(self, calibration: CalibrationData) -> None:
         """Initialize the object detection system.
