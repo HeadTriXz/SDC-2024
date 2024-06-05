@@ -1,6 +1,11 @@
 # Kart
 kart:
-  max_steering_angle: 20
+  lidar_offset: 0.26  # meters
+  max_steering_angle: 20  # degrees
+
+  dimensions:
+    length: 1.9  # meters
+    width: 1.325  # meters
 
   speed_modes:
     selected: 10
@@ -119,7 +124,10 @@ overtake:
 
 parking:
   min_distance: 1
-  steering_angle: 1.25
+  angle_tolerance: 5  # degrees
+  barrier_angle_margin: 10  # degrees
+  straight_angle_margin: 3  # degrees
+  start_steering_offset: -0.1  # meters
 
 crosswalk:
   lost_frames: 10

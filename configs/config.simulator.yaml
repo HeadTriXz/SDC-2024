@@ -1,5 +1,10 @@
 kart:
+  lidar_offset: 1.6
   max_steering_angle: 20
+
+  dimensions:
+    length: 3.2
+    width: 1.4
 
   braking:
     max_force: 100

@@ -1,8 +1,18 @@
+import numpy as np
+
 from abc import ABC, abstractmethod
 
 
 class ILidar(ABC):
-    """Interface for the lidar classes."""
+    """Interface for the lidar classes.
+
+    Attributes
+    ----------
+        scan_data: A numpy array containing the scan data from the lidar.
+
+    """
+
+    scan_data: np.ndarray
 
     @abstractmethod
     def find_obstacle_distance(self, angle_min: int, angle_max: int) -> int:

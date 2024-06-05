@@ -1,8 +1,7 @@
 import logging
 import os
 
-from src.driving.can import CANController, get_can_bus
-from src.driving.modes import AutonomousDriving
+from src.driving.kart import Kart
 from src.telemetry.logging_handler import LoggingHandler
 
 
@@ -14,10 +13,4 @@ if __name__ == "__main__":
 
         start_simulator()
     else:
-        bus = get_can_bus()
-        can = CANController(bus)
-        can.start()
-
-        kart = AutonomousDriving(can)
-        kart.toggle()
-        kart.start()
+        Kart().start()
