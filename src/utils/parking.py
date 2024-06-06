@@ -9,7 +9,7 @@ from src.config import config
 from src.constants import Gear
 from src.driving.can import ICANController
 from src.driving.speed_controller import ISpeedController, SpeedControllerState
-from src.utils.lidar import ILidar
+from src.utils.lidar import BaseLidar
 
 
 class ParkingManoeuvre:
@@ -17,10 +17,10 @@ class ParkingManoeuvre:
 
     __can_controller: ICANController
     __lengths: list[float]
-    __lidar: ILidar
+    __lidar: BaseLidar
     __speed_controller: ISpeedController
 
-    def __init__(self, lidar: ILidar, speed_controller: ISpeedController, can_controller: ICANController) -> None:
+    def __init__(self, lidar: BaseLidar, speed_controller: ISpeedController, can_controller: ICANController) -> None:
         """Initializes the parking manoeuvre.
 
         :param lidar: The lidar sensor.
@@ -34,7 +34,7 @@ class ParkingManoeuvre:
 
     def park(self) -> None:
         """Park the go-kart."""
-        self.__speed_controller.target_speed = 5
+        self.__speed_controller.target_speed = config["parking"]["max_speed"]
         logging.info("Parking the go-kart.")
 
         self.__wait_until_wall()
@@ -113,24 +113,24 @@ class ParkingManoeuvre:
         if nearest_angle == -1:
             return False
 
-        outer_wall_angle = -1
-        inner_wall_angle = -1
-
         nearest_point = self.__angle_to_xy(nearest_angle)
+        angles: list[float] = []
+
         if outer_angle != -1:
             outer_point = self.__angle_to_xy(outer_angle)
             outer_wall_angle = self.__angle_from_points(outer_point, nearest_point)
+            angles.append(outer_wall_angle)
 
         if inner_angle != -1 and inner_angle > nearest_angle:
             inner_point = self.__angle_to_xy(inner_angle)
             inner_wall_angle = self.__angle_from_points(nearest_point, inner_point)
-            inner_wall_angle -= 90
+            if inner_wall_angle >= 100:
+                angles.append(inner_wall_angle - 90)
 
-            if inner_wall_angle < 10:
-                inner_wall_angle = -1
+        if len(angles) == 0:
+            return False
 
-        average_angle = self.__optional_mean([outer_wall_angle, inner_wall_angle])
-        return average_angle != -1 and average_angle <= 45 + config["parking"]["angle_tolerance"]
+        return np.mean(angles) <= 45 + config["parking"]["angle_tolerance"]
 
     def __is_centered(self, available_space: float) -> bool:
         """Check if the go-kart is centered in the parking spot.
@@ -144,10 +144,12 @@ class ParkingManoeuvre:
         if np.isinf(frontal_distance):
             return True
 
-        margin = ((config["kart"]["dimensions"]["length"] / 2) - config["kart"]["lidar_offset"]) * 1000
+        margin = (config["kart"]["dimensions"]["length"] / 2) - config["kart"]["lidar_offset"]
+        margin -= self.__speed_controller.get_braking_distance()
+
         center = available_space / 2 * 1000
 
-        return frontal_distance - margin >= center
+        return frontal_distance - margin * 1000 >= center
 
     def __is_past_barrier(self) -> bool:
         """Check if the go-kart is past the barrier.
@@ -209,7 +211,8 @@ class ParkingManoeuvre:
         if rightmost_dist <= nearest_dist:
             return False
 
-        offset = config["parking"]["start_steering_offset"]
+        offset = -self.__speed_controller.get_braking_distance()
+        offset += config["parking"]["start_steering_offset"]
 
         distance = math.sqrt(rightmost_dist**2 - nearest_dist**2)
         threshold = (config["kart"]["dimensions"]["length"] - config["kart"]["lidar_offset"] + offset) * 1000
@@ -291,19 +294,6 @@ class ParkingManoeuvre:
 
         angle = math.degrees(math.atan2(dy, dx))
         return (180 - angle) % 360
-
-    @staticmethod
-    def __optional_mean(data: list[float]) -> float:
-        """Calculate the mean of a list of numbers. If a number is -1, it is ignored.
-
-        :param data: The list of numbers.
-        :return: The mean of the list of numbers.
-        """
-        data = [x for x in data if x != -1]
-        if len(data) == 0:
-            return -1
-
-        return np.mean(data)
 
     @staticmethod
     def __wait_until(condition: Callable[[], bool]) -> None:

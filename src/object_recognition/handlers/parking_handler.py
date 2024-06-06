@@ -6,14 +6,16 @@ from src.config import config
 from src.constants import Label
 from src.object_recognition.handlers.base_handler import BaseObjectHandler
 from src.object_recognition.object_controller import ObjectController
-from src.utils.lidar import Lidar
+from src.utils.lidar import BaseLidar
 from src.utils.parking import ParkingManoeuvre
 
 
 class ParkingHandler(BaseObjectHandler):
     """A handler for parking spaces."""
 
-    def __init__(self, controller: ObjectController, lidar: Lidar) -> None:
+    __lidar: BaseLidar
+
+    def __init__(self, controller: ObjectController, lidar: BaseLidar) -> None:
         """Initializes the parking handler.
 
         :param controller: The object controller.
@@ -21,8 +23,6 @@ class ParkingHandler(BaseObjectHandler):
         """
         super().__init__(controller, [Label.PARKING_SPACE])
         self.__lidar = lidar
-        self.__speed_controller = controller.speed_controller
-        self.__can_controller = controller.speed_controller.can_controller
 
     def handle(self, predictions: Boxes) -> None:
         """Check if there is a parking space available. If so, set the state to parking.
@@ -38,7 +38,9 @@ class ParkingHandler(BaseObjectHandler):
         self.controller.stop()
         self.controller.lane_assist.stop()
 
-        manoeuvre = ParkingManoeuvre(self.__lidar, self.__speed_controller, self.__can_controller)
+        manoeuvre = ParkingManoeuvre(
+            self.__lidar, self.controller.speed_controller, self.controller.speed_controller.can_controller
+        )
         manoeuvre.park()
 
     def __any_within_distance(self, predictions: Boxes) -> bool:

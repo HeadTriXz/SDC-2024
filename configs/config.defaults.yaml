@@ -123,6 +123,7 @@ overtake:
   range_threshold: 3000
 
 parking:
+  max_speed: 5
   min_distance: 1
   angle_tolerance: 5  # degrees
   barrier_angle_margin: 10  # degrees
