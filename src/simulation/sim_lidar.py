@@ -121,7 +121,7 @@ class SimLidar(ILidar):
             angles, distances = np.hsplit(
                 np.rad2deg(
                     np.column_stack((np.arctan2(points[:, 1], points[:, 0]),
-                                     np.linalg.norm(points[:, :2], axis=1)))), 2 )
+                                     np.linalg.norm(points[:, :2], axis=1)))), 2)
             angles = angles.astype(int)
 
             distances *= 5

@@ -107,6 +107,4 @@ def start_simulator() -> None:
 
     lane_assist.toggle()
 
-    # We cant run lane assist and parking at the same time because airsim is shit
-    # lane_assist.start(True) # noqa:ERA001
     parking_handler.wait_for_wall()
