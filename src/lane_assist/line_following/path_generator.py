@@ -57,6 +57,34 @@ class Path:
         return f"Path({self.points}, {self.radius})"
 
 
+def compute_normals(line: Line) -> np.ndarray:
+    """Compute the normals of the line.
+
+    :param line: The line to compute the normals for.
+    :return: The normals of the line.
+    """
+    dx = np.gradient(line.points[:, 0])
+    dy = np.gradient(line.points[:, 1])
+
+    # Compute the normals.
+    normals = np.array([-dy, dx]).T
+
+    # Normalize the normals.
+    normals /= np.linalg.norm(normals, axis=1)[:, np.newaxis]
+    return normals
+
+
+def offset_line(line: Line, offset: float) -> np.ndarray:
+    """Offset the line by the given offset.
+
+    :param line: The line to offset.
+    :param offset: The offset to apply.
+    :return: The offset line.
+    """
+    normals = compute_normals(line)
+    return line.points + offset * normals
+
+
 def generate_driving_path(
         calibration: CalibrationData,
         lines: list[Line],
@@ -71,6 +99,12 @@ def generate_driving_path(
     :param current_position: The current position of the go-kart.
     :return: The generated path.
     """
+    if len(lines) == 1:
+        offset = current_position[0] - lines[0].points[0, 0]
+        path = offset_line(lines[0], offset)
+
+        return Path(calibration, path)
+
     lanes = [[lines[i], lines[i - 1]] for i in range(len(lines) - 1, 0, -1)]
 
     if requested_lane >= len(lanes):
