@@ -2,9 +2,18 @@ import cv2
 import dataclasses
 import numpy as np
 import scipy
+from matplotlib import pyplot as plt
 
 from src.calibration.data import CalibrationData
 from src.config import config
+
+import sys
+
+gettrace = getattr(sys, 'gettrace', None)
+if gettrace is not None:
+    debug = gettrace() is not None
+else:
+    debug = False
 
 
 @dataclasses.dataclass
@@ -75,18 +84,27 @@ def morphex_filter(image: np.ndarray, calibration: CalibrationData) -> np.ndarra
     margin = calibration.get_pixels(config["line_detection"]["filtering"]["margin"])
     width = calibration.get_pixels(0.5)
 
-    histogram_peaks = basic_filter_ranges(image, hpx, width, margin)
-
     full_mask = np.full((image.shape[0] + 10, image.shape[1]), 255, dtype=np.uint8)
     full_mask[:-10] = image
 
-    full_mask = cv2.morphologyEx(full_mask, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7)))
-    full_mask = cv2.dilate(full_mask, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (13, 13)))
+    # has been moved, so we can use the mask to get the peaks
+    histogram_peaks = basic_filter_ranges(image, hpx, width, margin)
+
+    # this dilation has been added
+    full_mask = cv2.dilate(full_mask, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 5)), iterations=1)
+
+    full_mask = cv2.morphologyEx(
+        full_mask,
+        cv2.MORPH_OPEN,
+        cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
+    )
+
+    full_mask = cv2.dilate(full_mask, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (13, 13)), iterations=1)
 
     full_mask[full_mask > 100] = 255
     full_mask[full_mask <= 100] = 0
 
-    mask = np.zeros_like(image)
+    mask = np.zeros_like(full_mask)
     for peak in histogram_peaks:
         mask[peak.left:peak.right] = full_mask[peak.left:peak.right]
 
@@ -97,4 +115,26 @@ def morphex_filter(image: np.ndarray, calibration: CalibrationData) -> np.ndarra
     if len(histogram_peaks) == 0:
         return np.zeros_like(image)
 
-    return mask
+    return mask[:-10]
+
+
+def combined_filter(gray: np.ndarray, calibration: CalibrationData) -> np.ndarray:
+    """Filter the image using morphological operations."""
+    # convert to grayscale
+    # cv2.imshow("frame", gray)
+
+    im_mask = np.zeros_like(gray)
+    im_mask[gray == 0] = 255
+
+    _, thresholded = cv2.threshold(gray, config["preprocessing"]["white_threshold"], 255, cv2.THRESH_BINARY)
+    thresholded[gray == 0] = 255
+    # cv2.imshow("thresholded", thresholded)
+
+    filter_mask = cv2.bitwise_not(morphex_filter(thresholded, calibration))
+    filtered = cv2.bitwise_and(thresholded, filter_mask)
+    filtered[im_mask == 255] = 0
+
+    # cv2.imshow("thresholded", thresholded)
+    # cv2.imshow("filtered", filtered)
+    return filtered
+    # cv2.imshow("filtered", filtered)
