@@ -10,7 +10,6 @@ from src.config import config
 from src.lane_assist.line_detection.line import Line, LineType
 from src.lane_assist.line_detection.window import Window
 from src.lane_assist.line_detection.window_search import window_search
-from src.lane_assist.preprocessing.image_filters import morphex_filter
 from src.utils.other import euclidean_distance, get_border_of_points
 
 
@@ -58,11 +57,6 @@ def get_lines(image: np.ndarray, calibration: CalibrationData) -> list[Line]:
     :param calibration: The calibration data of the stitching, used for calculating the window sizes.
     :return: The lines in the image.
     """
-    # Filter the image. This is done in place and will be used to remove zebra crossings.
-    if config["line_detection"]["filtering"]["active"]:
-        filter_mask = cv2.bitwise_not(morphex_filter(image, calibration))
-        image = cv2.bitwise_and(image, filter_mask)
-
     # Create histogram to find the start of the lines.
     # This is done by weighting the pixels using a logspace.
     pixels = image[image.shape[0] // 2:, :]
