@@ -100,9 +100,10 @@ def generate_driving_path(
     :return: The generated path.
     """
     if len(lines) == 1:
-        offset = current_position[0] - lines[0].points[0, 0]
-        path = offset_line(lines[0], offset)
+        sign = np.sign(current_position[0] - lines[0].points[0, 0])
+        offset = calibration.get_pixels(config["line_following"]["no_lane_offset"])
 
+        path = offset_line(lines[0], sign * offset)
         return Path(calibration, path)
 
     lanes = [[lines[i], lines[i - 1]] for i in range(len(lines) - 1, 0, -1)]
