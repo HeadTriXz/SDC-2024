@@ -6,6 +6,7 @@ from typing import Callable, Generator
 from src.calibration.data import CalibrationData
 from src.config import config
 from src.lane_assist.preprocessing.gamma import GammaAdjuster
+from src.lane_assist.preprocessing.image_filters import morphex_filter
 from src.telemetry.app import TelemetryServer
 from src.utils.video_stream import VideoStream
 
@@ -49,13 +50,18 @@ def td_stitched_image_generator(
                 right_image = gamma_adjuster.adjust(right_image, config["preprocessing"]["gamma"]["right"])
 
             topdown = calibration.transform([left_image, center_image, right_image])
-            thresholded = cv2.threshold(topdown, config["preprocessing"]["white_threshold"], 255, cv2.THRESH_BINARY)[1]
+
+            filter_mask = cv2.bitwise_not(morphex_filter(topdown, calibration))
+            filtered = cv2.bitwise_and(topdown, filter_mask)
+
+            thresholded = cv2.threshold(filtered, config["preprocessing"]["white_threshold"], 255, cv2.THRESH_BINARY)[1]
 
             if config["telemetry"]["enabled"] and telemetry.any_listening():
                 telemetry.websocket_handler.send_image("left", left_image)
                 telemetry.websocket_handler.send_image("center", center_image)
                 telemetry.websocket_handler.send_image("right", right_image)
-                telemetry.websocket_handler.send_image("topdown", thresholded)
+                telemetry.websocket_handler.send_image("topdown", topdown)
+                telemetry.websocket_handler.send_image("filtered", thresholded)
 
             yield thresholded
 

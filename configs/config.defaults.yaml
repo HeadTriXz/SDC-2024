@@ -23,6 +23,7 @@ preprocessing:
     center: 1.0
     right: 0.62
   white_threshold: 180
+  filter_threshold: 170
 
 line_detection:
   max_angle_difference: 30  # degrees

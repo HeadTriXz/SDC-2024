@@ -69,8 +69,8 @@ class AutonomousDriving(DrivingMode):
         self.speed_controller.gear = Gear.DRIVE
         self.speed_controller.state = SpeedControllerState.DRIVING
 
-        self.detector.start()
         self.telemetry.start()
+        self.detector.start()
         self.lane_assist.start()
 
     def toggle(self) -> None:
