@@ -84,14 +84,18 @@ def morphex_filter(image: np.ndarray, calibration: CalibrationData) -> np.ndarra
     margin = calibration.get_pixels(config["line_detection"]["filtering"]["margin"])
     width = calibration.get_pixels(0.5)
 
+    _, image = cv2.threshold(image, config["preprocessing"]["filter_threshold"], 255, cv2.THRESH_BINARY)
     full_mask = np.full((image.shape[0] + 10, image.shape[1]), 255, dtype=np.uint8)
     full_mask[:-10] = image
+
 
     # has been moved, so we can use the mask to get the peaks
     histogram_peaks = basic_filter_ranges(image, hpx, width, margin)
 
     # this dilation has been added
     full_mask = cv2.dilate(full_mask, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 4)), iterations=1)
+
+    cv2.imshow("full_mask", full_mask)
 
     full_mask = cv2.morphologyEx(
         full_mask,
@@ -122,19 +126,19 @@ def combined_filter(gray: np.ndarray, calibration: CalibrationData) -> np.ndarra
     """Filter the image using morphological operations."""
     # convert to grayscale
 
-    gray[gray == 0] = 255
+    # gray[gray == 0] = 255
     _, thresholded = cv2.threshold(gray, config["preprocessing"]["white_threshold"], 255, cv2.THRESH_BINARY)
 
-    filter_mask = cv2.bitwise_not(morphex_filter(thresholded, calibration))
+    filter_mask = cv2.bitwise_not(morphex_filter(gray, calibration))
     filtered = cv2.bitwise_and(thresholded, filter_mask)
 
     # the following line can be removed but gives artifacts at the top of the
     # triangles at the bottom of the img. This will increase fps by a small
     # margin (736 -> 762 avgs of 10 runs)
-    filtered[gray == 255] = 0
+    # filtered[gray == 255] = 0
 
-    # cv2.imshow("filter_mask", filter_mask)
-    # cv2.imshow("frame", gray)
-    # cv2.imshow("thresholded", thresholded)
-    # cv2.imshow("filtered", filtered)
+    cv2.imshow("filter_mask", filter_mask)
+    cv2.imshow("frame", gray)
+    cv2.imshow("thresholded", thresholded)
+    cv2.imshow("filtered", filtered)
     return filtered

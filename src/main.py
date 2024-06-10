@@ -32,7 +32,9 @@ if __name__ == "__main__":
         elapsed += end - start
         frame_counter += 1
 
-        cv2.waitKey(1)
+        while True:
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
     avg = elapsed / frame_counter
     fps = frame_counter / elapsed
