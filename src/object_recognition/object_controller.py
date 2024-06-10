@@ -121,6 +121,9 @@ class ObjectController:
         :param predictions: The predictions to handle.
         """
         for handler in self.handlers:
+            if not self.lane_assist.enabled and handler.manual_mode:
+                continue
+
             filtered_predictions = handler.filter_predictions(predictions)
             if len(filtered_predictions.data) == 0:
                 continue

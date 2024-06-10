@@ -15,20 +15,25 @@ class BaseObjectHandler(ABC):
     Attributes
     ----------
         allowed_classes (list[int]): The allowed classes for the handler.
+        controller (ObjectController): The object controller.
+        manual_mode (bool): Whether the handler will be used in manual mode.
 
     """
 
     allowed_classes: list[int]
     controller: "ObjectController"
+    manual_mode: bool = False
 
-    def __init__(self, controller: "ObjectController", allowed_classes: list[int]) -> None:
+    def __init__(self, controller: "ObjectController", allowed_classes: list[int], manual_mode: bool = False) -> None:
         """Initializes the handler.
 
         :param controller: The object controller.
         :param allowed_classes: The allowed classes for the handler.
+        :param manual_mode: Whether the handler will be used in manual mode.
         """
         self.allowed_classes = allowed_classes
         self.controller = controller
+        self.manual_mode = manual_mode
 
     def filter_predictions(self, predictions: Boxes) -> Boxes:
         """Filters the predictions.

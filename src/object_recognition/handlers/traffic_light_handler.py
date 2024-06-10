@@ -14,7 +14,7 @@ class TrafficLightHandler(BaseObjectHandler):
 
         :param controller: The object controller.
         """
-        super().__init__(controller, [Label.TRAFFIC_LIGHT_RED, Label.TRAFFIC_LIGHT_GREEN])
+        super().__init__(controller, [Label.TRAFFIC_LIGHT_RED, Label.TRAFFIC_LIGHT_GREEN], manual_mode=True)
 
     def handle(self, predictions: Boxes) -> None:
         """Sets the state of the speed controller based on the detected traffic light.
