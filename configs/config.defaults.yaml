@@ -124,11 +124,11 @@ overtake:
 
 parking:
   max_speed: 5
-  min_distance: 1
-  angle_tolerance: 5  # degrees
-  barrier_angle_margin: 10  # degrees
+  min_barrier_distance: 0.0  # meters
+  min_distance: 1.0  # meters
+  angle_tolerance: 0  # degrees
   straight_angle_margin: 3  # degrees
-  start_steering_offset: -0.1  # meters
+  start_steering_offset: -0.5  # meters
 
 crosswalk:
   lost_frames: 10

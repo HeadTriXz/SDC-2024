@@ -121,10 +121,10 @@ class ParkingManoeuvre:
             outer_wall_angle = self.__angle_from_points(outer_point, nearest_point)
             angles.append(outer_wall_angle)
 
-        if inner_angle != -1 and inner_angle > nearest_angle:
+        if inner_angle != -1:
             inner_point = self.__angle_to_xy(inner_angle)
             inner_wall_angle = self.__angle_from_points(nearest_point, inner_point)
-            if inner_wall_angle >= 100:
+            if inner_wall_angle >= 130:
                 angles.append(inner_wall_angle - 90)
 
         if len(angles) == 0:
@@ -157,7 +157,7 @@ class ParkingManoeuvre:
         :return: Whether the go-kart is past the barrier.
         """
         car_x = config["kart"]["dimensions"]["width"] / 2 * 1000
-        car_y = -config["kart"]["lidar_offset"] * 1000
+        car_y = (-config["kart"]["lidar_offset"] - config["parking"]["min_barrier_distance"]) * 1000
 
         nearest_angle = self.__lidar.find_nearest_angle(200, 300)
         rightmost_angle = self.__lidar.find_highest_index(200, 300, 300, 3000)
@@ -168,24 +168,24 @@ class ParkingManoeuvre:
         rightmost_point = self.__angle_to_xy(rightmost_angle)
 
         wall_angle = self.__angle_from_points(nearest_point, rightmost_point)
-        if wall_angle < 90:
+        if wall_angle < 120:
             return False
 
-        angle = self.__angle_from_points((car_x, car_y), nearest_point)
-        return angle >= wall_angle - config["parking"]["barrier_angle_margin"]
+        angle = self.__angle_from_points((car_x, car_y), rightmost_point)
+        return angle >= wall_angle - config["parking"]["angle_tolerance"]
 
     def __is_straight(self) -> bool:
         """Check if the go-kart is straight in the parking spot.
 
         :return: Whether the go-kart is straight in the parking spot.
         """
-        leftmost_angle = self.__lidar.find_lowest_index(150, 210, 300, 5000)
+        nearest_angle = self.__lidar.find_nearest_angle(150, 210)
         rightmost_angle = self.__lidar.find_highest_index(150, 210, 300, 5000)
 
-        if leftmost_angle == -1 or rightmost_angle == -1 or leftmost_angle == rightmost_angle:
+        if nearest_angle == -1 or rightmost_angle == -1 or nearest_angle == rightmost_angle:
             return False
 
-        leftmost_point = self.__angle_to_xy(leftmost_angle)
+        leftmost_point = self.__angle_to_xy(nearest_angle)
         rightmost_point = self.__angle_to_xy(rightmost_angle)
 
         angle = self.__angle_from_points(leftmost_point, rightmost_point)
@@ -203,6 +203,13 @@ class ParkingManoeuvre:
         rightmost_angle = self.__lidar.find_highest_index(275, 320, 1000, 3000)
 
         if nearest_angle == -1 or rightmost_angle == -1:
+            return False
+
+        nearest_point = self.__angle_to_xy(nearest_angle)
+        rightmost_point = self.__angle_to_xy(rightmost_angle)
+
+        wall_angle = self.__angle_from_points(nearest_point, rightmost_point)
+        if wall_angle > 100:
             return False
 
         nearest_dist = self.__lidar.scan_data[nearest_angle]
