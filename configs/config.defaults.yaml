@@ -109,6 +109,10 @@ traffic_light:
 
 overtake:
   consecutive_frames: 3
+  force_move:
+    enabled: true
+    angle: 1.0  # percentage
+    duration: 0.5  # seconds
   force_return:
     enabled: true
     angle: 1.0  # percentage

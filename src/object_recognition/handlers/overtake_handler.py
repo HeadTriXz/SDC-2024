@@ -64,6 +64,18 @@ class OvertakeHandler(BaseObjectHandler):
             logging.info("Vehicle detected in the current lane. Switching to the next lane.")
             self.controller.set_lane(current_lane + 1)
 
+            if config["overtake"]["force_move"]["enabled"]:
+                # Force the go-kart to switch to the next lane
+                self.controller.lane_assist.toggle()
+                self.controller.set_steering(config["overtake"]["force_move"]["angle"])
+
+                # Wait for the specified duration
+                time.sleep(config["overtake"]["force_move"]["duration"])
+
+                # Reset the steering angle to 0.0
+                self.controller.set_steering(0.0)
+                self.controller.lane_assist.toggle()
+
     def __return_lane(self) -> None:
         """Checks if the side is free and returns to the previous lane."""
         while True:
@@ -103,6 +115,7 @@ class OvertakeHandler(BaseObjectHandler):
 
                 if config["overtake"]["force_return"]["enabled"]:
                     # Force the go-kart to return to the previous lane
+                    self.controller.lane_assist.toggle()
                     self.controller.set_steering(config["overtake"]["force_return"]["angle"])
 
                     # Wait for the specified duration
@@ -110,5 +123,6 @@ class OvertakeHandler(BaseObjectHandler):
 
                     # Reset the steering angle to 0.0
                     self.controller.set_steering(0.0)
+                    self.controller.lane_assist.toggle()
 
             time.sleep(0.1)
