@@ -53,6 +53,7 @@ line_following:
 
   initial_speed: 5  # km/h
 
+  no_lane_offset: 1.5  # meters
   max_steering_range: 20  # degrees
   look_ahead_distance: .5  # meters
 
