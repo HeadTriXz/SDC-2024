@@ -17,7 +17,7 @@ class SpeedLimitHandler(BaseObjectHandler):
         :param controller: The object controller.
         """
         allowed_classes = list(config["speed_limit"]["class_to_speed"].keys())
-        super().__init__(controller, allowed_classes)
+        super().__init__(controller, allowed_classes, manual_mode=True)
 
     def handle(self, predictions: Boxes) -> None:
         """Updates the speed limit based on the detected objects.
