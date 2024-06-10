@@ -59,7 +59,6 @@ def morphex_filter(image: np.ndarray, calibration: CalibrationData) -> np.ndarra
     full_mask[:-10] = image
 
     histogram_peaks = basic_filter_ranges(image, hpx, width, margin)
-
     if len(histogram_peaks) == 0:
         return np.zeros_like(image)
 
@@ -70,8 +69,8 @@ def morphex_filter(image: np.ndarray, calibration: CalibrationData) -> np.ndarra
     full_mask[full_mask > 100] = 255
     full_mask[full_mask <= 100] = 0
 
-    mask = np.zeros_like(full_mask)
+    mask = np.zeros_like(image)
     for peak in histogram_peaks:
         mask[peak.left : peak.right] = full_mask[peak.left : peak.right]
 
-    return mask.threshold(config["preprocessing"]["filter_threshold"], 255, cv2.THRESH_BINARY)[1]
+    return mask
