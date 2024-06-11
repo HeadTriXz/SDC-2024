@@ -19,7 +19,7 @@ line_following:
     kd: 0.5
 
 parking:
-  steering_angle: 0.8
+  steering_angle: 1.25
   speed: 5
 
 preprocessing:
