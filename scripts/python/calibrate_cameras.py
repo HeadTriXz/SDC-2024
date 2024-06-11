@@ -59,9 +59,9 @@ def calibrate_cameras() -> None:
     right_image = cam_right.next()
 
     # Stop the camera streams.
-    cam_left.stop()
-    cam_center.stop()
-    cam_right.stop()
+    cam_left.stop(detach=True)
+    cam_center.stop(detach=True)
+    cam_right.stop(detach=True)
 
     calibrate_images([left_image, center_image, right_image])
 
