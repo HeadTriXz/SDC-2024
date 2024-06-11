@@ -61,6 +61,6 @@ class Kart:
         """Toggle between autonomous and manual driving."""
         self.__autonomous = not self.__autonomous
 
-        self.__gamepad.vibrate()
         self.autonomous.toggle()
         self.manual.toggle()
+        self.__gamepad.vibrate()
