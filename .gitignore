@@ -21,7 +21,7 @@ venv.bak/
 .vscode
 
 # Data
-**/.benchmarks
+**/can_recordings
 
 # Compiled object detection model
 *_openvino_model/

@@ -34,9 +34,7 @@ class CANController(ICANController):
         :param can_bus: The CAN bus to use.
         """
         self.bus = can_bus
-        self.bus.set_filters([
-            {"can_id": CANFeedbackIdentifier.SPEED_SENSOR, "can_mask": 0xFFF, "extended": False}
-        ])
+        self.bus.set_filters([{"can_id": CANFeedbackIdentifier.SPEED_SENSOR, "can_mask": 0xFFF, "extended": False}])
 
         self.__listeners = {}
         self.__thread = threading.Thread(target=self.__listen, daemon=True)
