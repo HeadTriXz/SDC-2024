@@ -30,6 +30,9 @@ def replay_log(can_bus: can.Bus, log_path: Path) -> None:
     :param can_bus: The CAN bus to use.
     :param log_path: The path to the log file.
     """
+    if not log_path.exists():
+        raise FileNotFoundError(f"Log file {log_path} does not exist.")
+
     with can.ASCReader(log_path) as reader:
         for message in can.MessageSync(reader):
             can_bus.send(message)

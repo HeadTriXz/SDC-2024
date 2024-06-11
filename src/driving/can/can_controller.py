@@ -34,7 +34,7 @@ class CANController(ICANController):
 
     __recording_can: can.Bus = None
     __recorder: threading.Thread = None
-    __recording: bool = False
+    recording: bool = False
 
     def __init__(self, can_bus: can.Bus) -> None:
         """Initialize the CAN controller.
@@ -104,16 +104,6 @@ class CANController(ICANController):
                 for listener in self.__listeners[message.arbitration_id]:
                     listener(message)
 
-    def __recording_thread(self, filepath: Path) -> None:
-        """Record CAN messages into a .asc file."""
-        self.__recording = True
-
-        with can.ASCWriter(filepath) as writer:
-            while self.__recording:
-                msg = self.__recording_can.recv(1)
-                if msg is not None:
-                    writer.on_message_received(msg)
-
     def toggle_recording(self) -> None:
         """Toggle the recording of CAN messages.
 
@@ -125,8 +115,11 @@ class CANController(ICANController):
         """
         if self.__recording_can is None:
             self.__recording_can = get_can_bus()
+            self.__recording_can.set_filters(
+                [{"can_id": can_id, "can_mask": 0xFFF, "extended": False} for can_id in CANControlIdentifier]
+            )
 
-        if not self.__recording:
+        if not self.recording:
             path = Path(f"./data/can_recordings/can_{int(time.time())}.asc")
             path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -135,6 +128,20 @@ class CANController(ICANController):
             self.__recorder.start()
 
         else:
-            self.__recording = False
-            self.__recorder.join()
+            self.recording = False
+            self.__recorder.join(1)
+
+            self.__recording_can.shutdown()
+            self.__recording_can = None
+
             logging.info("Stopped recording CAN messages")
+
+    def __recording_thread(self, filepath: Path) -> None:
+        """Record CAN messages into a .asc file."""
+        self.recording = True
+
+        with can.ASCWriter(filepath) as writer:
+            while self.recording:
+                msg = self.__recording_can.recv(1)
+                if msg is not None:
+                    writer.on_message_received(msg)
