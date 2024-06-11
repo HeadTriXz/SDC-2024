@@ -56,12 +56,12 @@ if __name__ == "__main__":
     id_list_group.add_argument(
         "--blacklist",
         nargs="+",
-        type=lambda x: int(x,0),
+        type=lambda x: int(x, 0),
         help="The list of message IDs to ignore when logging.",
-        default=[]
+        default=[],
     )
     id_list_group.add_argument(
-        "--whitelist", nargs="+", type=lambda x: int(x,0), help="The list of message IDs to listen to.", default=[]
+        "--whitelist", nargs="+", type=lambda x: int(x, 0), help="The list of message IDs to listen to.", default=[]
     )
     id_list_group.add_argument("--log", action="store_true", help="Log all CAN messages.")
     args = arg_parser.parse_args()
