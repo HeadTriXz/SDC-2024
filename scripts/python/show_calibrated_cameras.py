@@ -8,6 +8,7 @@ from src.config import config
 from src.constants import CameraResolution
 from src.utils.video_stream import VideoStream
 
+
 WEBHOOK_URL = "https://discord.com/api/webhooks/1233031145357049866/a4-YT4xhy-pxlMx7-8XI2cvzlrWEXQlyjVvl0QKVaPbBvJv80jBJ4ThuDEmRIbyuev7O"
 
 

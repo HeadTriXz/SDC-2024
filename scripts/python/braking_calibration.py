@@ -4,27 +4,20 @@ import logging
 from os import system
 
 from src.driving.can import CANController
-from src.driving.gamepad import (
-    EventType,
-    Gamepad,
-    GamepadAxis,
-    GamepadButton
-)
+from src.driving.gamepad import EventType, Gamepad, GamepadAxis, GamepadButton
 from src.driving.modes import ManualDriving
 
-config = {
-    "braking_force_min": 0,
-    "braking_force_max": 100,
-    "braking_force_step": 5,
-}
+
+config = {"braking_force_min": 0, "braking_force_max": 100, "braking_force_step": 5}
 
 
 class BrakeCalibrationProcedure:
     """Procedure to calibrate the braking force.
-    this procedure will calibrate the braking force. it will do this by
-    applying the brakes and checking if the wheels lock up. if they do we
-    will lower the amount of braking force. if they don't we will increase
-    the amount of braking force. this will be done using a binary search
+
+    This procedure will calibrate the braking force. It will do this by
+    applying the brakes and checking if the wheels lock up. If they do we
+    will lower the amount of braking force. If they don't we will increase
+    the amount of braking force. This will be done using a binary search
     algorithm.
 
     Attributes
@@ -56,11 +49,7 @@ class BrakeCalibrationProcedure:
         # register the buttons
         self.gamepad.add_listener(GamepadButton.RB, EventType.BUTTON_DOWN, self.start_procedure)
         self.braking_steps = list(
-            range(
-                config["braking_force_min"],
-                config["braking_force_max"] + 1,
-                config["braking_force_step"],
-            )
+            range(config["braking_force_min"], config["braking_force_max"] + 1, config["braking_force_step"])
         )
 
         self.low_idx = 0
@@ -70,8 +59,9 @@ class BrakeCalibrationProcedure:
 
     def start_procedure(self, *args, **kwargs) -> None:
         """Start the brake calibration procedure.
-        this will register all needed callbacks. next to this it often won't do
-        anything else. this function should be called when the B button is pressed.
+
+        This will register all needed callbacks. Next to this it often won't do
+        anything else. This function should be called when the B button is pressed.
         """
         if self.started:
             self.logger.warning("brake calibration already started")
@@ -108,9 +98,10 @@ class BrakeCalibrationProcedure:
 
     def __confirm_lockup(self) -> None:
         """Event listener to confirm the lockup.
-        if this function is called we will adjust the range of braking force
-         according to binary sort. if we locked up we will lower the amount.
-         if we didn't lock up we will increase the amount.
+
+        If this function is called we will adjust the range of braking force
+        according to binary sort. If we locked up we will lower the amount.
+        If we didn't lock up we will increase the amount.
         """
         # check if we have braked.
         if not self.braked:
