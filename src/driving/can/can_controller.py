@@ -28,10 +28,6 @@ class CANController(ICANController):
     __listeners: dict[int, list[callable]]
     __thread: threading.Thread
 
-    __recording_can: can.Bus = None
-    __recorder: threading.Thread = None
-    recording: bool = False
-
     def __init__(self, can_bus: can.Bus) -> None:
         """Initialize the CAN controller.
 

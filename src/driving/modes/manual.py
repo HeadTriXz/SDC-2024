@@ -52,10 +52,6 @@ class ManualDriving(DrivingMode):
         """Toggle the controller."""
         self.enabled = not self.enabled
 
-        if self.enabled:
-            return
-
-
     def __ready(self, *_args: Any, **_kwargs: Any) -> None:
         """The controller is ready to drive."""
         if self.__primed:
