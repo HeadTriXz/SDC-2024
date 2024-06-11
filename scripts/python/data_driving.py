@@ -8,7 +8,7 @@ from pathlib import Path
 
 from src.config import config
 from src.constants import CameraResolution
-from src.driving.can import get_can_bus, CANController
+from src.driving.can import CANController, get_can_bus
 from src.driving.gamepad import Gamepad
 from src.driving.modes import ManualDriving
 from src.utils.video_stream import VideoStream
