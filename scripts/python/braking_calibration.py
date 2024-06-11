@@ -1,9 +1,8 @@
-import can
 import logging
 
-from os import system
+from typing import Any
 
-from src.driving.can import CANController
+from src.driving.can import CANController, get_can_bus
 from src.driving.gamepad import EventType, Gamepad, GamepadAxis, GamepadButton
 from src.driving.modes import ManualDriving
 
@@ -55,19 +54,18 @@ class BrakeCalibrationProcedure:
         self.low_idx = 0
         self.high_idx = len(self.braking_steps) - 1
         self.middle_idx = self.low_idx + (self.high_idx - self.low_idx) // 2
-        self.logger = logging.getLogger(__name__)
 
-    def start_procedure(self, *args, **kwargs) -> None:
+    def start_procedure(self, *_args: Any, **_kwargs: Any) -> None:
         """Start the brake calibration procedure.
 
         This will register all needed callbacks. Next to this it often won't do
         anything else. This function should be called when the B button is pressed.
         """
         if self.started:
-            self.logger.warning("brake calibration already started")
+            logging.warning("brake calibration already started")
             return
 
-        self.logger.info("start brake calibration")
+        logging.info("start brake calibration")
         self.gamepad.add_listener(GamepadAxis.DPAD_X, EventType.AXIS_CHANGED, self.__arrow_pressed)
         self.gamepad.add_listener(GamepadAxis.DPAD_Y, EventType.AXIS_CHANGED, self.__arrow_pressed)
         self.gamepad.add_listener(GamepadButton.LB, EventType.BUTTON_DOWN, self.__start_braking)
@@ -86,13 +84,13 @@ class BrakeCalibrationProcedure:
 
         if button == GamepadAxis.DPAD_Y:
             if val == 1:
-                self.logger.info("select lockup")
+                logging.info("select lockup")
                 self.locked = True
             elif val == -1:
-                self.logger.info("select non lockup")
+                logging.info("select non lockup")
                 self.locked = False
         if button == GamepadAxis.DPAD_X:
-            self.logger.info("confirm")
+            logging.info("confirm")
             if val == 1:
                 self.__confirm_lockup()
 
@@ -105,7 +103,7 @@ class BrakeCalibrationProcedure:
         """
         # check if we have braked.
         if not self.braked:
-            self.logger.info("brake first")
+            logging.info("brake first")
             return
 
         self.braked = False
@@ -113,10 +111,10 @@ class BrakeCalibrationProcedure:
         with open("braking_force.txt", "w") as f:
             if self.low_idx >= self.high_idx:
                 f.write(f"braking force calibrated: {self.braking_steps[self.middle_idx]}")
-                self.logger.info("braking force calibrated: %d", self.braking_steps[self.middle_idx])
+                logging.info("braking force calibrated: %d", self.braking_steps[self.middle_idx])
 
             f.write(f"low: {self.low_idx} high: {self.high_idx} middle: {self.middle_idx}")
-            self.logger.info("low: %d high: %d middle: %d", self.low_idx, self.high_idx, self.middle_idx)
+            logging.info("low: %d high: %d middle: %d", self.low_idx, self.high_idx, self.middle_idx)
             if self.locked:
                 self.high_idx = self.middle_idx - 1
             else:
@@ -126,22 +124,20 @@ class BrakeCalibrationProcedure:
         self.locked = False
         self.middle_idx = self.low_idx + (self.high_idx - self.low_idx) // 2
 
-    def __start_braking(self, *args, **kwargs) -> None:
+    def __start_braking(self, *_args: Any, **_kwargs: Any) -> None:
         """Start braking at the set pressure."""
         self.can_controller.set_brake(self.braking_steps[self.middle_idx])
 
-    def __stop_braking(self, *args, **kwargs) -> None:
+    def __stop_braking(self, *_args: Any, **_kwargs: Any) -> None:
         """Stop braking."""
         self.can_controller.set_brake(0)
         self.braked = True
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    system("ip link set can0 type can bitrate 500000")
-    system("ip link set can0 up")
+    logging.basicConfig(level=logging.INFO)
 
-    can_bus = can.interface.Bus(interface="socketcan", channel="can0", bitrate=500000)
+    can_bus = get_can_bus()
     can_controller = CANController(can_bus)
     can_controller.start()
 

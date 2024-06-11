@@ -3,7 +3,7 @@ import logging
 from typing import Any
 
 from src.constants import Gear
-from src.driving.can import CANController, ICANController
+from src.driving.can import ICANController
 from src.driving.gamepad import EventType, Gamepad, GamepadAxis, GamepadButton
 from src.driving.modes import DrivingMode
 from src.utils.decorators import check_if
@@ -46,7 +46,6 @@ class ManualDriving(DrivingMode):
         self.can_controller.set_brake(100)
 
         self.gamepad.add_listener(GamepadButton.A, EventType.LONG_PRESS, self.__ready)
-        self.gamepad.add_listener(GamepadButton.LB, EventType.LONG_PRESS, self.__toggle_can_recording)
         self.gamepad.vibrate()
 
     def toggle(self) -> None:
@@ -56,23 +55,6 @@ class ManualDriving(DrivingMode):
         if self.enabled:
             return
 
-        if isinstance(self.can_controller, CANController) and self.can_controller.recording:
-            self.can_controller.toggle_recording()
-            logging.info("Disabled recording as the controller has been stopped")
-
-    def __toggle_can_recording(self, *_args: Any, **_kwargs: Any) -> None:
-        """Toggle the recording of CAN messages."""
-        # check if can_controller is of type CANController
-        if not isinstance(self.can_controller, CANController):
-            logging.warning("Cannot toggle recording, the CAN controller is not of type CANController")
-            return
-
-        if not self.enabled or not self.__primed:
-            logging.warning("Cannot toggle recording, the controller is not enabled or primed")
-            return
-
-        self.can_controller.toggle_recording()
-        self.gamepad.vibrate()
 
     def __ready(self, *_args: Any, **_kwargs: Any) -> None:
         """The controller is ready to drive."""

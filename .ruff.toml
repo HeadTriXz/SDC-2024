@@ -52,7 +52,6 @@ exclude = ["scripts/python/original_controller.py"]
 # Ignore unused imports in __init__.py files (would need __all__ otherwise)
 [lint.per-file-ignores]
 "__init__.py" = ["F401", "I"]
-"scripts/python/braking_calibration.py" = ["ARG002", "ANN003", "ANN002"]
 
 [format]
 quote-style = "double"
