@@ -47,7 +47,7 @@ ignore = [
     "PERF203",
 ]
 
-exclude = ["scripts/**"]
+exclude = ["scripts/python/original_controller.py"]
 
 # Ignore unused imports in __init__.py files (would need __all__ otherwise)
 [lint.per-file-ignores]

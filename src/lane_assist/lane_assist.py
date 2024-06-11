@@ -107,8 +107,7 @@ class LaneAssist:
 
         lines = get_lines(image, calibration=self.__calibration)
         filtered_lines = filter_lines(lines, current_position)
-
-        if len(filtered_lines) < 2:
+        if len(filtered_lines) == 0:
             return
 
         self.lines = filtered_lines

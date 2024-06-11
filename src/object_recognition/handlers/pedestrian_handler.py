@@ -15,12 +15,12 @@ class PedestrianHandler(BaseObjectHandler):
 
     Attributes
     ----------
-        frames_lost (int): The number of frames lost.
+        safe_zone_frames (dict[int, int]): The number of frames a pedestrian has been in the safe zone.
         track_history (dict[int, list[int]]): The history of the pedestrians.
 
     """
 
-    frames_lost: int = 0
+    safe_zone_frames: dict[int, int]
     track_history: dict[int, np.ndarray]
 
     def __init__(self, controller: ObjectController) -> None:
@@ -29,6 +29,7 @@ class PedestrianHandler(BaseObjectHandler):
         :param controller: The object controller.
         """
         super().__init__(controller, [Label.PERSON, Label.CROSSWALK])
+        self.safe_zone_frames = {}
         self.track_history = {}
 
     def handle(self, predictions: Boxes) -> None:
@@ -41,14 +42,8 @@ class PedestrianHandler(BaseObjectHandler):
 
         stopped = self.controller.has_stopped()
         should_stop = self.__should_stop(predictions)
-        if should_stop:
-            self.frames_lost = 0
 
         if stopped and not should_stop:
-            if self.frames_lost < config["crosswalk"]["lost_frames"]:
-                self.frames_lost += 1
-                return
-
             logging.info("The pedestrian has finished crossing. Resuming driving.")
 
             self.controller.stopped_by = None
@@ -70,18 +65,18 @@ class PedestrianHandler(BaseObjectHandler):
 
         return np.sign(history[-1][0] - average)
 
-    def __get_most_recent_side(self, history: np.ndarray) -> int:
+    def __get_most_recent_side(self, pedestrian_id: int) -> int:
         """Calculates the most recent side the pedestrian was on.
 
-        :param history: The pedestrian's previous positions.
+        :param pedestrian_id: The ID of the pedestrian.
         :return: The most recent side the pedestrian was on. -1 if left, 1 if right, 0 if in the middle.
         """
         margin = config["crosswalk"]["safe_zone_margin"]
         known_sides = []
 
-        for position in history[::-1]:
-            if len(known_sides) == 2:
-                return known_sides[1]
+        for position in self.track_history[pedestrian_id][::-1]:
+            if len(known_sides) >= self.safe_zone_frames[pedestrian_id] + 2:
+                return known_sides[-1]
 
             if position[0] < margin:
                 known_sides.append(-1)
@@ -121,16 +116,20 @@ class PedestrianHandler(BaseObjectHandler):
                 (min_margin <= pedestrian[0] <= max_margin or
                  min_margin <= pedestrian[2] <= max_margin))
 
-    def __reached_safe_zone(self, history: np.ndarray) -> bool:
+    def __reached_safe_zone(self, pedestrian_id: int) -> bool:
         """Checks if the pedestrian has reached the safe zone.
 
-        :param history: The pedestrian's previous positions.
+        :param pedestrian_id: The ID of the pedestrian.
         :return: Whether the pedestrian has reached the safe zone.
         """
+        if self.safe_zone_frames[pedestrian_id] > config["crosswalk"]["lost_frames"]:
+            return True
+
+        history = self.track_history[pedestrian_id]
         if len(history) < 2:
             return False
 
-        side = self.__get_most_recent_side(history)
+        side = self.__get_most_recent_side(pedestrian_id)
         direction = self.__get_direction(history)
         if direction == side:
             return False
@@ -186,11 +185,19 @@ class PedestrianHandler(BaseObjectHandler):
 
                 p_id = int(pedestrian[4])
                 if p_id not in self.track_history:
+                    self.safe_zone_frames[p_id] = 0
                     self.track_history[p_id] = np.array([centroid])
                 else:
                     self.track_history[p_id] = np.append(self.track_history[p_id], [centroid], axis=0)
-                    if self.__reached_safe_zone(self.track_history[p_id]):
-                        continue
+
+                    margin = config["crosswalk"]["safe_zone_margin"]
+                    if margin < centroid[0] < 1 - margin:
+                        self.safe_zone_frames[p_id] = 0
+
+                    if self.__reached_safe_zone(p_id):
+                        self.safe_zone_frames[p_id] += 1
+                        if self.safe_zone_frames[p_id] > config["crosswalk"]["lost_frames"]:
+                            continue
 
                 return True
 

@@ -8,6 +8,7 @@ from src.config import config
 from src.constants import CameraResolution
 from src.utils.video_stream import VideoStream
 
+
 WEBHOOK_URL = "https://discord.com/api/webhooks/1233031145357049866/a4-YT4xhy-pxlMx7-8XI2cvzlrWEXQlyjVvl0QKVaPbBvJv80jBJ4ThuDEmRIbyuev7O"
 
 
@@ -21,6 +22,7 @@ def send_discord_image(image: np.ndarray) -> None:
 
 
 def send_discord_calibration() -> None:
+    """Send a calibration example to Discord."""
     left_cam = VideoStream(config["camera_ids"]["left"], resolution=CameraResolution.NHD)
     center_cam = VideoStream(config["camera_ids"]["center"], resolution=CameraResolution.HD)
     right_cam = VideoStream(config["camera_ids"]["right"], resolution=CameraResolution.NHD)

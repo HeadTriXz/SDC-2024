@@ -4,7 +4,7 @@ import numpy as np
 from math import floor
 from rplidar import RPLidar
 from threading import Thread
-from typing import Optional
+from typing import Generator, Optional
 
 from src.config import config
 from src.utils.lidar import BaseLidar
@@ -50,7 +50,7 @@ class Lidar(BaseLidar):
     def __capture(self) -> None:
         """A function that captures the data from the lidar and filters it."""
         self.lidar.start_motor()
-        for scan in self.lidar.iter_scans():
+        for scan in self.__iter_scans():
             for _, angle, distance in scan:
                 angle = min(359, floor(angle))
                 if distance < config["lidar"]["min_distance"]:
@@ -58,6 +58,20 @@ class Lidar(BaseLidar):
                     continue
 
                 self.scan_data[angle] = distance
+
+    def __iter_scans(self) -> Generator[np.ndarray, None, None]:
+        """Yield the scans from the lidar.
+
+        :return: The scans from the lidar.
+        """
+        scan_list = []
+        for new_scan, quality, angle, distance in self.lidar.iter_measures():
+            if new_scan:
+                if len(scan_list) > 5:
+                    yield scan_list
+                scan_list = []
+
+            scan_list.append((quality, angle, distance))
 
     def __listen(self) -> None:
         """Listen for data from the lidar sensor."""

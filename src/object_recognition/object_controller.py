@@ -80,6 +80,9 @@ class ObjectController:
         :param shape: The shape of the image (width, height).
         :return: The lane the object is in.
         """
+        if len(self.lane_assist.lines) < 2:
+            return None
+
         point = np.array(self.calibration.transform_point(x, y, shape))
 
         def is_left(p0: np.ndarray, p1: np.ndarray, p: np.ndarray) -> bool:
@@ -127,6 +130,9 @@ class ObjectController:
             return
 
         for handler in self.handlers:
+            if not self.lane_assist.enabled and handler.manual_mode:
+                continue
+
             filtered_predictions = handler.filter_predictions(predictions)
             if len(filtered_predictions.data) == 0:
                 continue

@@ -48,53 +48,29 @@ def basic_filter_ranges(image: np.ndarray, hpx: int, width: int, margin: int) ->
     )
 
 
-def basic_filter(image: np.ndarray, calibration: CalibrationData) -> tuple[np.ndarray, list[HistogramPeak]]:
-    """Filter the image based on the axis.
-
-    :param image: The image to filter.
-    :param calibration: The calibration data.
-    :return: The filtered image and the peaks.
-    """
-    hpx = calibration.get_pixels(config["line_detection"]["thresholds"]["zebra_crossing"])
-    margin = calibration.get_pixels(config["line_detection"]["filtering"]["margin"])
-    width = calibration.get_pixels(0.5)
-
-    histogram_peaks = basic_filter_ranges(image, hpx, width, margin)
-    for peak in histogram_peaks:
-        if peak.width > calibration.get_pixels(6):
-            continue
-
-        image[peak.left:peak.right] = 0
-
-    return image, histogram_peaks
-
-
 def morphex_filter(image: np.ndarray, calibration: CalibrationData) -> np.ndarray:
     """Filter the image using morphological operations."""
     hpx = calibration.get_pixels(config["line_detection"]["thresholds"]["zebra_crossing"])
     margin = calibration.get_pixels(config["line_detection"]["filtering"]["margin"])
     width = calibration.get_pixels(0.5)
 
-    histogram_peaks = basic_filter_ranges(image, hpx, width, margin)
-
+    _, image = cv2.threshold(image, config["preprocessing"]["filter_threshold"], 255, cv2.THRESH_BINARY)
     full_mask = np.full((image.shape[0] + 10, image.shape[1]), 255, dtype=np.uint8)
     full_mask[:-10] = image
 
+    histogram_peaks = basic_filter_ranges(image, hpx, width, margin)
+    if len(histogram_peaks) == 0:
+        return np.zeros_like(image)
+
+    full_mask = cv2.dilate(full_mask, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 4)), iterations=1)
     full_mask = cv2.morphologyEx(full_mask, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7)))
-    full_mask = cv2.dilate(full_mask, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (13, 13)))
+    full_mask = cv2.dilate(full_mask, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (13, 13)), iterations=1)
 
     full_mask[full_mask > 100] = 255
     full_mask[full_mask <= 100] = 0
 
     mask = np.zeros_like(image)
     for peak in histogram_peaks:
-        mask[peak.left:peak.right] = full_mask[peak.left:peak.right]
-
-    mask[mask > 100] = 255
-    mask[mask <= 100] = 0
-
-    # if there are no peaks we can return the image as is
-    if len(histogram_peaks) == 0:
-        return np.zeros_like(image)
+        mask[peak.left : peak.right] = full_mask[peak.left : peak.right]
 
     return mask

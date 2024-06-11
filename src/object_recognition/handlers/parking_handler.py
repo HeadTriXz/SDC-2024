@@ -58,15 +58,6 @@ class ParkingHandler(BaseObjectHandler):
 
         return False
 
-    def __is_on_my_right(self, bbox: np.ndarray, shape: tuple[int, int]) -> bool:
-        """Check if the parking space is on the right side of the go-kart.
-
-        :param bbox: The bounding box of the parking space.
-        :param shape: The shape of the image (height, width).
-        :return: Whether the parking space is on the right side of the go-kart.
-        """
-        return bbox[0] > shape[1] // 2
-
     def __is_within_distance(self, bbox: np.ndarray, shape: tuple[int, int]) -> bool:
         """Check if the parking space is within the distance threshold.
 
@@ -78,3 +69,13 @@ class ParkingHandler(BaseObjectHandler):
         distance = self.controller.calibration.get_distance_to_y(x, y, shape[::-1])
 
         return distance < config["parking"]["min_distance"]
+
+    @staticmethod
+    def __is_on_my_right(bbox: np.ndarray, shape: tuple[int, int]) -> bool:
+        """Check if the parking space is on the right side of the go-kart.
+
+        :param bbox: The bounding box of the parking space.
+        :param shape: The shape of the image (height, width).
+        :return: Whether the parking space is on the right side of the go-kart.
+        """
+        return bbox[0] > shape[1] // 2

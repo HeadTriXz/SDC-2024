@@ -45,7 +45,7 @@ class StopLineAssist:
         if self.speed_controller.state != SpeedControllerState.WAITING_TO_STOP:
             return
 
-        if len(filtered_lines) == 0:
+        if len(filtered_lines) < 2:
             return
 
         stop_lines = get_stop_lines(image, filtered_lines, self.__calibration)

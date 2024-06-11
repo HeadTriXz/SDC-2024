@@ -15,20 +15,25 @@ class BaseObjectHandler(ABC):
     Attributes
     ----------
         allowed_classes (list[int]): The allowed classes for the handler.
+        controller (ObjectController): The object controller.
+        manual_mode (bool): Whether the handler will be used in manual mode.
 
     """
 
     allowed_classes: list[int]
     controller: "ObjectController"
+    manual_mode: bool = False
 
-    def __init__(self, controller: "ObjectController", allowed_classes: list[int]) -> None:
+    def __init__(self, controller: "ObjectController", allowed_classes: list[int], manual_mode: bool = False) -> None:
         """Initializes the handler.
 
         :param controller: The object controller.
         :param allowed_classes: The allowed classes for the handler.
+        :param manual_mode: Whether the handler will be used in manual mode.
         """
         self.allowed_classes = allowed_classes
         self.controller = controller
+        self.manual_mode = manual_mode
 
     def filter_predictions(self, predictions: Boxes) -> Boxes:
         """Filters the predictions.
@@ -41,7 +46,15 @@ class BaseObjectHandler(ABC):
 
         return Boxes(data, predictions.orig_shape)
 
-    def get_closest_prediction(self, predictions: Boxes) -> np.ndarray | None:
+    def is_stopped_by_other(self) -> bool:
+        """Checks if another handler has stopped the go-kart.
+
+        :return: Whether the handler has stopped the go-kart.
+        """
+        return self.controller.has_stopped() and self.controller.stopped_by != self
+
+    @staticmethod
+    def get_closest_prediction(predictions: Boxes) -> np.ndarray | None:
         """Gets the closest prediction to the go-kart. We assume the largest bounding box is the closest.
 
         :param predictions: The predictions to search.
@@ -57,13 +70,6 @@ class BaseObjectHandler(ABC):
                 closest_prediction = box
 
         return closest_prediction
-
-    def is_stopped_by_other(self) -> bool:
-        """Checks if another handler has stopped the go-kart.
-
-        :return: Whether the handler has stopped the go-kart.
-        """
-        return self.controller.has_stopped() and self.controller.stopped_by != self
 
     @abstractmethod
     def handle(self, predictions: Boxes) -> None:
