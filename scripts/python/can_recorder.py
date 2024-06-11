@@ -3,6 +3,7 @@ import logging
 import threading
 import time
 
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
 
@@ -24,7 +25,7 @@ class CANRecorder:
     __recorder: threading.Thread = None
 
     def __init__(self) -> None:
-        """Procedure to calibrate the braking force."""
+        """Procedure to record CAN messages."""
         self.__can_bus = get_can_bus()
         self.__can_bus.set_filters(
             [{"can_id": can_id, "can_mask": 0xFFF, "extended": False} for can_id in CANControlIdentifier]
@@ -37,13 +38,12 @@ class CANRecorder:
         and stop recording if it is already recording.
         """
         if not self.__recording:
-            path = Path(f"./data/can_recordings/can_{int(time.time())}.asc")
+            path = Path(f"./data/can_recordings/{datetime.now().strftime("%m_%d_%Y_%H_%M_%S")}.asc")
             path.parent.mkdir(parents=True, exist_ok=True)
 
             logging.info("Recording CAN messages to %s", path)
             self.__recorder = threading.Thread(target=self.__recording_thread, args=(path,), daemon=True)
             self.__recorder.start()
-
         else:
             self.__recording = False
             self.__recorder.join(1)
@@ -91,4 +91,4 @@ if __name__ == "__main__":
     gamepad.add_listener(GamepadButton.LB, EventType.LONG_PRESS, create_toggle_callback(can_recorder, gamepad))
 
     while True:
-        pass
+        time.sleep(1)

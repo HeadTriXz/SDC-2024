@@ -1,4 +1,5 @@
 import logging
+import time
 
 from typing import Any
 
@@ -150,4 +151,4 @@ if __name__ == "__main__":
     brake_calibration = BrakeCalibrationProcedure(can_controller, gamepad)
 
     while True:
-        pass
+        time.sleep(1)
