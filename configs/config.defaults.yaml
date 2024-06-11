@@ -123,6 +123,7 @@ parking:
   speed: 3 # km/h
   kart_length: 160
   angle_threshold: 250
+  rightmost_point_max: 320
 
   side_angles:
     right: [265, 275]
