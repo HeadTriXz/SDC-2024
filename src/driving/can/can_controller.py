@@ -1,9 +1,13 @@
 import can
+import logging
 import struct
 import threading
+import time
+
+from pathlib import Path
 
 from src.constants import CAN_SEND_PERIOD, CANControlIdentifier, CANFeedbackIdentifier, Gear
-from src.driving.can import ICANController
+from src.driving.can import ICANController, get_can_bus
 
 
 def initialize_can_message(message_id: CANControlIdentifier) -> can.Message:
@@ -28,15 +32,17 @@ class CANController(ICANController):
     __listeners: dict[int, list[callable]]
     __thread: threading.Thread
 
+    __recording_can: can.Bus = None
+    __recorder: threading.Thread = None
+    __recording: bool = False
+
     def __init__(self, can_bus: can.Bus) -> None:
         """Initialize the CAN controller.
 
         :param can_bus: The CAN bus to use.
         """
         self.bus = can_bus
-        self.bus.set_filters([
-            {"can_id": CANFeedbackIdentifier.SPEED_SENSOR, "can_mask": 0xFFF, "extended": False}
-        ])
+        self.bus.set_filters([{"can_id": CANFeedbackIdentifier.SPEED_SENSOR, "can_mask": 0xFFF, "extended": False}])
 
         self.__listeners = {}
         self.__thread = threading.Thread(target=self.__listen, daemon=True)
@@ -97,3 +103,38 @@ class CANController(ICANController):
             if message is not None and message.arbitration_id in self.__listeners:
                 for listener in self.__listeners[message.arbitration_id]:
                     listener(message)
+
+    def __recording_thread(self, filepath: Path) -> None:
+        """Record CAN messages into a .asc file."""
+        self.__recording = True
+
+        with can.ASCWriter(filepath) as writer:
+            while self.__recording:
+                msg = self.__recording_can.recv(1)
+                if msg is not None:
+                    writer.on_message_received(msg)
+
+    def toggle_recording(self) -> None:
+        """Toggle the recording of CAN messages.
+
+        This function will start recording CAN messages if it is not already recording,
+        and stop recording if it is already recording.
+
+        On first call, it will create a new CAN bus to record messages.
+        This is due to the virtual can not being able to receive its own messages.
+        """
+        if self.__recording_can is None:
+            self.__recording_can = get_can_bus()
+
+        if not self.__recording:
+            path = Path(f"./data/can_recordings/can_{int(time.time())}.asc")
+            path.parent.mkdir(parents=True, exist_ok=True)
+
+            logging.info("Recording CAN messages to %s", path)
+            self.__recorder = threading.Thread(target=self.__recording_thread, args=(path,), daemon=True)
+            self.__recorder.start()
+
+        else:
+            self.__recording = False
+            self.__recorder.join()
+            logging.info("Stopped recording CAN messages")

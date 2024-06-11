@@ -2,6 +2,8 @@ import can
 import logging
 import os
 
+from pathlib import Path
+
 
 def get_can_bus(channel: str = "can0", bitrate: int = 500000) -> can.ThreadSafeBus:
     """Create a CAN bus using the specified channel and bitrate.
@@ -20,3 +22,14 @@ def get_can_bus(channel: str = "can0", bitrate: int = 500000) -> can.ThreadSafeB
 
     logging.warning("Failed to create CAN interface, using virtual interface instead.")
     return can.ThreadSafeBus(interface="virtual", channel="vcan0")
+
+
+def replay_log(can_bus: can.Bus, log_path: Path) -> None:
+    """Replay a log of CAN messages. this will block the current thread.
+
+    :param can_bus: The CAN bus to use.
+    :param log_path: The path to the log file.
+    """
+    with can.ASCReader(log_path) as reader:
+        for message in can.MessageSync(reader):
+            can_bus.send(message)

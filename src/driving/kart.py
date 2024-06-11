@@ -35,6 +35,7 @@ class Kart:
 
         self.__gamepad.add_listener(GamepadButton.START, EventType.LONG_PRESS, self.__toggle_delayed)
         self.__gamepad.add_listener(GamepadButton.SELECT, EventType.LONG_PRESS, self.__toggle_delayed)
+        self.__gamepad.add_listener(GamepadButton.LB, EventType.BUTTON_DOWN, self.__toggle_can_recording)
 
         self.autonomous.telemetry.add_callback_function("toggle_driving_mode", self.__toggle)
 
@@ -47,6 +48,11 @@ class Kart:
         self.autonomous.start()
 
         return self
+
+    def __toggle_can_recording(self, *_args: Any, **_kwargs: Any) -> None:
+        """Toggle the recording of CAN messages."""
+        self.__can.toggle_recording()
+        self.__gamepad.vibrate()
 
     def __toggle_delayed(self, *_args: Any, **_kwargs: Any) -> None:
         """Toggle between autonomous and manual driving with a delay."""
