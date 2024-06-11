@@ -108,7 +108,6 @@ class ParkingHandler(BaseObjectHandler):
             time.sleep(0.1)
             if amount == 3:
                 break
-
             amount += 1
 
         if amount < 3:
@@ -120,15 +119,14 @@ class ParkingHandler(BaseObjectHandler):
     def wait_for_steering_point(self) -> None:
         """Wait for the steering point to be reached."""
         self.controller.lane_assist.stop()
-
         while True:
             time.sleep(0.1)
             # Check if we are still detecting a wall.
-            if not self.__lidar.free_range(282, 290, config["parking"]["free_side"]["max_distance"]):
+            if not self.__lidar.free_range(280, 310, config["parking"]["free_side"]["max_distance"]):
                 # Get the distance to the wall nad the right most point of it and calculate the distance to it.
                 distance_wall = self.__lidar.find_obstacle_distance(265, 280)
                 rightmost_point = self.__lidar.find_rightmost_point(
-                    280, config["parking"]["rightmost_point_max"], 800, config["parking"]["free_side"]["max_distance"]
+                    280, config["parking"]["rightmost_point_max"], 400, config["parking"]["free_side"]["max_distance"]
                 )
                 if distance_wall == 0 or rightmost_point == 0 or rightmost_point < distance_wall:
                     continue
@@ -273,7 +271,7 @@ class ParkingHandler(BaseObjectHandler):
                 reverse = True
 
     def reverse_creep(self, reverse: bool) -> None:
-        """Reverse the go kart align it with the parking spot."""
+        """Reverse the go-kart to align it with the parking spot."""
         counter = 0
         while True:
             time.sleep(0.1)

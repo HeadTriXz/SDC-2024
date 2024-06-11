@@ -121,7 +121,7 @@ parking:
   min_distance: 900 # millimeters
   steering_angle: 1.25
   speed: 3 # km/h
-  kart_length: 160
+  kart_length: 170
   angle_threshold: 230
   rightmost_point_max: 320
 
