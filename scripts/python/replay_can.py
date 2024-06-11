@@ -39,7 +39,7 @@ if __name__ == "__main__":
     """Replay CAN messages from a file and log to a file.
 
     This script will replay CAN messages from a file and log them to a file.
-    We will also log them to the console depending on the arguments. 
+    We will also log them to the console depending on the arguments.
     You can only use either --blacklist or --whitelist.
 
     Arguments:
@@ -54,12 +54,16 @@ if __name__ == "__main__":
     arg_parser.add_argument("logfile", type=Path, help="The path to the log file.")
     id_list_group = arg_parser.add_mutually_exclusive_group()
     id_list_group.add_argument(
-        "--blacklist", nargs="+", type=lambda x: int(x,0), help="The list of message IDs to ignore when logging.", default=[]
+        "--blacklist",
+        nargs="+",
+        type=lambda x: int(x,0),
+        help="The list of message IDs to ignore when logging.",
+        default=[]
     )
     id_list_group.add_argument(
         "--whitelist", nargs="+", type=lambda x: int(x,0), help="The list of message IDs to listen to.", default=[]
     )
-    arg_parser.add_argument("--log", action="store_true", help="Log all CAN messages.")
+    id_list_group.add_argument("--log", action="store_true", help="Log all CAN messages.")
     args = arg_parser.parse_args()
 
     # Check if the log file exists.
