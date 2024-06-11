@@ -124,6 +124,7 @@ parking:
   kart_length: 170
   angle_threshold: 230
   rightmost_point_max: 320
+  corner_angle: 235
 
   side_angles:
     right: [265, 275]

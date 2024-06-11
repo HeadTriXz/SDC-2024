@@ -149,7 +149,7 @@ class ParkingHandler(BaseObjectHandler):
     def drive_into_spot(self) -> None:
         """Drive into the parking spot."""
         counter = 0
-        previous_distance = 4000
+        previous_distance = 6000
 
         while True:
             time.sleep(0.1)
@@ -190,12 +190,11 @@ class ParkingHandler(BaseObjectHandler):
     def wait_to_steer_back(self) -> None:
         """Wait for the go-kart to steer back."""
         counter = 0
-        previous_distance = 8000
         while True:
             time.sleep(0.1)
             corner_angle = self.__lidar.find_nearest_angle(180, 320)
 
-            if corner_angle < 235:
+            if corner_angle < config["parking"]["corner_angle"]:
                 if counter == 3:
                     self.__can_controller.set_steering(-config["parking"]["steering_angle"])
                     return self.wait_to_stop()
