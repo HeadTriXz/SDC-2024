@@ -87,6 +87,9 @@ class ParkingManoeuvre:
         """Estimate the length of the parking space."""
         angle_front = self.__lidar.find_nearest_angle(200, 250)
         angle_back = self.__lidar.find_nearest_angle(280, 320)
+        if angle_front == -1 or angle_back == -1:
+            return
+
         angle_diff = math.radians(angle_back - angle_front)
 
         dist_front = self.__lidar.scan_data[angle_front]
