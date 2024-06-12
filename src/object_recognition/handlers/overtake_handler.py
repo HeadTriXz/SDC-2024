@@ -1,7 +1,6 @@
 import logging
 import time
 
-from threading import Thread
 from ultralytics.engine.results import Boxes
 
 from src.config import config
@@ -21,9 +20,7 @@ class OvertakeHandler(BaseObjectHandler):
     """
 
     lidar: Lidar
-    __frames_seen: dict[int, int]
-    __frames_lost: dict[int, int]
-    __thread: Thread
+    __known_vehicles: set[int]
 
     def __init__(self, controller: ObjectController, lidar: Lidar) -> None:
         """Initializes the overtaking handler.
@@ -32,20 +29,48 @@ class OvertakeHandler(BaseObjectHandler):
         :param lidar: The lidar sensor.
         """
         super().__init__(controller, [Label.CAR])
+
         self.lidar = lidar
-        self.__frames_seen = {}
-        self.__frames_lost = {}
-        self.__thread = Thread(target=self.__return_lane, daemon=True)
-        self.__thread.start()
+        self.__known_vehicles = set()
 
     def handle(self, predictions: Boxes) -> None:
         """Handles the detected overtaking vehicles.
 
         :param predictions: The detected overtaking vehicles (.data: x1, y1, x2, y2, track_id, conf, cls).
         """
-        full_lanes = set()
-        for x1, _, x2, y2 in predictions.xyxy:
+        if not predictions.is_track:
+            return
+
+        full_lanes = self.__get_full_lanes(predictions)
+        current_lane = self.controller.get_current_lane()
+        if current_lane not in full_lanes:
+            return
+
+        logging.info("Vehicle detected in the current lane. Switching to the next lane.")
+        self.__switch_lane(1)
+
+        for track_id in full_lanes[current_lane]:
+            self.__known_vehicles.add(track_id)
+
+        self.__wait_until_seen(config["overtake"]["consecutive_scans"])
+        self.__wait_until_safe(config["overtake"]["consecutive_scans"])
+
+        logging.info("The right lane is free. Returning to the previous lane.")
+        self.__switch_lane(0)
+
+    def __get_full_lanes(self, predictions: Boxes) -> dict[int, list[int]]:
+        """Gets the lanes with detected vehicles.
+
+        :param predictions: The detected vehicles.
+        :return: The lanes with detected vehicles.
+        """
+        full_lanes: dict[int, list[int]] = {}
+        for x1, _, x2, y2, track_id, _, _ in predictions.data:
+            if track_id in self.__known_vehicles:
+                continue
+
             cx = (x1 + x2) // 2
+
             distance = self.controller.calibration.get_distance_to_y(cx, y2, predictions.orig_shape[::-1])
             reaction_distance = self.controller.get_reaction_distance()
 
@@ -54,75 +79,70 @@ class OvertakeHandler(BaseObjectHandler):
                 continue
 
             lane = self.controller.get_object_lane(cx, y2, predictions.orig_shape[::-1])
-            if lane is None:
-                continue
+            if lane is not None:
+                if lane not in full_lanes:
+                    full_lanes[lane] = []
 
-            full_lanes.add(lane)
+                full_lanes[lane].append(track_id)
 
-        current_lane = self.controller.get_current_lane()
-        if current_lane in full_lanes:
-            logging.info("Vehicle detected in the current lane. Switching to the next lane.")
-            self.controller.set_lane(current_lane + 1)
+        return full_lanes
 
-            if config["overtake"]["force_move"]["enabled"]:
-                # Force the go-kart to switch to the next lane
-                self.controller.lane_assist.toggle()
-                self.controller.set_steering(config["overtake"]["force_move"]["angle"])
+    def __is_safe_to_return(self) -> bool:
+        """Checks if it is safe to return to the original lane.
 
-                # Wait for the specified duration
-                time.sleep(config["overtake"]["force_move"]["duration"])
+        :return: Whether it is safe to return to the original lane.
+        """
+        return self.lidar.free_range(
+            config["overtake"]["min_angle"],
+            config["overtake"]["max_angle"],
+            config["overtake"]["range_threshold"] * 1000,
+            config["overtake"]["max_points"]
+        )
 
-                # Reset the steering angle to 0.0
-                self.controller.set_steering(0.0)
-                self.controller.lane_assist.toggle()
+    def __switch_lane(self, lane: int) -> None:
+        """Switch to the specified lane.
 
-    def __return_lane(self) -> None:
-        """Checks if the side is free and returns to the previous lane."""
-        while True:
-            current_lane = self.controller.get_current_lane()
-            if current_lane == 0:
-                time.sleep(0.1)
-                continue
+        :param lane: The lane to switch to.
+        """
+        is_left = lane > self.controller.get_current_lane()
+        config_key = "force_move" if is_left else "force_return"
 
-            if current_lane not in self.__frames_seen:
-                self.__frames_lost[current_lane] = 0
-                self.__frames_seen[current_lane] = 0
+        self.controller.set_lane(lane)
 
-            is_side_free = self.lidar.free_range(
-                config["overtake"]["min_angle"],
-                config["overtake"]["max_angle"],
-                config["overtake"]["range_threshold"]
-            )
+        if config["overtake"][config_key]["enabled"]:
+            self.controller.lane_assist.toggle()
+            self.controller.set_steering(config["overtake"][config_key]["angle"])
 
-            # Wait until we have seen the car for the first time
-            if not is_side_free:
-                self.__frames_seen[current_lane] += 1
+            time.sleep(config["overtake"][config_key]["duration"])
+            self.controller.set_steering(0.0)
 
-            # If we have previously seen the car, we can start checking if we have passed it
-            if self.__frames_seen[current_lane] >= config["overtake"]["consecutive_frames"]:
-                if is_side_free:
-                    self.__frames_lost[current_lane] += 1
-                else:
-                    self.__frames_lost[current_lane] -= 1
+            time.sleep(config["overtake"][config_key]["straight_duration"])
+            self.controller.lane_assist.toggle()
 
-            # If the side is free for a certain amount of frames, return to the previous lane
-            if self.__frames_lost[current_lane] >= config["overtake"]["consecutive_frames"]:
-                logging.info("The right side is free. Returning to the previous lane.")
+    def __wait_until_safe(self, consecutive: int = 3) -> None:
+        """Wait until it is safe to return to the original lane.
 
-                self.controller.set_lane(current_lane - 1)
-                del self.__frames_lost[current_lane]
-                del self.__frames_seen[current_lane]
+        :param consecutive: The number of consecutive scans the lane should be free.
+        """
+        count = 0
+        while count < consecutive:
+            if self.__is_safe_to_return():
+                count += 1
+            else:
+                count = 0
 
-                if config["overtake"]["force_return"]["enabled"]:
-                    # Force the go-kart to return to the previous lane
-                    self.controller.lane_assist.toggle()
-                    self.controller.set_steering(config["overtake"]["force_return"]["angle"])
+            time.sleep(0.1)
 
-                    # Wait for the specified duration
-                    time.sleep(config["overtake"]["force_return"]["duration"])
+    def __wait_until_seen(self, consecutive: int = 3) -> None:
+        """Wait until the vehicle is seen.
 
-                    # Reset the steering angle to 0.0
-                    self.controller.set_steering(0.0)
-                    self.controller.lane_assist.toggle()
+        :param consecutive: The number of consecutive scans the vehicle should be detected.
+        """
+        count = 0
+        while count < consecutive:
+            if self.__is_safe_to_return():
+                count = 0
+            else:
+                count += 1
 
             time.sleep(0.1)

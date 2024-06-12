@@ -7,6 +7,7 @@ from src.config import config
 from src.driving.speed_controller import ISpeedController, SpeedControllerState
 from src.lane_assist.lane_assist import LaneAssist
 from src.object_recognition.handlers.base_handler import BaseObjectHandler
+from src.utils.other import is_point_between
 
 
 class ObjectController:
@@ -78,23 +79,15 @@ class ObjectController:
             return None
 
         point = np.array(self.calibration.transform_point(x, y, shape))
-
-        def is_left(p0: np.ndarray, p1: np.ndarray, p: np.ndarray) -> bool:
-            return np.sign(np.cross(p1 - p0, p - p0)) > 0
-
         for i in range(len(self.lane_assist.lines) - 1):
-            line1 = self.lane_assist.lines[i]
-            line2 = self.lane_assist.lines[i + 1]
+            line_left = self.lane_assist.lines[i].points
+            line_right = self.lane_assist.lines[i + 1].points
 
-            line_left1 = np.all([is_left(line1.points[i], line1.points[i + 1], point)
-                                 for i in range(len(line1.points) - 1)])
-            line_left2 = np.all([is_left(line2.points[i], line2.points[i + 1], point)
-                                 for i in range(len(line2.points) - 1)])
+            closest_left = np.argmin(np.linalg.norm(line_left - point, axis=1))
+            closest_right = np.argmin(np.linalg.norm(line_right - point, axis=1))
 
-            any_close = [np.allclose(point, p) for p in np.vstack((line1.points, line2.points))]
-
-            if (line_left1 != line_left2) and not any(any_close):
-                return i
+            if is_point_between(line_left[closest_left], line_right[closest_right], point):
+                return len(self.lane_assist.lines) - i - 2
 
         return None
 
