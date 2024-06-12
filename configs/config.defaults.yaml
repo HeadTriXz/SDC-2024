@@ -109,19 +109,25 @@ traffic_light:
   min_distance: 2
 
 overtake:
-  consecutive_frames: 3
+  consecutive_scans: 3
+
   force_move:
     enabled: true
-    angle: 1.0  # percentage
-    duration: 0.5  # seconds
+    angle: -1.25  # percentage
+    duration: 1.0  # seconds
+    straight_duration: 0.5  # seconds
+
   force_return:
     enabled: true
-    angle: 1.0  # percentage
-    duration: 0.5  # seconds
-  min_distance: 6
-  min_angle: 230
+    angle: 1.25  # percentage
+    duration: 1.0  # seconds
+    straight_duration: 0.5  # seconds
+
+  min_distance: 10  # meters
+  min_points: 5
+  min_angle: 270
   max_angle: 280
-  range_threshold: 3000
+  range_threshold: 4.0  # meters
 
 parking:
   min_distance: 1
