@@ -14,31 +14,28 @@ from src.driving.modes import ManualDriving
 
 
 class CANRecorder:
-    """Procedure to record CAN message.
-
-    This procedure can be used to record messages send on the CAN bus.
-    This will record all the messages we can send and not the ones we receive.
-    """
+    """Procedure to record the CAN-messages sent on the CAN bus."""
 
     __can_bus: can.Bus
     __recording: bool = False
     __recorder: threading.Thread = None
 
     def __init__(self) -> None:
-        """Procedure to record CAN messages."""
+        """Initialize the CAN recorder."""
         self.__can_bus = get_can_bus()
         self.__can_bus.set_filters(
             [{"can_id": can_id, "can_mask": 0xFFF, "extended": False} for can_id in CANControlIdentifier]
         )
 
     def toggle_recording(self) -> None:
-        """Toggle the recording of CAN messages.
+        """Toggle the recording of CAN-messages.
 
-        This function will start recording CAN messages if it is not already recording,
+        This function will start recording CAN-messages if it is not already recording,
         and stop recording if it is already recording.
         """
         if not self.__recording:
-            path = Path(f"./data/can_recordings/{datetime.now().strftime("%m_%d_%Y_%H_%M_%S")}.asc")
+            filename = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
+            path = Path(f"./data/can_recordings/{filename}.asc")
             path.parent.mkdir(parents=True, exist_ok=True)
 
             logging.info("Recording CAN messages to %s", path)
@@ -54,7 +51,7 @@ class CANRecorder:
             logging.info("Stopped recording CAN messages")
 
     def __recording_thread(self, filepath: Path) -> None:
-        """Record CAN messages into a .asc file."""
+        """Record CAN-messages into a .asc file."""
         self.__recording = True
 
         with can.ASCWriter(filepath) as writer:
@@ -65,7 +62,11 @@ class CANRecorder:
 
 
 def create_toggle_callback(can_recorder: CANRecorder, gamepad: Gamepad) -> Callable[[Any, Any], None]:
-    """Create the callback for the toggle of the CAN recording."""
+    """Create the callback for the toggle of the CAN recording.
+
+    :param can_recorder: The CAN recorder.
+    :param gamepad: The gamepad.
+    """
 
     def __toggle(*_args: Any, **_kwargs: Any) -> None:
         can_recorder.toggle_recording()
