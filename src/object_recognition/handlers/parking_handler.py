@@ -41,9 +41,6 @@ class ParkingHandler(BaseObjectHandler):
         manoeuvre = ParkingManoeuvre(self.__lidar, self.controller.lane_assist)
         manoeuvre.park()
 
-        while True:
-            time.sleep(1)
-
     def __any_within_distance(self, predictions: Boxes) -> bool:
         """Check if any parking space is within the distance threshold.
 

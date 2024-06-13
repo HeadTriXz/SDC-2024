@@ -70,7 +70,7 @@ class ParkingManoeuvre:
         self.__straighten_wheels()
 
         self.__wait_until(lambda: self.__is_centered(available_space))
-        self.__speed_controller.toggle()
+        self.__speed_controller.state = SpeedControllerState.STOPPED
 
     def __angle_to_xy(self, angle: int) -> tuple[float, float]:
         """Convert an angle and distance to x, y coordinates.
