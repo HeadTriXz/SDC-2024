@@ -7,7 +7,7 @@ from src.config import config
 from src.constants import Label
 from src.object_recognition.handlers.base_handler import BaseObjectHandler
 from src.object_recognition.object_controller import ObjectController
-from src.utils.lidar import Lidar
+from src.utils.lidar import BaseLidar
 
 
 class OvertakeHandler(BaseObjectHandler):
@@ -15,14 +15,14 @@ class OvertakeHandler(BaseObjectHandler):
 
     Attributes
     ----------
-        lidar (Lidar): The lidar sensor.
+        lidar (BaseLidar): The lidar sensor.
 
     """
 
-    lidar: Lidar
+    lidar: BaseLidar
     __known_vehicles: set[int]
 
-    def __init__(self, controller: ObjectController, lidar: Lidar) -> None:
+    def __init__(self, controller: ObjectController, lidar: BaseLidar) -> None:
         """Initializes the overtaking handler.
 
         :param controller: The object controller.

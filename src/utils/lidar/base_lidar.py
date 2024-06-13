@@ -83,15 +83,19 @@ class BaseLidar(ABC):
 
         return -1
 
-    def free_range(self, angle_min: int, angle_max: int, distance: int) -> bool:
+    def free_range(self, angle_min: int, angle_max: int, distance: int, max_points: int = 0) -> bool:
         """A function that checks if the side between angle_min and angle_max of the car is free.
 
         :param angle_min: The minimum angle to check. (180 is the front of the car)
         :param angle_max: The maximum angle to check. (180 is the front of the car)
         :param distance: The minimum distance to check.
+        :param max_points: The maximum allowed points in the range (to avoid false positives).
         :return: Whether the side is free.
         """
-        return self.find_obstacle_distance(angle_min, angle_max) > distance
+        distances = self.scan_data[angle_min:angle_max]
+        within_range = np.sum(distances < distance)
+
+        return within_range <= max_points
 
     @abstractmethod
     def start(self) -> None:
