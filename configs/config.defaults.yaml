@@ -128,7 +128,7 @@ overtake:
     duration: 1.5  # seconds
     straight_duration: 1.0  # seconds
 
-  min_distance: 6  # meters
+  min_distance: 7.0  # meters
   max_points: 5
   min_angle: 270
   max_angle: 280
