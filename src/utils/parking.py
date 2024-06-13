@@ -43,7 +43,7 @@ class ParkingManoeuvre:
         self.__wait_until_opening()
         self.__wait_until_wall(estimate_length=True)
 
-        available_space = np.median(self.__lengths) / 1000
+        available_space = self.__get_available_space()
         logging.info("Estimated parking space length: %.2f meters.", available_space)
 
         if available_space < config["kart"]["dimensions"]["length"]:
@@ -103,6 +103,16 @@ class ParkingManoeuvre:
 
         distance = math.sqrt(dist_front**2 + dist_back**2 - 2 * dist_front * dist_back * math.cos(angle_diff))
         self.__lengths.append(distance)
+
+    def __get_available_space(self) -> float:
+        """Get the available space in the parking spot.
+
+        :return: The available space in the parking spot.
+        """
+        if config["parking"]["available_space"]["static"]:
+            return config["parking"]["available_space"]["static_value"]
+
+        return np.median(self.__lengths) / 1000
 
     def __is_at_45_degree_angle(self) -> bool:
         """Check if the go-kart is at a 45-degree angle.
@@ -284,7 +294,7 @@ class ParkingManoeuvre:
         """
         found_wall = 0
         while found_wall < consecutive:
-            if estimate_length:
+            if estimate_length and not config["parking"]["available_space"]["static"]:
                 self.__estimate_length()
 
             if self.__lidar.free_range(265, 275, 3000):

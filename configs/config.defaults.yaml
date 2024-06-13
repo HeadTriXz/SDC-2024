@@ -135,12 +135,15 @@ overtake:
   range_threshold: 4.0  # meters
 
 parking:
-  max_speed: 3
-  min_barrier_distance: -1.0  # meters
+  available_space:
+    static: true
+    static_value: 4.5  # meters
+  max_speed: 3.0  # km/h
+  min_barrier_distance: 0.0  # meters
   min_distance: 2.0  # meters
   angle_tolerance: 7  # degrees
   straight_angle_margin: 3  # degrees
-  start_steering_offset: 0.0  # meters
+  start_steering_offset: -0.2  # meters
 
 crosswalk:
   lost_frames: 10
