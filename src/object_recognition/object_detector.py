@@ -54,11 +54,16 @@ class ObjectDetector:
 
         logging.info("Started the object detection model.")
 
+    def stop(self) -> None:
+        """Stop looking for objects in the video stream."""
+        self.controller.disabled = True
+        self.__thread.join()
+
     def __track_video_stream(self) -> None:
         """Track the objects in the video stream."""
         model = YOLO(self.model_path)
 
-        while self.stream.has_next():
+        while not self.controller.disabled and self.stream.has_next():
             start = time.perf_counter()
             frame = self.stream.next()
             results = model.track(
@@ -77,8 +82,6 @@ class ObjectDetector:
             # Sleep for the remaining time to keep the FPS constant.
             sleep_time = 1 / config["object_detection"]["max_frame_rate"] - (end - start)
             time.sleep(max(0, sleep_time))
-
-        self.stream.stop()
 
     @classmethod
     def from_model(cls, path: str | Path, controller: ObjectController, camera_id: int) -> "ObjectDetector":

@@ -52,6 +52,7 @@ class LaneAssist:
     speed_controller: ISpeedController
     telemetry: TelemetryServer
 
+    __killed: bool = False
     __path_follower: PathFollower
     __stop_line_assist: StopLineAssist
     __calibration: CalibrationData
@@ -150,8 +151,16 @@ class LaneAssist:
 
         return self.__run()
 
+    def stop(self) -> None:
+        """Stop the lane assist."""
+        self.__killed = True
+        self.enabled = False
+
     def toggle(self) -> None:
         """Toggle the lane assist."""
+        if self.__killed:
+            return
+
         self.enabled = not self.enabled
         self.__path_follower.reset()
 
@@ -180,10 +189,13 @@ class LaneAssist:
 
     def __run(self) -> None:
         """Run the lane assist loop."""
-        for gray_image in self.image_generator():
-            if not self.enabled:
-                time.sleep(0.5)
-                continue
+        try:
+            for image in self.image_generator():
+                if not self.enabled:
+                    time.sleep(0.5)
+                    continue
 
-            self.lane_assist_loop(gray_image)
-            time.sleep(0)
+                self.lane_assist_loop(image)
+                time.sleep(0)
+        except StopIteration:
+            pass

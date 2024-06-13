@@ -1,4 +1,5 @@
 import airsim
+import argparse
 import cv2
 import numpy as np
 
@@ -10,12 +11,17 @@ from src.constants import Gear
 from src.driving.speed_controller import SpeedController, SpeedControllerState
 from src.lane_assist.lane_assist import LaneAssist
 from src.lane_assist.stop_line_assist import StopLineAssist
-from src.simulation.can_controller import SimCanController
+from src.simulation.can_controller import SimCANController
+from src.simulation.sim_lidar import SimLidar
 from src.telemetry.app import TelemetryServer
+from src.utils.parking import ParkingManoeuvre
 
 
-def start_simulator() -> None:
-    """Run the simulator."""
+def simulate_lane_assist(park: bool = False) -> None:
+    """Simulate the lane assist.
+
+    :param park: Whether to simulate the parking manoeuvre.
+    """
     telemetry = TelemetryServer()
 
     # Start the client.
@@ -73,7 +79,7 @@ def start_simulator() -> None:
 
             yield top_view
 
-    can_controller = SimCanController()
+    can_controller = SimCANController()
     speed_controller = SpeedController(can_controller)
     speed_controller.gear = Gear.DRIVE
     speed_controller.state = SpeedControllerState.DRIVING
@@ -94,4 +100,21 @@ def start_simulator() -> None:
     speed_controller.toggle()
 
     lane_assist.toggle()
-    lane_assist.start()
+    lane_assist.start(multithreading=park)
+
+    if park:
+        lidar = SimLidar(client)
+        lidar.start()
+
+        manoeuvre = ParkingManoeuvre(lidar, lane_assist)
+        manoeuvre.park()
+
+
+def start_simulator() -> None:
+    """Run the simulator."""
+    parser = argparse.ArgumentParser(description="Run the simulator.")
+    parser.add_argument("--park", action="store_true", help="Whether to simulate the parking manoeuvre.")
+
+    args = parser.parse_args()
+
+    simulate_lane_assist(args.park)

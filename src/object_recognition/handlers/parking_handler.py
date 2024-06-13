@@ -1,4 +1,3 @@
-import logging
 import numpy as np
 
 from ultralytics.engine.results import Boxes
@@ -7,27 +6,23 @@ from src.config import config
 from src.constants import Label
 from src.object_recognition.handlers.base_handler import BaseObjectHandler
 from src.object_recognition.object_controller import ObjectController
-from src.utils.lidar import Lidar
-
-
-def start_parking() -> None:
-    """Starts parking the go-kart."""
-    logging.info("The eagle has landed.")
+from src.utils.lidar import BaseLidar
+from src.utils.parking import ParkingManoeuvre
 
 
 class ParkingHandler(BaseObjectHandler):
     """A handler for parking spaces."""
 
-    lidar: Lidar
+    __lidar: BaseLidar
 
-    def __init__(self, controller: ObjectController, lidar: Lidar) -> None:
+    def __init__(self, controller: ObjectController, lidar: BaseLidar) -> None:
         """Initializes the parking handler.
 
         :param controller: The object controller.
         :param lidar: The lidar sensor.
         """
         super().__init__(controller, [Label.PARKING_SPACE])
-        self.lidar = lidar
+        self.__lidar = lidar
 
     def handle(self, predictions: Boxes) -> None:
         """Check if there is a parking space available. If so, set the state to parking.
@@ -40,7 +35,10 @@ class ParkingHandler(BaseObjectHandler):
         if not self.__any_within_distance(predictions):
             return
 
-        start_parking()
+        self.controller.stop()
+
+        manoeuvre = ParkingManoeuvre(self.__lidar, self.controller.lane_assist)
+        manoeuvre.park()
 
     def __any_within_distance(self, predictions: Boxes) -> bool:
         """Check if any parking space is within the distance threshold.
