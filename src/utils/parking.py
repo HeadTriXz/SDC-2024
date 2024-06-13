@@ -9,6 +9,7 @@ from src.config import config
 from src.constants import Gear
 from src.driving.can import ICANController
 from src.driving.speed_controller import ISpeedController, SpeedControllerState
+from src.lane_assist.lane_assist import LaneAssist
 from src.utils.lidar import BaseLidar
 
 
@@ -16,21 +17,22 @@ class ParkingManoeuvre:
     """A parking manoeuvre that uses the lidar sensor to park the go-kart."""
 
     __can_controller: ICANController
+    __lane_assist: LaneAssist
     __lengths: list[float]
     __lidar: BaseLidar
     __speed_controller: ISpeedController
 
-    def __init__(self, lidar: BaseLidar, speed_controller: ISpeedController, can_controller: ICANController) -> None:
+    def __init__(self, lidar: BaseLidar, lane_assist: LaneAssist) -> None:
         """Initializes the parking manoeuvre.
 
         :param lidar: The lidar sensor.
-        :param speed_controller: The speed controller.
-        :param can_controller: The CAN controller.
+        :param lane_assist: The lane assist system.
         """
         self.__lengths = []
         self.__lidar = lidar
-        self.__speed_controller = speed_controller
-        self.__can_controller = can_controller
+        self.__lane_assist = lane_assist
+        self.__speed_controller = lane_assist.speed_controller
+        self.__can_controller = lane_assist.can_controller
 
     def park(self) -> None:
         """Park the go-kart."""
@@ -52,6 +54,7 @@ class ParkingManoeuvre:
 
         # Drive into the parking spot
         self.__wait_until(self.__should_start_steering)
+        self.__lane_assist.stop()
         self.__start_steering()
 
         # Straighten the wheels when the go-kart is at a 45-degree angle

@@ -1,4 +1,5 @@
 import numpy as np
+import time
 
 from ultralytics.engine.results import Boxes
 
@@ -36,12 +37,12 @@ class ParkingHandler(BaseObjectHandler):
             return
 
         self.controller.stop()
-        self.controller.lane_assist.stop()
 
-        manoeuvre = ParkingManoeuvre(
-            self.__lidar, self.controller.speed_controller, self.controller.speed_controller.can_controller
-        )
+        manoeuvre = ParkingManoeuvre(self.__lidar, self.controller.lane_assist)
         manoeuvre.park()
+
+        while True:
+            time.sleep(1)
 
     def __any_within_distance(self, predictions: Boxes) -> bool:
         """Check if any parking space is within the distance threshold.

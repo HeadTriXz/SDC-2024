@@ -17,28 +17,11 @@ from src.telemetry.app import TelemetryServer
 from src.utils.parking import ParkingManoeuvre
 
 
-def simulate_parking() -> None:
-    """Simulate the parking manoeuvre."""
-    client = airsim.CarClient()
-    client.confirmConnection()
+def simulate_lane_assist(park: bool = False) -> None:
+    """Simulate the lane assist.
 
-    can_controller = SimCANController()
-    speed_controller = SpeedController(can_controller)
-    speed_controller.state = SpeedControllerState.DRIVING
-    speed_controller.toggle()
-
-    lidar = SimLidar(client)
-    parking = ParkingManoeuvre(lidar, speed_controller, can_controller)
-
-    lidar.start()
-    can_controller.start()
-    speed_controller.start()
-
-    parking.park()
-
-
-def simulate_lane_assist() -> None:
-    """Simulate the lane assist."""
+    :param park: Whether to simulate the parking manoeuvre.
+    """
     telemetry = TelemetryServer()
 
     # Start the client.
@@ -117,7 +100,14 @@ def simulate_lane_assist() -> None:
     speed_controller.toggle()
 
     lane_assist.toggle()
-    lane_assist.start()
+    lane_assist.start(multithreading=park)
+
+    if park:
+        lidar = SimLidar(client)
+        lidar.start()
+
+        manoeuvre = ParkingManoeuvre(lidar, lane_assist)
+        manoeuvre.park()
 
 
 def start_simulator() -> None:
@@ -126,7 +116,5 @@ def start_simulator() -> None:
     parser.add_argument("--park", action="store_true", help="Whether to simulate the parking manoeuvre.")
 
     args = parser.parse_args()
-    if args.park:
-        simulate_parking()
-    else:
-        simulate_lane_assist()
+
+    simulate_lane_assist(args.park)
