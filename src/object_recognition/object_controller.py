@@ -119,10 +119,10 @@ class ObjectController:
 
         :param predictions: The predictions to handle.
         """
-        if self.disabled:
-            return
-
         for handler in self.handlers:
+            if self.disabled:
+                break
+
             if not self.lane_assist.enabled and handler.manual_mode:
                 continue
 
