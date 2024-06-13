@@ -57,3 +57,19 @@ def get_border_of_points(points: np.ndarray) -> tuple[int, int, int, int]:
     max_y = np.max(points[:, 1])
 
     return int(min_x), int(min_y), int(max_x), int(max_y)
+
+
+def is_point_between(start: np.ndarray, end: np.ndarray, point: np.ndarray) -> bool:
+    """Check if a point is between two other points.
+
+    :param start: The start point.
+    :param end: The end point.
+    :param point: The point to check.
+    :return: Whether the point is between the two points.
+    """
+    distance_start_end = np.linalg.norm(end - start)
+    distance_point_start = np.linalg.norm(point - start)
+    distance_point_end = np.linalg.norm(point - end)
+
+    return (distance_start_end**2 + distance_point_start**2 >= distance_point_end**2 and
+            distance_start_end**2 + distance_point_end**2 >= distance_point_start**2)
