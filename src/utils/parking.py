@@ -161,11 +161,11 @@ class ParkingManoeuvre:
             return True
 
         margin = (config["kart"]["dimensions"]["length"] / 2) - config["kart"]["lidar_offset"]
-        margin -= self.__speed_controller.get_braking_distance()
+        margin += self.__speed_controller.get_braking_distance()
 
         center = available_space / 2 * 1000
 
-        return frontal_distance - margin * 1000 >= center
+        return frontal_distance + margin * 1000 >= center
 
     def __is_past_barrier(self) -> bool:
         """Check if the go-kart is past the barrier.
