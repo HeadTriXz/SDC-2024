@@ -39,6 +39,10 @@ def simulate_lane_assist(park: bool = False) -> None:
 
     def get_sim_image_generator() -> Generator[np.ndarray, None, None]:
         while True:
+            if park:
+                yield np.zeros((height, width), dtype=np.uint8)
+                continue
+
             responses = client.simGetImages([airsim.ImageRequest("0", airsim.ImageType.Scene, False, False)])
             response = responses[0]
 
